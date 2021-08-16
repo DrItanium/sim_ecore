@@ -418,6 +418,13 @@ union Register {
         ByteInteger bints_[sizeof(Integer)/sizeof(ByteInteger)];
 };
 
+class PreviousFramePointer {
+public:
+    explicit PreviousFramePointer(Register& targetRegister) : reg_(targetRegister) {}
+private:
+    Register& reg_;
+};
+
 union ArithmeticControls { 
     public:
         constexpr explicit ArithmeticControls(Ordinal value = 0) noexcept : ord_(value) { }
@@ -507,11 +514,31 @@ union DoubleRegister {
 };
 
 union RegisterFrame {
+    RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),
+                                         Register(), Register(), Register(), Register(),
+                                         Register(), Register(), Register(), Register(),
+                                         Register(), Register(), Register(), Register(),
+                                       } {
+
+                                       }
     Register gprs[16];
     DoubleRegister dprs[sizeof(gprs)/sizeof(DoubleRegister)];
 };
 
-Register ip(0); // start at address zero
-ArithmeticControls ac(0);
-ExtendedReal fpRegs[4];
 
+class Core {
+public:
+    Core() : ip_(0), ac_(0) { };
+protected:
+    Register ip_; // start at address zero
+    ArithmeticControls ac_;
+    RegisterFrame locals;
+    RegisterFrame globals;
+    ExtendedReal fpRegs[4];
+};
+
+
+int main(int argc, char** argv) {
+    Core c;
+    return 0;
+}
