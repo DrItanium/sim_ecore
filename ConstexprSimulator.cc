@@ -9,12 +9,12 @@ using ByteOrdinal = uint8_t;
 using ByteInteger = int8_t;
 
 using FullOpcode = uint16_t;
-
+#ifdef NUMERICS_ARCHITECTURE
 using Real = float;
 using LongReal = double;
+// right now, we can just exploit the fact that extended real and long real are different sizes on x86_64, just like i960
 using ExtendedReal = long double;
-static_assert(sizeof(LongReal) != sizeof(ExtendedReal));
-
+#endif
 
 
 enum class RegisterIndex : uint8_t {
@@ -82,6 +82,7 @@ enum class RegisterIndex : uint8_t {
     Literal29,
     Literal30,
     Literal31,
+#ifdef NUMERICS_ARCHITECTURE
     // floating point literals and registers have to be handled a tad
     // differently they must be converted from the standard bits to this
     // extended format to make it unique. The instruction bits itself will 
@@ -94,6 +95,7 @@ enum class RegisterIndex : uint8_t {
     Literal0_0f = 0b010'10000,
     // reserved
     Literal1_0f = 0b010'10110,
+#endif
     Bad = 0b1111'1111,
 };
 static_assert(static_cast<uint8_t>(RegisterIndex::Literal0) == 0b1'00000, "Literal 0 needs to be 0b100000 to accurately reflect the i960 design");
@@ -125,6 +127,7 @@ constexpr auto isLocalRegister(RegisterIndex index) noexcept {
 constexpr auto isGlobalRegister(RegisterIndex index) noexcept {
     return isRegister(index) && !isLocalRegister(index);
 }
+#ifdef NUMERICS_ARCHITECTURE
 constexpr auto toFloatingPointForm(RegisterIndex index) noexcept {
     if (isLiteral(index)) {
         switch (index) {
@@ -156,6 +159,8 @@ constexpr auto isFloatingPointRegister(RegisterIndex index) noexcept {
 constexpr auto isFloatingPointLiteral(RegisterIndex index) noexcept {
     return index == RegisterIndex::Literal0_0f || index == RegisterIndex::Literal1_0f;
 }
+static_assert(toFloatingPointForm(RegisterIndex::Bad) == RegisterIndex::Bad, "toFloatingPointForm is not passing through correctly!");
+#endif
 
 constexpr Ordinal getLiteralOrdinal(RegisterIndex index) noexcept {
     if (isLiteral(index)) {
@@ -166,7 +171,6 @@ constexpr Ordinal getLiteralOrdinal(RegisterIndex index) noexcept {
 }
 
 
-static_assert(toFloatingPointForm(RegisterIndex::Bad) == RegisterIndex::Bad, "toFloatingPointForm is not passing through correctly!");
 
 enum class MEMFormatMode : uint8_t {
     // MEMA formats map to the top two bits with the lower of the two always being zero
@@ -218,207 +222,211 @@ constexpr auto isMEMFormat(FullOpcode opcode) noexcept {
 }
 // based off of the i960 instruction set
 union Instruction {
-    public:
-        constexpr explicit Instruction(Ordinal lower, Ordinal upper = 0) noexcept : parts{lower, upper} { }
-        constexpr auto getWideValue() const noexcept { return wholeValue_; }
-        constexpr auto getHalf(int offset) const noexcept { return parts[offset & 1]; }
-        constexpr auto getLowerHalf() const noexcept { return getHalf(0); }
-        constexpr auto getUpperHalf() const noexcept { return getHalf(1); }
-        constexpr FullOpcode getOpcode() const noexcept {
-            // by default the opcode is only 8-bits wide...except for REG format instructions, they are 12-bits instead
-            // so to make everything much simpler, we should just make a 16-bit opcode in all cases. 
-            // The normal opcode bits are mapped in the same place on all forms so we should just shift it right by 4 bits
-            // so 0x11 => 0x110. This maintains sanity in all cases with a tad amount of overhead
-            FullOpcode normalOpcode = makeFullOpcode(opcode);
-            // okay now we need to figure out what kind of operation we are actually looking at.
-            // Fortunately, the classes are range based :D
-            // We only need to modify the opcode if it is a reg format instruction
-            if (::isREGFormat(normalOpcode)) {
-                normalOpcode |= reg.opcodeExt;
-            }
-            return normalOpcode;
+public:
+    constexpr explicit Instruction(Ordinal lower, Ordinal upper = 0) noexcept : parts{lower, upper} { }
+    constexpr auto getWideValue() const noexcept { return wholeValue_; }
+    constexpr auto getHalf(int offset) const noexcept { return parts[offset & 1]; }
+    constexpr auto getLowerHalf() const noexcept { return getHalf(0); }
+    constexpr auto getUpperHalf() const noexcept { return getHalf(1); }
+    constexpr FullOpcode getOpcode() const noexcept {
+        // by default the opcode is only 8-bits wide...except for REG format instructions, they are 12-bits instead
+        // so to make everything much simpler, we should just make a 16-bit opcode in all cases.
+        // The normal opcode bits are mapped in the same place on all forms so we should just shift it right by 4 bits
+        // so 0x11 => 0x110. This maintains sanity in all cases with a tad amount of overhead
+        FullOpcode normalOpcode = makeFullOpcode(opcode);
+        // okay now we need to figure out what kind of operation we are actually looking at.
+        // Fortunately, the classes are range based :D
+        // We only need to modify the opcode if it is a reg format instruction
+        if (::isREGFormat(normalOpcode)) {
+            normalOpcode |= reg.opcodeExt;
         }
-        constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
-        constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getOpcode()); }
-        constexpr auto isCOBRFormat() const noexcept { return ::isCOBRFormat(getOpcode()); }
-        constexpr auto isCTRLFormat() const noexcept { return ::isCTRLFormat(getOpcode()); }
-        constexpr Integer getDisplacement() const noexcept { 
-            if (isCOBRFormat()) {
-                return cobr.displacement;
-            } else if (isCTRLFormat()) {
-                return ctrl.displacement;
-            } else if (isMEMBFormat()) {
-                return memb.optionalDisplacement;
-            } else {
-                // unsure what we should actually be returning when we have a failure
-                return -1;
-            }
+        return normalOpcode;
+    }
+    constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
+    constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getOpcode()); }
+    constexpr auto isCOBRFormat() const noexcept { return ::isCOBRFormat(getOpcode()); }
+    constexpr auto isCTRLFormat() const noexcept { return ::isCTRLFormat(getOpcode()); }
+    constexpr Integer getDisplacement() const noexcept {
+        if (isCOBRFormat()) {
+            return cobr.displacement;
+        } else if (isCTRLFormat()) {
+            return ctrl.displacement;
+        } else if (isMEMBFormat()) {
+            return memb.optionalDisplacement;
+        } else {
+            // unsure what we should actually be returning when we have a failure
+            return -1;
         }
-        constexpr RegisterIndex getSrc1() const noexcept { 
-            if (isREGFormat()) {
-                return makeRegisterIndex(reg.src1, reg.m1);
-            } else if (isCOBRFormat()) {
-                return makeRegister(cobr.src1);
-            } else {
-                return RegisterIndex::Bad;
-            }
+    }
+    constexpr RegisterIndex getSrc1() const noexcept {
+        if (isREGFormat()) {
+            return makeRegisterIndex(reg.src1, reg.m1);
+        } else if (isCOBRFormat()) {
+            return makeRegister(cobr.src1);
+        } else {
+            return RegisterIndex::Bad;
         }
-        constexpr RegisterIndex getSrc2() const noexcept { 
-            if (isREGFormat()) {
-                return makeRegisterIndex(reg.src2, reg.m2);
-            } else if (isCOBRFormat()) {
-                return makeRegister(cobr.src2);
-            } else {
-                return RegisterIndex::Bad;
-            }
+    }
+    constexpr RegisterIndex getSrc2() const noexcept {
+        if (isREGFormat()) {
+            return makeRegisterIndex(reg.src2, reg.m2);
+        } else if (isCOBRFormat()) {
+            return makeRegister(cobr.src2);
+        } else {
+            return RegisterIndex::Bad;
         }
-        constexpr RegisterIndex getSrcDest(bool treatAsSource) const noexcept { 
-            if (isREGFormat()) {
-                return makeRegisterIndex(reg.srcDest, treatAsSource ? reg.m3 : 0);
-            } else if (isMEMFormat()) {
-                return makeRegister(mem.srcDest);
-            } else {
-                return RegisterIndex::Bad;
-            }
+    }
+    constexpr RegisterIndex getSrcDest(bool treatAsSource) const noexcept {
+        if (isREGFormat()) {
+            return makeRegisterIndex(reg.srcDest, treatAsSource ? reg.m3 : 0);
+        } else if (isMEMFormat()) {
+            return makeRegister(mem.srcDest);
+        } else {
+            return RegisterIndex::Bad;
         }
-        constexpr Ordinal getOffset() const noexcept {
-            if (isMEMAFormat()) {
-                return mema.offset;
-            } else {
-                return 0xFFFF'FFFF;
-            }
+    }
+    constexpr Ordinal getOffset() const noexcept {
+        if (isMEMAFormat()) {
+            return mema.offset;
+        } else {
+            return 0xFFFF'FFFF;
         }
-        constexpr RegisterIndex getABase() const noexcept {
-            if (isMEMFormat()) {
-                return makeRegister(mem.abase);
-            } else {
-                return RegisterIndex::Bad;
-            }
+    }
+    constexpr RegisterIndex getABase() const noexcept {
+        if (isMEMFormat()) {
+            return makeRegister(mem.abase);
+        } else {
+            return RegisterIndex::Bad;
         }
+    }
 
-        constexpr MEMFormatMode getMemFormatMode() const noexcept {
-            if (isMEMAFormat()) {
-                return mema.mode == 0 ? MEMFormatMode::MEMA_AbsoluteOffset : MEMFormatMode::MEMA_RegisterIndirectWithOffset;
-            } else if (isMEMBFormat()) {
-                return static_cast<MEMFormatMode>(memb.mode);
-            } else {
-                return MEMFormatMode::Bad;
-            }
+    constexpr MEMFormatMode getMemFormatMode() const noexcept {
+        if (isMEMAFormat()) {
+            return mema.mode == 0 ? MEMFormatMode::MEMA_AbsoluteOffset : MEMFormatMode::MEMA_RegisterIndirectWithOffset;
+        } else if (isMEMBFormat()) {
+            return static_cast<MEMFormatMode>(memb.mode);
+        } else {
+            return MEMFormatMode::Bad;
         }
-        constexpr RegisterIndex getIndex() const noexcept {
-            if (isMEMBFormat()) {
-                return makeRegister(memb.index);
-            } else {
-                return RegisterIndex::Bad;
-            }
+    }
+    constexpr RegisterIndex getIndex() const noexcept {
+        if (isMEMBFormat()) {
+            return makeRegister(memb.index);
+        } else {
+            return RegisterIndex::Bad;
         }
-        constexpr uint8_t getScale() const noexcept {
-            constexpr uint8_t scaleFactors[8] { 1, 2, 4, 8, 16, 0, 0, 0, };
-            if (isMEMBFormat()) {
-                return scaleFactors[memb.scale];
-            } else {
-                return 0;
-            }
+    }
+    constexpr uint8_t getScale() const noexcept {
+        constexpr uint8_t scaleFactors[8] { 1, 2, 4, 8, 16, 0, 0, 0, };
+        if (isMEMBFormat()) {
+            return scaleFactors[memb.scale];
+        } else {
+            return 0;
         }
-        constexpr auto isDoubleWide() const noexcept {
-            // if it is not a MEM instruction then we still get Bad out which
-            // is legal and returns false
-            return isDoubleWideInstruction(getMemFormatMode());
-        }
+    }
+    constexpr auto isDoubleWide() const noexcept {
+        // if it is not a MEM instruction then we still get Bad out which
+        // is legal and returns false
+        return isDoubleWideInstruction(getMemFormatMode());
+    }
 
-    private:
-        constexpr Ordinal isMEMAFormat() const noexcept {
-            return isMEMFormat() && ((mem.modeMajor & 1u) == 0);
-        }
-        constexpr Ordinal isMEMBFormat() const noexcept {
-            return isMEMFormat() && ((mem.modeMajor & 1u) != 0);
-        }
-    private:
-        Ordinal parts[sizeof(LongOrdinal)/sizeof(Ordinal)];
+private:
+    constexpr Ordinal isMEMAFormat() const noexcept {
+        return isMEMFormat() && ((mem.modeMajor & 1u) == 0);
+    }
+    constexpr Ordinal isMEMBFormat() const noexcept {
+        return isMEMFormat() && ((mem.modeMajor & 1u) != 0);
+    }
+private:
+    Ordinal parts[sizeof(LongOrdinal)/sizeof(Ordinal)];
 
-        struct {
-            Ordinal lower : 24;
-            Ordinal opcode : 8;
-        };
-        struct {
-            Ordinal src1: 5;
-            Ordinal s1: 1;
-            Ordinal s2: 1;
-            Ordinal opcodeExt: 4;
-            Ordinal m1: 1;
-            Ordinal m2: 1;
-            Ordinal m3: 1;
-            Ordinal src2: 5;
-            Ordinal srcDest: 5;
-            Ordinal opcode: 8;
-        } reg;
-        struct {
-            Integer displacement: 13;
-            Ordinal m1: 1;
-            Ordinal src2: 5;
-            Ordinal src1: 5;
-            Ordinal opcode: 8;
-        } cobr;
-        struct {
-            Integer displacement: 24;
-            Ordinal opcode: 8;
-        } ctrl;
-        struct {
-            Ordinal differentiationBlock: 12;
-            Ordinal modeMajor: 2;
-            Ordinal abase: 5;
-            Ordinal srcDest: 5;
-            Ordinal opcode: 8;
-        } mem;
-        struct {
-            Ordinal offset: 12;
-            Ordinal mode: 2;
-            Ordinal abase: 5;
-            Ordinal srcDest: 5;
-            Ordinal opcode: 8;
-        } mema;
+    struct {
+        Ordinal lower : 24;
+        Ordinal opcode : 8;
+    };
+    struct {
+        Ordinal src1: 5;
+        Ordinal s1: 1;
+        Ordinal s2: 1;
+        Ordinal opcodeExt: 4;
+        Ordinal m1: 1;
+        Ordinal m2: 1;
+        Ordinal m3: 1;
+        Ordinal src2: 5;
+        Ordinal srcDest: 5;
+        Ordinal opcode: 8;
+    } reg;
+    struct {
+        Integer displacement: 13;
+        Ordinal m1: 1;
+        Ordinal src2: 5;
+        Ordinal src1: 5;
+        Ordinal opcode: 8;
+    } cobr;
+    struct {
+        Integer displacement: 24;
+        Ordinal opcode: 8;
+    } ctrl;
+    struct {
+        Ordinal differentiationBlock: 12;
+        Ordinal modeMajor: 2;
+        Ordinal abase: 5;
+        Ordinal srcDest: 5;
+        Ordinal opcode: 8;
+    } mem;
+    struct {
+        Ordinal offset: 12;
+        Ordinal mode: 2;
+        Ordinal abase: 5;
+        Ordinal srcDest: 5;
+        Ordinal opcode: 8;
+    } mema;
 
-        struct {
-            Ordinal index: 5;
-            Ordinal unused0: 2;
-            Ordinal scale: 3;
-            Ordinal mode: 4;
-            Ordinal abase: 5;
-            Ordinal srcDest: 5;
-            Ordinal opcode: 8;
-            Integer optionalDisplacement;
-        } memb;
-        LongOrdinal wholeValue_;
+    struct {
+        Ordinal index: 5;
+        Ordinal unused0: 2;
+        Ordinal scale: 3;
+        Ordinal mode: 4;
+        Ordinal abase: 5;
+        Ordinal srcDest: 5;
+        Ordinal opcode: 8;
+        Integer optionalDisplacement;
+    } memb;
+    LongOrdinal wholeValue_;
 };
 union Register {
-    public:
-        constexpr explicit Register(Ordinal value = 0) noexcept : ord_(value) { }
-        constexpr auto getOrdinal() const noexcept { return ord_; }
-        constexpr auto getInteger() const noexcept { return integer_; }
-        constexpr auto getReal() const noexcept { return real_; }
-        constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
-        constexpr auto getShortInteger(int which = 0) const noexcept { return sints_[which&0b01]; }
-        constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
-        constexpr auto getByteInteger(int which = 0) const noexcept { return bints_[which&0b11]; }
-        void setOrdinal(Ordinal value) noexcept { ord_ = value; }
-        void setInteger(Integer value) noexcept { integer_ = value; }
-        void setReal(Real value) noexcept { real_ = value; }
-        void setShortOrdinal(ShortOrdinal value) noexcept { setOrdinal(value); }
-        void setShortInteger(ShortInteger value) noexcept { setInteger(value); }
-        void setByteOrdinal(ByteOrdinal value) noexcept { setOrdinal(value); }
-        void setByteInteger(ByteInteger value) noexcept { setInteger(value); }
-        void setShortOrdinal(ShortOrdinal value, int which) noexcept { sords_[which&0b01] = value; }
-        void setShortInteger(ShortInteger value, int which) noexcept { sints_[which&0b01] = value; }
-        void setByteOrdinal(ByteOrdinal value, int which) noexcept { bords_[which&0b11] = value; }
-        void setByteInteger(ByteInteger value, int which) noexcept { bints_[which&0b11] = value; }
-    private:
-        Ordinal ord_ = 0;
-        Integer integer_;
-        Real real_;
-        ShortOrdinal sords_[sizeof(Ordinal)/sizeof(ShortOrdinal)];
-        ShortInteger sints_[sizeof(Integer)/sizeof(ShortInteger)];
-        ByteOrdinal bords_[sizeof(Ordinal)/sizeof(ByteOrdinal)];
-        ByteInteger bints_[sizeof(Integer)/sizeof(ByteInteger)];
+public:
+    constexpr explicit Register(Ordinal value = 0) noexcept : ord_(value) { }
+    constexpr auto getOrdinal() const noexcept { return ord_; }
+    constexpr auto getInteger() const noexcept { return integer_; }
+    constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
+    constexpr auto getShortInteger(int which = 0) const noexcept { return sints_[which&0b01]; }
+    constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
+    constexpr auto getByteInteger(int which = 0) const noexcept { return bints_[which&0b11]; }
+    void setOrdinal(Ordinal value) noexcept { ord_ = value; }
+    void setInteger(Integer value) noexcept { integer_ = value; }
+    void setShortOrdinal(ShortOrdinal value) noexcept { setOrdinal(value); }
+    void setShortInteger(ShortInteger value) noexcept { setInteger(value); }
+    void setByteOrdinal(ByteOrdinal value) noexcept { setOrdinal(value); }
+    void setByteInteger(ByteInteger value) noexcept { setInteger(value); }
+    void setShortOrdinal(ShortOrdinal value, int which) noexcept { sords_[which&0b01] = value; }
+    void setShortInteger(ShortInteger value, int which) noexcept { sints_[which&0b01] = value; }
+    void setByteOrdinal(ByteOrdinal value, int which) noexcept { bords_[which&0b11] = value; }
+    void setByteInteger(ByteInteger value, int which) noexcept { bints_[which&0b11] = value; }
+#ifdef NUMERICS_ARCHTIECTURE
+    constexpr auto getReal() const noexcept { return real_; }
+    void setReal(Real value) noexcept { real_ = value; }
+#endif
+private:
+    Ordinal ord_ = 0;
+    Integer integer_;
+    ShortOrdinal sords_[sizeof(Ordinal)/sizeof(ShortOrdinal)];
+    ShortInteger sints_[sizeof(Integer)/sizeof(ShortInteger)];
+    ByteOrdinal bords_[sizeof(Ordinal)/sizeof(ByteOrdinal)];
+    ByteInteger bints_[sizeof(Integer)/sizeof(ByteInteger)];
+#ifdef NUMERICS_ARCHITECTURE
+    Real real_;
+#endif
 };
 
 class PreviousFramePointer {
@@ -428,47 +436,56 @@ private:
     Register& reg_;
 };
 
-union ArithmeticControls { 
-    public:
-        constexpr explicit ArithmeticControls(Ordinal value = 0) noexcept : ord_(value) { }
-        constexpr auto getValue() const noexcept { return ord_; }
-        void setValue(Ordinal value) noexcept { ord_ = value; }
+union ArithmeticControls {
+public:
+    constexpr explicit ArithmeticControls(Ordinal value = 0) noexcept : ord_(value) { }
+    constexpr auto getValue() const noexcept { return ord_; }
+    void setValue(Ordinal value) noexcept { ord_ = value; }
 #define X(name, field, type) \
         constexpr type get ## name () const noexcept { return field ; } \
-        void set ## name( type value) noexcept { field  = value ; } 
-        X(ConditionCode, conditionCode, Ordinal);
-        X(ArithmeticStatus, arithmeticStatus, Ordinal);
+        void set ## name( type value) noexcept { field  = value ; }
+    X(ConditionCode, conditionCode, Ordinal);
+    X(NoImpreciseFaults, noImpreciseFaults, bool);
+#ifdef NUMERICS_ARCHITECTURE
+    X(ArithmeticStatus, arithmeticStatus, Ordinal);
         X(FloatingPointRoundingControl, floatingPointRoundingControl, Ordinal);
-        X(NoImpreciseFaults, noImpreciseFaults, bool);
         X(FloatingPointNormalizingMode, floatingPointNormalizingMode, bool);
+#endif
 #define Y(name, field) \
         X(name ## Flag , field ## Flag, bool); \
         X(name ## Mask , field ## Mask, bool);
-        Y(IntegerOverflow, integerOverflow);
-        Y(FloatingOverflow, floatingOverflow);
+    Y(IntegerOverflow, integerOverflow);
+#ifdef NUMERICS_ARCHITECTURE
+    Y(FloatingOverflow, floatingOverflow);
         Y(FloatingUnderflow, floatingUnderflow);
         Y(FloatingInvalidOp, floatingInvalidOp);
         Y(FloatingZeroDivide, floatingZeroDivide);
         Y(FloatingInexact, floatingInexact);
+#endif
 #undef Y
 #undef X
-    public:
-        /**
-         * Reads and modifies contents of this object
-         */
-        Ordinal modify(Ordinal mask, Ordinal src) noexcept;
-    private:
-        Ordinal ord_ = 0;
-        struct {
-            Ordinal conditionCode : 3;
-            Ordinal arithmeticStatus : 4;
+public:
+    /**
+     * Reads and modifies contents of this object
+     */
+    Ordinal modify(Ordinal mask, Ordinal src) noexcept;
+private:
+    Ordinal ord_ = 0;
+    struct {
+        Ordinal conditionCode : 3;
+#ifdef NUMERICS_ARCHITECTURE
+        Ordinal arithmeticStatus : 4;
             Ordinal unused0 : 1;
-            Ordinal integerOverflowFlag : 1;
-            Ordinal unused1 : 3;
-            Ordinal integerOverflowMask : 1;
-            Ordinal unused2 : 2;
-            Ordinal noImpreciseFaults : 1;
-            Ordinal floatingOverflowFlag : 1;
+#else
+        Ordinal unused0 : 5;
+#endif // end defined(NUMERICS_ARCHITECTURE)
+        Ordinal integerOverflowFlag : 1;
+        Ordinal unused1 : 3;
+        Ordinal integerOverflowMask : 1;
+        Ordinal unused2 : 2;
+        Ordinal noImpreciseFaults : 1;
+#ifdef NUMERICS_ARCHITECTURE
+        Ordinal floatingOverflowFlag : 1;
             Ordinal floatingUnderflowFlag : 1;
             Ordinal floatingInvalidOpFlag : 1;
             Ordinal floatingZeroDivideFlag : 1;
@@ -481,7 +498,10 @@ union ArithmeticControls {
             Ordinal floatingInexactMask : 1;
             Ordinal floatingPointNormalizingMode : 1;
             Ordinal floatingPointRoundingControl : 2;
-        };
+#else
+        Ordinal unused3 : 16;
+#endif // end defined(NUMERICS_ARCHITECTURE)
+    };
 
 };
 static_assert (sizeof(ArithmeticControls) == sizeof(Ordinal), "ArithmeticControls must be the width of a single Ordinal");
@@ -499,34 +519,41 @@ ArithmeticControls::modify(Ordinal mask, Ordinal src) noexcept {
 }
 
 union DoubleRegister {
-    public:
-        constexpr explicit DoubleRegister(LongOrdinal value = 0) noexcept : lord_(value) { }
-        constexpr auto getLongOrdinal() const noexcept { return lord_; }
-        constexpr auto getLongInteger() const noexcept { return lint_; }
-        constexpr auto getLongReal() const noexcept { return lreal_; }
-        constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which & 0b01]; }
-        void setLongOrdinal(LongOrdinal value) noexcept { lord_ = value; }
-        void setLongInteger(LongInteger value) noexcept { lint_ = value; }
-        void setLongReal(LongReal value) noexcept { lreal_ = value; }
-        void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b01] = value; }
-    private:
-        LongOrdinal lord_ = 0;
-        LongInteger lint_;
-        LongReal lreal_;
-        Ordinal parts_[sizeof(LongOrdinal)/ sizeof(Ordinal)];
+public:
+    constexpr explicit DoubleRegister(LongOrdinal value = 0) noexcept : lord_(value) { }
+    constexpr auto getLongOrdinal() const noexcept { return lord_; }
+    constexpr auto getLongInteger() const noexcept { return lint_; }
+    constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which & 0b01]; }
+    void setLongOrdinal(LongOrdinal value) noexcept { lord_ = value; }
+    void setLongInteger(LongInteger value) noexcept { lint_ = value; }
+    void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b01] = value; }
+
+#ifdef NUMERICS_ARCHITECTURE
+    constexpr auto getLongReal() const noexcept { return lreal_; }
+    void setLongReal(LongReal value) noexcept { lreal_ = value; }
+#endif
+private:
+    LongOrdinal lord_ = 0;
+    LongInteger lint_;
+    Ordinal parts_[sizeof(LongOrdinal)/ sizeof(Ordinal)];
+#ifdef NUMERICS_ARCHITECTURE
+    LongReal lreal_;
+#endif
 };
 
 union RegisterFrame {
     RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),
-                                         Register(), Register(), Register(), Register(),
-                                         Register(), Register(), Register(), Register(),
-                                         Register(), Register(), Register(), Register(),
-                                       } {
+                                      Register(), Register(), Register(), Register(),
+                                      Register(), Register(), Register(), Register(),
+                                      Register(), Register(), Register(), Register(),
+    } {
 
-                                       }
+    }
     Register gprs[16];
     DoubleRegister dprs[sizeof(gprs)/sizeof(DoubleRegister)];
+#ifdef NUMERICS_ARCHITECTURE
     ExtendedReal efprs[sizeof(gprs)/sizeof(ExtendedReal)];
+#endif
 };
 
 
@@ -561,7 +588,9 @@ protected:
     ArithmeticControls ac_;
     RegisterFrame locals;
     RegisterFrame globals;
+#ifdef NUMERICS_ARCHITECTURE
     ExtendedReal fpRegs[4] = { 0 };
+#endif
 };
 
 
