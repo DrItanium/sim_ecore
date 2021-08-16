@@ -541,6 +541,42 @@ private:
 #endif
 };
 
+union TripleRegister {
+public:
+    constexpr explicit TripleRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0) noexcept : parts_{a, b, c, 0}{ }
+    constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which % 3]; } // very expensive!
+    void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which % 3] = value; }
+#ifdef NUMERICS_ARCHITECTURE
+    constexpr auto getExtendedReal() const noexcept { return lreal_; }
+    void setExtendedReal(LongReal value) noexcept { lreal_ = value; }
+#endif
+private:
+    Ordinal parts_[4]; // the fourth Ordinal is for alignment purposes, there is no way to modify it through the class
+#ifdef NUMERICS_ARCHITECTURE
+    ExtendedReal lreal_;
+#endif
+};
+
+union QuadRegister {
+public:
+    constexpr explicit QuadRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0, Ordinal d = 0) noexcept : parts_{a, b, c, d}{ }
+    constexpr explicit QuadRegister(LongOrdinal lower, LongOrdinal upper) noexcept : halves_{lower, upper} { }
+    constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which & 0b11]; } // very expensive!
+    void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b11] = value; }
+    constexpr auto getHalf(int which = 0) const noexcept { return halves_[which & 0b01];}
+    void setHalf(LongOrdinal value, int which = 0) noexcept { halves_[which & 0b01] = value; }
+#ifdef NUMERICS_ARCHITECTURE
+    constexpr auto getExtendedReal() const noexcept { return lreal_; }
+void setExtendedReal(LongReal value) noexcept { lreal_ = value; }
+#endif
+private:
+    Ordinal parts_[4];
+    LongOrdinal halves_[2];
+#ifdef NUMERICS_ARCHITECTURE
+    ExtendedReal lreal_;
+#endif
+};
+
 union RegisterFrame {
     RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),
                                       Register(), Register(), Register(), Register(),
@@ -551,9 +587,9 @@ union RegisterFrame {
     }
     Register gprs[16];
     DoubleRegister dprs[sizeof(gprs)/sizeof(DoubleRegister)];
-#ifdef NUMERICS_ARCHITECTURE
-    ExtendedReal efprs[sizeof(gprs)/sizeof(ExtendedReal)];
-#endif
+    TripleRegister tprs[sizeof(gprs)/sizeof(TripleRegister)]; // this will have the same alignment as quad registers by ignoring the fourth ordinal
+    QuadRegister qprs[sizeof(gprs)/sizeof(QuadRegister)];
+    // we put the extended reals in a different location
 };
 
 
