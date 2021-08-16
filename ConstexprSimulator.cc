@@ -534,7 +534,7 @@ protected:
     ArithmeticControls ac_;
     RegisterFrame locals;
     RegisterFrame globals;
-    ExtendedReal fpRegs[4];
+    ExtendedReal fpRegs[4] = { 0 };
 };
 
 
