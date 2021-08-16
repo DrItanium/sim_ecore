@@ -223,7 +223,8 @@ constexpr auto isMEMFormat(FullOpcode opcode) noexcept {
 // based off of the i960 instruction set
 union Instruction {
 public:
-    constexpr explicit Instruction(Ordinal lower, Ordinal upper = 0) noexcept : parts{lower, upper} { }
+    constexpr Instruction(Ordinal lower, Ordinal upper) noexcept : parts{lower, upper} { }
+    constexpr explicit Instruction(LongOrdinal value = 0) noexcept : wholeValue_(value) { }
     constexpr auto getWideValue() const noexcept { return wholeValue_; }
     constexpr auto getHalf(int offset) const noexcept { return parts[offset & 1]; }
     constexpr auto getLowerHalf() const noexcept { return getHalf(0); }
@@ -609,6 +610,7 @@ public:
                 };
 public:
     Core() : ip_(0), ac_(0) { };
+    virtual ~Core() = default;
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
     virtual void storeLong(Address destination, LongOrdinal value) = 0;
@@ -630,6 +632,9 @@ public:
     virtual LongOrdinal loadLong(Address destination) = 0;
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
+private:
+    Instruction loadInstruction(Address baseAddress) noexcept;
+    void executeInstruction(const Instruction& instruction) noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
@@ -667,6 +672,12 @@ Core::getRegister(RegisterIndex targetIndex) const {
     } else {
         throw "Illegal register requested";
     }
+}
+
+Instruction
+Core::loadInstruction(Address baseAddress) noexcept {
+    // load words 64-bits at a time for simplicity, we increment by eight on double wide instructions and four on single wide
+    return Instruction(loadLong(baseAddress & (~static_cast<Address>(0b111))));
 }
 
 
