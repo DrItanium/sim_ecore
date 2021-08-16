@@ -576,7 +576,6 @@ private:
     ExtendedReal lreal_;
 #endif
 };
-
 union RegisterFrame {
     RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),
                                       Register(), Register(), Register(), Register(),
@@ -596,8 +595,18 @@ union RegisterFrame {
 class Core {
 public:
     using Address = Ordinal;
-    using TripleOrdinal = Ordinal[3];
-    using QuadOrdinal = Ordinal[4];
+    static constexpr Register OrdinalLiterals[32] {
+#define X(base) Register(base + 0), Register(base + 1), Register(base + 2), Register(base + 3)
+            X(0),
+            X(4),
+            X(8),
+            X(12),
+            X(16),
+            X(20),
+            X(24),
+            X(28),
+#undef X
+                };
 public:
     Core() : ip_(0), ac_(0) { };
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
@@ -619,7 +628,12 @@ public:
     virtual ByteOrdinal loadByte(Address destination) = 0;
     virtual ShortOrdinal loadShort(Address destination) = 0;
     virtual LongOrdinal loadLong(Address destination) = 0;
-protected:
+    Register& getRegister(RegisterIndex targetIndex);
+    const Register& getRegister(RegisterIndex targetIndex) const;
+private:
+    void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
+    void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
+private:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
     RegisterFrame locals;
@@ -628,6 +642,32 @@ protected:
     ExtendedReal fpRegs[4] = { 0 };
 #endif
 };
+
+Register&
+Core::getRegister(RegisterIndex targetIndex) {
+    if (isLocalRegister(targetIndex)) {
+        return locals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+    } else if (isLiteral(targetIndex)) {
+        throw "Literals cannot be modified";
+    } else {
+        throw "Illegal register requested";
+    }
+}
+
+const Register&
+Core::getRegister(RegisterIndex targetIndex) const {
+    if (isLocalRegister(targetIndex)) {
+        return locals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+    } else if (isLiteral(targetIndex)) {
+        return OrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
+    } else {
+        throw "Illegal register requested";
+    }
+}
 
 
 int main(int argc, char** argv) {
