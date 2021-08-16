@@ -13,6 +13,9 @@ using FullOpcode = uint16_t;
 using Real = float;
 using LongReal = double;
 using ExtendedReal = long double;
+static_assert(sizeof(LongReal) != sizeof(ExtendedReal));
+
+
 
 enum class RegisterIndex : uint8_t {
     Local0 = 0,
@@ -523,12 +526,36 @@ union RegisterFrame {
                                        }
     Register gprs[16];
     DoubleRegister dprs[sizeof(gprs)/sizeof(DoubleRegister)];
+    ExtendedReal efprs[sizeof(gprs)/sizeof(ExtendedReal)];
 };
 
 
 class Core {
 public:
+    using Address = Ordinal;
+    using TripleOrdinal = Ordinal[3];
+    using QuadOrdinal = Ordinal[4];
+public:
     Core() : ip_(0), ac_(0) { };
+    virtual void storeByte(Address destination, ByteOrdinal value) = 0;
+    virtual void storeShort(Address destination, ShortOrdinal value) = 0;
+    virtual void storeLong(Address destination, LongOrdinal value) = 0;
+    virtual void storeWord(Address destination, Ordinal value) = 0;
+    virtual void storeTriple(Address destination, Ordinal lowest, Ordinal middle, Ordinal highest) {
+        storeWord(destination + 0, lowest);
+        storeWord(destination + 4, middle);
+        storeWord(destination + 8, highest);
+    }
+    virtual void storeQuad(Address destination, Ordinal a, Ordinal b, Ordinal c, Ordinal d) {
+        storeWord(destination + 0, a);
+        storeWord(destination + 4, b);
+        storeWord(destination + 8, c);
+        storeWord(destination + 12, d);
+    }
+    virtual Ordinal load(Address destination) = 0;
+    virtual ByteOrdinal loadByte(Address destination) = 0;
+    virtual ShortOrdinal loadShort(Address destination) = 0;
+    virtual LongOrdinal loadLong(Address destination) = 0;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
@@ -539,6 +566,5 @@ protected:
 
 
 int main(int argc, char** argv) {
-    Core c;
     return 0;
 }
