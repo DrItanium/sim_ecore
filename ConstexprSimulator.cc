@@ -585,6 +585,20 @@ union RegisterFrame {
     } {
 
     }
+    const Register& getRegister(int index) const noexcept { return gprs[index & 0b1111]; }
+    Register& getRegister(int index) noexcept { return gprs[index & 0b1111]; }
+    const DoubleRegister& getDoubleRegister(int index) const noexcept { return dprs[(index >> 1) & 0b111]; }
+    DoubleRegister& getDoubleRegister(int index) noexcept { return dprs[(index >> 1) & 0b111]; }
+    const TripleRegister& getTripleRegister(int index) const noexcept { return tprs[(index >> 2) & 0b11]; }
+    TripleRegister& getTripleRegister(int index) noexcept { return tprs[(index >> 2) & 0b11]; }
+    const QuadRegister& getQuadRegister(int index) const noexcept { return qprs[(index >> 2) & 0b11]; }
+    QuadRegister& getQuadRegister(int index) noexcept { return qprs[(index >> 2) & 0b11]; }
+
+    constexpr auto getNumRegisters() const noexcept { return 16; }
+    constexpr auto getNumDoubleRegisters() const noexcept { return 8; }
+    constexpr auto getNumTripleRegisters () const noexcept { return 4; }
+    constexpr auto getNumQuadRegisters () const noexcept { return 4; }
+
     Register gprs[16];
     DoubleRegister dprs[sizeof(gprs)/sizeof(DoubleRegister)];
     TripleRegister tprs[sizeof(gprs)/sizeof(TripleRegister)]; // this will have the same alignment as quad registers by ignoring the fourth ordinal
@@ -679,6 +693,22 @@ Core::loadInstruction(Address baseAddress) noexcept {
     // load words 64-bits at a time for simplicity, we increment by eight on double wide instructions and four on single wide
     return Instruction(loadLong(baseAddress & (~static_cast<Address>(0b111))));
 }
+
+void
+Core::saveRegisterFrame(const RegisterFrame &theFrame, Address baseAddress) noexcept {
+    for (int i = 0; i < 16; ++i, baseAddress += 4) {
+        storeWord(baseAddress, theFrame.getRegister(i).getOrdinal());
+    }
+}
+
+void
+Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcept {
+    for (auto& reg : theFrame.gprs) {
+        reg.setOrdinal(load(baseAddress));
+        baseAddress += 4;
+    }
+}
+
 
 
 int main(int argc, char** argv) {
