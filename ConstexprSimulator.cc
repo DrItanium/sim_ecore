@@ -716,6 +716,8 @@ private:
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
     void generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept;
+    void cmpi(Integer src1, Integer src2) noexcept;
+    void cmpo(Ordinal src1, Ordinal src2) noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     inline void saveLocals(Address baseAddress) noexcept { saveRegisterFrame(locals, baseAddress); }
@@ -731,6 +733,27 @@ private:
 #endif
     Ordinal advanceIPBy = 0;
 };
+
+void
+Core::cmpi(Integer src1, Integer src2) noexcept {
+    if (src1 < src2) {
+        ac_.setConditionCode(0b100);
+    } else if (src1 == src2) {
+        ac_.setConditionCode(0b010);
+    } else {
+        ac_.setConditionCode(0b001);
+    }
+}
+void
+Core::cmpo(Ordinal src1, Ordinal src2) noexcept {
+    if (src1 < src2) {
+        ac_.setConditionCode(0b100);
+    } else if (src1 == src2) {
+        ac_.setConditionCode(0b010);
+    } else {
+        ac_.setConditionCode(0b001);
+    }
+}
 
 Register&
 Core::getRegister(RegisterIndex targetIndex) {
@@ -1098,6 +1121,18 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 }
             }();
             break;
+        case Opcode::cmpo:
+            [this, &instruction]() {
+                cmpo(getRegister(instruction.getSrc1()).getOrdinal(),
+                     getRegister(instruction.getSrc2()).getOrdinal());
+            }();
+            break;
+        case Opcode::cmpi:
+            [this, &instruction]() {
+                cmpi(getRegister(instruction.getSrc1()).getInteger(),
+                     getRegister(instruction.getSrc2()).getInteger());
+            }();
+                break;
         case Opcode::cmpobg:
             [this, &instruction]() {
 
