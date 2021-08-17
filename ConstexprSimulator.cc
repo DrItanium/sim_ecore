@@ -1329,7 +1329,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::lda:
             [this, &instruction]() {
-
+                // compute the effective address (memory address) and store it in destination
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(computeMemoryAddress(instruction));
             }();
             break;
         case Opcode::ld:
