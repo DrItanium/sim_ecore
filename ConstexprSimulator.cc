@@ -1012,142 +1012,82 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             ip_.setOrdinal(ip_.getOrdinal() + 4);
         }
     };
+    auto condBranch = [this, &instruction](uint8_t mask) {
+        if ((ac_.getConditionCode()& mask) != 0) {
+            ipRelativeBranch(instruction.getDisplacement()) ;
+        }
+    };
+    auto condFault = [this](uint8_t mask) {
+        if ((ac_.getConditionCode()& mask) != 0) {
+            /// @todo constraint range fault
+            generateFault(0, 0);
+        }
+    };
     switch (instruction.identifyOpcode()) {
+        case Opcode::None:
+        case Opcode::Bad:
+            ipRelativeBranch(instruction.getDisplacement()) ;
+            /// @todo generate fault here
+            break;
         // CTRL Format opcodes
         case Opcode::b:
-            [this, &instruction]() {
-                ipRelativeBranch(instruction.getDisplacement());
-            }();
             break;
         case Opcode::bal:
-            [this, &instruction]() {
-                auto& g14 = getRegister(RegisterIndex::Global14);
-                g14.setOrdinal(ip_.getOrdinal() + 4);
-                ipRelativeBranch(instruction.getDisplacement());
-            }();
+            getRegister(RegisterIndex::Global14).setOrdinal(ip_.getOrdinal() + 4);
+            ipRelativeBranch(instruction.getDisplacement()) ;
             break;
         case Opcode::bno:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b000>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-            }();
+            if (ac_.getConditionCode() == 0) {
+                ipRelativeBranch(instruction.getDisplacement()) ;
+            }
             break;
         case Opcode::bg:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b001>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-
-            }();
+            condBranch(0b001);
             break;
         case Opcode::be:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b010>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-
-            }();
+            condBranch(0b010);
             break;
         case Opcode::bge:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b011>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-
-            }();
+            condBranch(0b011);
             break;
         case Opcode::bl:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b100>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-            }();
+            condBranch(0b100);
             break;
         case Opcode::bne:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b101>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-
-            }();
+            condBranch(0b101);
             break;
         case Opcode::ble:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b110>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-
-            }();
+            condBranch(0b110);
             break;
         case Opcode::bo:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b111>()) {
-                    ipRelativeBranch(instruction.getDisplacement());
-                }
-            }();
+            condBranch(0b111);
             break;
         case Opcode::faultno:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b000>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-            }();
+            if (ac_.getConditionCode() == 0) {
+                /// @todo make target constraint range fault
+                generateFault(0, 0);
+            }
             break;
         case Opcode::faultg:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b001>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-
-            }();
+            condFault(0b001);
             break;
         case Opcode::faulte:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b010>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-
-            }();
+            condFault(0b010);
             break;
         case Opcode::faultge:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b011>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-
-            }();
+            condFault(0b011);
             break;
         case Opcode::faultl:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b100>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-
-            }();
+            condFault(0b100);
             break;
         case Opcode::faultne:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b101>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-
-            }();
+            condFault(0b101);
             break;
         case Opcode::faultle:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b110>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-
-            }();
+            condFault(0b110);
             break;
         case Opcode::faulto:
-            [this, &instruction]() {
-                if (ac_.conditionCodeIs<0b111>()) {
-                    generateFault(0, 0); /// @todo implement proper fault types
-                }
-            }();
+            condFault(0b111);
             break;
             // COBR Format
         case Opcode::testno:
@@ -1687,7 +1627,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 }
             }();
             break;
-
 
     }
 }
