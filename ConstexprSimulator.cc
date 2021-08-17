@@ -896,6 +896,32 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #undef X
     };
     advanceIPBy = 4;
+    auto cmpobx = [this, &instruction](uint8_t mask) noexcept {
+        auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
+        auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+        cmpo(src1, src2);
+        advanceIPBy = 0;
+        if ((mask & ac_.getConditionCode()) != 0) {
+            // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+            ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
+        } else {
+            ip_.setOrdinal(ip_.getOrdinal() + 4);
+        }
+    };
+    auto cmpibx = [this, &instruction](uint8_t mask) noexcept {
+        auto src1 = getRegister(instruction.getSrc1()).getInteger();
+        auto src2 = getRegister(instruction.getSrc2()).getInteger();
+        cmpi(src1, src2);
+        advanceIPBy = 0;
+        if ((mask & ac_.getConditionCode()) != 0) {
+            // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+            ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
+        } else {
+            ip_.setOrdinal(ip_.getOrdinal() + 4);
+        }
+    };
     switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
         case Opcode::b:
@@ -1162,74 +1188,46 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     }();
                     break;
         case Opcode::cmpobg:
-            [this, &instruction]() {
-
-            }();
+            cmpobx(0b001);
             break;
         case Opcode::cmpobe:
-            [this, &instruction]() {
-
-            }();
+            cmpobx(0b010);
             break;
         case Opcode::cmpobge:
-            [this, &instruction]() {
-
-            }();
+            cmpobx(0b011);
             break;
         case Opcode::cmpobl:
-            [this, &instruction]() {
-
-            }();
+            cmpobx(0b100);
             break;
         case Opcode::cmpobne:
-            [this, &instruction]() {
-
-            }();
+            cmpobx(0b101);
             break;
         case Opcode::cmpoble:
-            [this, &instruction]() {
-
-            }();
+            cmpobx(0b110);
             break;
         case Opcode::cmpibno:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b000);
             break;
         case Opcode::cmpibg:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b001);
             break;
         case Opcode::cmpibe:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b010);
             break;
         case Opcode::cmpibge:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b011);
             break;
         case Opcode::cmpibl:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b100);
             break;
         case Opcode::cmpibne:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b101);
             break;
         case Opcode::cmpible:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b110);
             break;
         case Opcode::cmpibo:
-            [this, &instruction]() {
-
-            }();
+            cmpibx(0b111);
             break;
             // MEM Format
         case Opcode::ldob:
