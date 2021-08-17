@@ -1729,6 +1729,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(temp);
             }();
             break;
+        case Opcode::chkbit:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
+            }();
+            break;
     }
 }
 
