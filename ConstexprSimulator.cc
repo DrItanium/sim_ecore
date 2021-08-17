@@ -1890,6 +1890,25 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setInteger(src >> len);
             }();
             break;
+        case Opcode::shrdi:
+            [this, &instruction]() {
+                static constexpr Integer bitPositions[32] {
+#define X(base) 1 << (base + 0), 1 << (base + 1), 1 << (base + 2), 1 << (base + 3)
+                        X(0), X(4), X(8), X(12),
+                        X(16), X(20), X(24), X(28)
+#undef X
+                };
+                // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc2()).getInteger();
+                auto len = getRegister(instruction.getSrc1()).getInteger();
+                if (len < 32) {
+                    dest.setInteger(src / bitPositions[len]);
+                } else {
+                    dest.setInteger(0);
+                }
+            }();
+            break;
     }
 }
 
