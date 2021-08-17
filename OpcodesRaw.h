@@ -96,9 +96,11 @@
             X(0x612, atadd)
             X(0x640, spanbit)
             X(0x641, scanbit)
+#ifdef NUMERICS_ARCHITECTURE
             X(0x642, daddc)
             X(0x643, dsubc)
             X(0x644, dmovt)
+#endif
             X(0x645, modac)
             X(0x650, modify)
             X(0x651, extract)

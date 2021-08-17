@@ -722,19 +722,7 @@ Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcep
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     switch (instruction.identifyOpcode()) {
-        // REG format
-        case Opcode::addi:
-            [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setInteger(getRegister(instruction.getSrc2()).getInteger() +
-                                                                      getRegister(instruction.getSrc1()).getInteger());
-            }();
-        case Opcode::addo:
-            [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() +
-                                                                      getRegister(instruction.getSrc1()).getOrdinal());
-            }();
-            break;
-            // CTRL Format opcodes
+        // CTRL Format opcodes
         case Opcode::b:
             [this, &instruction]() {
 
@@ -1057,6 +1045,87 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 
             }();
             break;
+            // REG format
+        case Opcode::addi:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setInteger(getRegister(instruction.getSrc2()).getInteger() +
+                                                                      getRegister(instruction.getSrc1()).getInteger());
+            }();
+        case Opcode::addo:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() +
+                                                                      getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::subi:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setInteger(
+                        getRegister(instruction.getSrc2()).getInteger() - getRegister(instruction.getSrc1()).getInteger());
+            }();
+        case Opcode::subo:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setOrdinal(
+                        getRegister(instruction.getSrc2()).getOrdinal() - getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::muli:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setInteger(
+                        getRegister(instruction.getSrc2()).getInteger() * getRegister(instruction.getSrc1()).getInteger());
+            }();
+        case Opcode::mulo:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setOrdinal(
+                        getRegister(instruction.getSrc2()).getOrdinal() * getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::divo:
+            [this, &instruction]() {
+                /// @todo check denominator and do proper handling
+                getRegister(instruction.getSrcDest(false)).setOrdinal(
+                        getRegister(instruction.getSrc2()).getOrdinal() / getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::divi:
+            [this, &instruction]() {
+                /// @todo check denominator and do proper handling
+                getRegister(instruction.getSrcDest(false)).setInteger(
+                        getRegister(instruction.getSrc2()).getInteger() / getRegister(instruction.getSrc1()).getInteger());
+            }();
+            break;
+        case Opcode::notbit:
+            [this, &instruction]() {
+            }();
+            break;
+        case Opcode::logicalAnd: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() & getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::logicalOr: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::logicalXor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() ^ getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::logicalXnor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getRegister(instruction.getSrc2()).getOrdinal() ^ getRegister(instruction.getSrc1()).getOrdinal())); }(); break;
+        case Opcode::logicalNor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal())); }(); break;
+        case Opcode::logicalNand: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getRegister(instruction.getSrc2()).getOrdinal() & getRegister(instruction.getSrc1()).getOrdinal())); }(); break;
+        case Opcode::logicalNot: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getRegister(instruction.getSrc1()).getOrdinal())); }(); break;
+        case Opcode::andnot: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() & ~getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::notand: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~getRegister(instruction.getSrc2()).getOrdinal() & getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::ornot: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() | ~getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::notor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::remi:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src2 = getRegister(instruction.getSrc2()).getInteger();
+                auto src1 = getRegister(instruction.getSrc1()).getInteger();
+                // taken from the i960Sx manual
+                dest.setInteger(src2 - ((src2 / src1) * src1));
+            }();
+            break;
+        case Opcode::remo:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+                auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
+                // taken from the i960Sx manual
+                dest.setOrdinal(src2 - ((src2 / src1) * src1));
+            }();
+                break;
         default:
             /// @todo implement fault invocation
             break;
