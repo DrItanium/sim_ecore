@@ -680,7 +680,7 @@ public:
             X(24),
             X(28),
 #undef X
-};
+    };
     static constexpr TripleRegister TripleOrdinalLiterals[32] {
 #define X(base) TripleRegister(base + 0), TripleRegister(base + 1), TripleRegister(base + 2), TripleRegister(base + 3)
             X(0),
@@ -692,7 +692,7 @@ public:
             X(24),
             X(28),
 #undef X
-};
+    };
     static constexpr QuadRegister QuadOrdinalLiterals[32] {
 #define X(base) QuadRegister(base + 0), QuadRegister(base + 1), QuadRegister(base + 2), QuadRegister(base + 3)
             X(0),
@@ -704,7 +704,7 @@ public:
             X(24),
             X(28),
 #undef X
-};
+    };
 public:
 public:
     explicit Core(Ordinal salign = 4) : ip_(0), ac_(0), salign_(salign), c_((salign * 16) - 1) { };
@@ -724,6 +724,8 @@ protected:
         storeLong(destination + 0, reg.getHalf(0));
         storeLong(destination + 8, reg.getHalf(1));
     }
+    virtual void storeShortInteger(Address destination, ShortInteger value) = 0;
+    virtual void storeByteInteger(Address destination, ByteInteger value) = 0;
     virtual Ordinal load(Address destination) = 0;
     virtual Ordinal atomicLoad(Address destination) = 0;
     virtual ByteOrdinal loadByte(Address destination) = 0;
@@ -1053,7 +1055,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             ipRelativeBranch(instruction.getDisplacement()) ;
             /// @todo generate fault here
             break;
-        // CTRL Format opcodes
+            // CTRL Format opcodes
         case Opcode::b:
             break;
         case Opcode::bal:
@@ -1229,8 +1231,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto src2 = getRegister(instruction.getSrc2()).getInteger();
                 cmpi(getRegister(instruction.getSrc1()).getInteger(), src2);
                 getRegister(instruction.getSrcDest(false)).setInteger(src2 + 1);
-                    }();
-                    break;
+            }();
+            break;
         case Opcode::cmpobg:
             cmpobx(0b001);
             break;
@@ -1445,7 +1447,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // taken from the i960Sx manual
                 dest.setOrdinal(src2 - ((src2 / src1) * src1));
             }();
-                break;
+            break;
         case Opcode::rotate:
             [this, &instruction]() {
                 auto rotateOperation = [](Ordinal src, Ordinal length)  {
@@ -1562,7 +1564,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
                 /// @todo implement
             }();
-                break;
+            break;
 
         case Opcode::modac:
             [this, &instruction]() {
@@ -1643,12 +1645,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto len = getRegister(instruction.getSrc1()).getOrdinal();
-                if (len < 32) {
-                    auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                    dest.setOrdinal(src >> len);
-                } else {
-                    dest.setOrdinal(0);
-                }
+                /// @todo implement "speed" optimization by only getting src if we need it
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(src >> len);
             }();
             break;
         case Opcode::shli:
@@ -1714,22 +1713,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                         return;
                     }
                     --index;
-                    }
-                }();
-                break;
+                }
+            }();
+            break;
         case Opcode::syncf:
             syncf();
             break;
         case Opcode::atadd:
             [this, &instruction]() {
-               // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
-               // The initial value from memory is stored in dst (internally src/dst).
-               syncf();
-               auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
-               auto temp = atomicLoad(addr);
-               auto src = getRegister(instruction.getSrc2()).getOrdinal();
-               atomicStore(addr, temp + src);
-               getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
+                // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
+                // The initial value from memory is stored in dst (internally src/dst).
+                syncf();
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto temp = atomicLoad(addr);
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                atomicStore(addr, temp + src);
+                getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
             }();
             break;
         case Opcode::atmod:
@@ -1817,7 +1816,80 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 store(addr, src);
             }();
             break;
-
+        case Opcode::stob:
+            [this, &instruction]() {
+                auto addr = computeMemoryAddress(instruction);
+                auto src = getRegister(instruction.getSrcDest(true)).getByteOrdinal();
+                storeByte(addr, src);
+            }();
+            break;
+        case Opcode::stos:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrcDest(true)).getShortOrdinal();
+                storeShort(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stl:
+            [this, &instruction]() {
+                auto src = getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal();
+                storeLong(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stt:
+            [this, &instruction]() {
+                auto& src = getTripleRegister(instruction.getSrcDest(true));
+                storeTriple(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stq:
+            [this, &instruction]() {
+                auto& src = getQuadRegister(instruction.getSrcDest(true));
+                storeQuad(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stib:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrcDest(true)).getInteger();
+                storeByteInteger(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stis:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrcDest(true)).getInteger();
+                storeShortInteger(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::shri:
+            [this, &instruction]() {
+                static constexpr Integer bitPositions[32] {
+#define X(base) 1 << (base + 0), 1 << (base + 1), 1 << (base + 2), 1 << (base + 3)
+                        X(0), X(4), X(8), X(12),
+                        X(16), X(20), X(24), X(28)
+#undef X
+                };
+                /*
+                 * if (src >= 0) {
+                 *  if (len < 32) {
+                 *      dest <- src/2^len
+                 *  } else {
+                 *      dest <- 0
+                 *  }
+                 * }else {
+                 *  if (len < 32) {
+                 *      dest <- (src - 2^len + 1)/2^len;
+                 *  } else {
+                 *      dest <- -1;
+                 *   }
+                 * }
+                 *
+                 */
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc2()).getInteger();
+                auto len = getRegister(instruction.getSrc1()).getInteger();
+                /// @todo perhaps implement the extra logic if necessary
+                dest.setInteger(src >> len);
+            }();
+            break;
     }
 }
 
