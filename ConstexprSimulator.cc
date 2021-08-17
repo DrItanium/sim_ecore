@@ -897,6 +897,27 @@ void
 Core::generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept {
 
 }
+Ordinal
+Core::computeMemoryAddress(const Instruction &instruction) noexcept {
+    // assume we are looking at a correct style instruction :)
+    if (instruction.isDoubleWide()) {
+        // also make sure that we jump ahead by eight bytes instead of four
+        advanceIPBy += 4;
+    }
+    switch (instruction.getMemFormatMode()) {
+        case MEMFormatMode::MEMA_AbsoluteOffset:
+        case MEMFormatMode::MEMA_RegisterIndirectWithOffset:
+        case MEMFormatMode::MEMB_AbsoluteDisplacement:
+        case MEMFormatMode::MEMB_IPWithDisplacement:
+        case MEMFormatMode::MEMB_IndexWithDisplacement:
+        case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement:
+        case MEMFormatMode::MEMB_RegisterIndirectWithIndexAndDisplacement:
+        case MEMFormatMode::MEMB_RegisterIndirect:
+        case MEMFormatMode::MEMB_RegisterIndirectWithIndex:
+        default:
+            return 0;
+    }
+}
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     static constexpr Ordinal bitPositions[32] {
