@@ -966,7 +966,7 @@ Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcep
 }
 
 void
-Core::generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept {
+Core::generateFault(ByteOrdinal /*faultType*/, ByteOrdinal /*faultSubtype*/) noexcept {
 
 }
 Ordinal
@@ -1810,11 +1810,12 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setInteger(loadShort(computeMemoryAddress(instruction)));
             }();
             break;
+
     }
 }
 
 
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
     return 0;
 }
