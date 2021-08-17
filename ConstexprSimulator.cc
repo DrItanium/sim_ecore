@@ -1676,6 +1676,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::call:
             [this, &instruction]() {
                 /// @todo implement
+                // wait for any uncompleted instructions to finish
+                auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+                auto fp = getFramePointer().getOrdinal();
+                getRIP().setOrdinal(ip_.getOrdinal());
+                /// @todo implement support for caching register frames
+                saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+                getPFP().setOrdinal(fp);
+                getPFP().setOrdinal(temp);
+                getStackPointer().setOrdinal(temp + 64);
             }();
             break;
         case Opcode::callx:
