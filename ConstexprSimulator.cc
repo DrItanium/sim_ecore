@@ -1011,42 +1011,46 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             // COBR Format
         case Opcode::testno:
             [this, &instruction]() {
-
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b000>() ? 1 : 0);
             }();
             break;
         case Opcode::testg:
             [this, &instruction]() {
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b001>() ? 1 : 0);
 
             }();
             break;
         case Opcode::teste:
             [this, &instruction]() {
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b010>() ? 1 : 0);
 
             }();
             break;
         case Opcode::testge:
             [this, &instruction]() {
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b011>() ? 1 : 0);
 
             }();
             break;
         case Opcode::testl:
             [this, &instruction]() {
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b100>() ? 1 : 0);
 
             }();
             break;
         case Opcode::testne:
             [this, &instruction]() {
-
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b101>() ? 1 : 0);
             }();
             break;
         case Opcode::testle:
             [this, &instruction]() {
-
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b110>() ? 1 : 0);
             }();
             break;
         case Opcode::testo:
             [this, &instruction]() {
-
+                getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b111>() ? 1 : 0);
             }();
             break;
         case Opcode::bbc:
