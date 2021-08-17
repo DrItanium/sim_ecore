@@ -1593,6 +1593,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 /// @todo implement
             }();
             break;
+        case Opcode::mark:
+            [this, &instruction]() {
+                // Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
+                // The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
+                // controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
+
+                // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
+                /// @todo implement
+            }();
+                break;
         default:
             /// @todo implement fault invocation
             break;
