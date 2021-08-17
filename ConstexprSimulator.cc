@@ -1673,9 +1673,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 } else {
                     dest.setOrdinal(0);
                 }
-
             }();
             break;
+        case Opcode::shro:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto len = getRegister(instruction.getSrc1()).getOrdinal();
+                if (len < 32) {
+                    auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                    dest.setOrdinal(src >> len);
+                } else {
+                    dest.setOrdinal(0);
+                }
+            }();
+            break;
+
+
     }
 }
 
