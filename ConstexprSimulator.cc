@@ -696,17 +696,19 @@ protected:
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
     virtual void storeLong(Address destination, LongOrdinal value) = 0;
-    virtual void storeWord(Address destination, Ordinal value) = 0;
+    virtual void atomicStore(Address destination, Ordinal value) = 0;
+    virtual void store(Address destination, Ordinal value) = 0;
     virtual void storeTriple(Address destination, const TripleRegister& reg) {
-        storeWord(destination + 0, reg.getOrdinal(0));
-        storeWord(destination + 4, reg.getOrdinal(1));
-        storeWord(destination + 8, reg.getOrdinal(2));
+        store(destination + 0, reg.getOrdinal(0));
+        store(destination + 4, reg.getOrdinal(1));
+        store(destination + 8, reg.getOrdinal(2));
     }
     virtual void storeQuad(Address destination, const QuadRegister& reg) {
         storeLong(destination + 0, reg.getHalf(0));
         storeLong(destination + 8, reg.getHalf(1));
     }
     virtual Ordinal load(Address destination) = 0;
+    virtual Ordinal atomicLoad(Address destination) = 0;
     virtual ByteOrdinal loadByte(Address destination) = 0;
     virtual ShortOrdinal loadShort(Address destination) = 0;
     virtual LongOrdinal loadLong(Address destination) = 0;
@@ -762,6 +764,7 @@ private:
     void generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept;
     void cmpi(Integer src1, Integer src2) noexcept;
     void cmpo(Ordinal src1, Ordinal src2) noexcept;
+    void syncf() noexcept;
     void cycle() noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
@@ -782,6 +785,10 @@ private:
     Ordinal c_;
     bool executing_ = false;
 };
+void
+Core::syncf() noexcept {
+    // do nothing at this point
+}
 
 void
 Core::cycle() noexcept {
@@ -929,7 +936,7 @@ Core::loadInstruction(Address baseAddress) noexcept {
 void
 Core::saveRegisterFrame(const RegisterFrame &theFrame, Address baseAddress) noexcept {
     for (int i = 0; i < 16; ++i, baseAddress += 4) {
-        storeWord(baseAddress, theFrame.getRegister(i).getOrdinal());
+        store(baseAddress, theFrame.getRegister(i).getOrdinal());
     }
 }
 
@@ -1693,6 +1700,21 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     }
                 }();
                 break;
+        case Opcode::syncf:
+            syncf();
+            break;
+        case Opcode::atadd:
+            [this, &instruction]() {
+               // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
+               // The initial value from memory is stored in dst (internally src/dst).
+               syncf();
+               auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+               auto temp = atomicLoad(addr);
+               auto src = getRegister(instruction.getSrc2()).getOrdinal();
+               atomicStore(addr, temp + src);
+               getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
+            }();
+            break;
     }
 }
 
