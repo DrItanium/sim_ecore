@@ -413,6 +413,7 @@ private:
 union Register {
 public:
     constexpr explicit Register(Ordinal value = 0) noexcept : ord_(value) { }
+    constexpr bool getMostSignificantBit() const noexcept { return ord_ & 0x8000'0000; }
     constexpr auto getOrdinal() const noexcept { return ord_; }
     constexpr auto getInteger() const noexcept { return integer_; }
     constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
@@ -462,6 +463,22 @@ union ArithmeticControls {
 public:
     constexpr explicit ArithmeticControls(Ordinal value = 0) noexcept : ord_(value) { }
     constexpr auto getValue() const noexcept { return ord_; }
+    constexpr bool getOverflowBit() const noexcept { return getConditionCode() & 0b001; }
+    constexpr bool getCarryBit() const noexcept { return getConditionCode() & 0b001; }
+    void setCarryBit(bool value) noexcept {
+        if (value) {
+            setConditionCode(getConditionCode() | 0b010);
+        } else {
+            setConditionCode(getConditionCode() & 0b101);
+        }
+    }
+    void setOverflowBit(bool value) noexcept {
+        if (value) {
+            setConditionCode(getConditionCode() | 0b001);
+        } else {
+            setConditionCode(getConditionCode() & 0b110);
+        }
+    }
     void setValue(Ordinal value) noexcept { ord_ = value; }
 #define X(name, field, type) \
         constexpr type get ## name () const noexcept { return field ; } \
@@ -1734,6 +1751,29 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto src = getRegister(instruction.getSrc2()).getOrdinal();
                 auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
                 ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
+            }();
+            break;
+        case Opcode::addc:
+            [this, &instruction]() {
+                auto& src1 = getRegister(instruction.getSrc1());
+                auto& src2 = getRegister(instruction.getSrc2());
+                union {
+                    LongOrdinal value = 0;
+                    Ordinal halves[2];
+                } result;
+                result.value = static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0);
+                // the result will be larger than 32-bits so we have to keep that in mind
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(result.halves[0]);
+                // do computation here
+                ac_.setConditionCode(0);
+                if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+                    // set the overflow bit in ac
+                    ac_.setOverflowBit(1);
+                }
+                ac_.setCarryBit(result.halves[1] != 0);
+
+                // set the carry out bit
             }();
             break;
     }
