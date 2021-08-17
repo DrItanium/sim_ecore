@@ -326,9 +326,8 @@ public:
         }
     }
     constexpr uint8_t getScale() const noexcept {
-        constexpr uint8_t scaleFactors[8] { 1, 2, 4, 8, 16, 0, 0, 0, };
         if (isMEMBFormat()) {
-            return scaleFactors[memb.scale];
+            return memb.scale; // this is already setup for proper shifting
         } else {
             return 0;
         }
@@ -906,16 +905,28 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
     }
     switch (instruction.getMemFormatMode()) {
         case MEMFormatMode::MEMA_AbsoluteOffset:
+            return instruction.getOffset();
         case MEMFormatMode::MEMA_RegisterIndirectWithOffset:
-        case MEMFormatMode::MEMB_AbsoluteDisplacement:
-        case MEMFormatMode::MEMB_IPWithDisplacement:
-        case MEMFormatMode::MEMB_IndexWithDisplacement:
-        case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement:
-        case MEMFormatMode::MEMB_RegisterIndirectWithIndexAndDisplacement:
+            return instruction.getOffset() + getRegister(instruction.getABase()).getOrdinal();
         case MEMFormatMode::MEMB_RegisterIndirect:
+            return getRegister(instruction.getABase()).getOrdinal();
         case MEMFormatMode::MEMB_RegisterIndirectWithIndex:
+            return getRegister(instruction.getABase()).getOrdinal() +
+                   (getRegister(instruction.getIndex()).getOrdinal() << instruction.getScale());
+        case MEMFormatMode::MEMB_IPWithDisplacement:
+            return static_cast<Ordinal>(ip_.getInteger() + instruction.getDisplacement() + 8);
+        case MEMFormatMode::MEMB_AbsoluteDisplacement:
+            return instruction.getDisplacement(); // this will return the optional displacement
+        case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement:
+            return static_cast<Ordinal>(getRegister(instruction.getABase()).getInteger() + instruction.getDisplacement());
+        case MEMFormatMode::MEMB_IndexWithDisplacement:
+            return static_cast<Ordinal>((getRegister(instruction.getIndex()).getInteger() << instruction.getScale()) + instruction.getDisplacement());
+        case MEMFormatMode::MEMB_RegisterIndirectWithIndexAndDisplacement:
+            return static_cast<Ordinal>(
+                    getRegister(instruction.getABase()).getInteger() +
+                    (getRegister(instruction.getIndex()).getInteger() << instruction.getScale()) + instruction.getDisplacement());
         default:
-            return 0;
+            return -1;
     }
 }
 void
