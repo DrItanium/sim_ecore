@@ -651,7 +651,9 @@ private:
     void executeInstruction(const Instruction& instruction) noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
+    inline void saveLocals(Address baseAddress) noexcept { saveRegisterFrame(locals, baseAddress); }
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
+    inline void restoreLocals(Address baseAddress) noexcept { restoreRegisterFrame(locals, baseAddress); }
 private:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
