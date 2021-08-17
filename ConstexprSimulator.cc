@@ -1627,7 +1627,25 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 }
             }();
             break;
+        case Opcode::shli:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto len = getRegister(instruction.getSrc1()).getInteger();
+                auto src = getRegister(instruction.getSrc2()).getInteger();
+                dest.setInteger(src << len);
+            }();
+            break;
+        case Opcode::scanbyte:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto& src1 = getRegister(instruction.getSrc1());
+                auto& src2 = getRegister(instruction.getSrc2());
+                auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.getByteOrdinal(which) == src2.getByteOrdinal(which); };
+                ac_.setConditionCode((bytesEqual(0) || bytesEqual(1) || bytesEqual(2) || bytesEqual(3)) ? 0b010 : 0b000);
 
+
+            }();
+            break;
     }
 }
 
