@@ -1527,6 +1527,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
             }();
             break;
+        case Opcode::flushreg:
+            [this, &instruction]() {
+                /// @todo expand this instruction to dump saved register sets to stack in the right places
+                // currently this does nothing because I haven't implemented the register frame stack yet
+            }();
+            break;
+        case Opcode::fmark:
+            [this, &instruction]() {
+                // Generates a breakpoint trace-event. This instruction causes a breakpoint trace-event to be generated, regardless of the
+                // setting of the breakpoint trace mode flag (to be implemented), providing the trace-enable bit (bit 0) of the process
+                // controls is set.
+
+                // if pc.te == 1 then raiseFault(BreakpointTraceFault)
+                /// @todo implement
+            }();
+            break;
         default:
             /// @todo implement fault invocation
             break;
