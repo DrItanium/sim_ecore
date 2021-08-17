@@ -366,6 +366,8 @@ private:
         Ordinal opcode: 8;
     } reg;
     struct {
+        // normally the bottom two bits are ignored by the processor (at least on the Sx) and are forced to zero
+        // so it is immediately word aligned. No need to actually keep it that accurate
         Integer displacement: 13;
         Ordinal m1: 1;
         Ordinal src2: 5;
@@ -373,6 +375,8 @@ private:
         Ordinal opcode: 8;
     } cobr;
     struct {
+        // normally the bottom two bits are ignored by the processor (at least on the Sx) and are forced to zero
+        // so it is immediately word aligned. No need to actually keep it that accurate
         Integer displacement: 24;
         Ordinal opcode: 8;
     } ctrl;
@@ -706,6 +710,7 @@ public:
     const QuadRegister& getQuadRegister(RegisterIndex targetIndex) const;
 private:
     void ipRelativeBranch(Integer displacement) noexcept {
+        advanceIPBy = 0;
         ip_.setInteger(ip_.getInteger() + displacement);
     }
     Instruction loadInstruction(Address baseAddress) noexcept;
@@ -724,6 +729,7 @@ private:
 #ifdef NUMERICS_ARCHITECTURE
     ExtendedReal fpRegs[4] = { 0 };
 #endif
+    Ordinal advanceIPBy = 0;
 };
 
 Register&
@@ -860,6 +866,13 @@ Core::generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept {
 }
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
+    static constexpr Ordinal bitPositions[32] {
+#define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
+            X(0), X(4), X(8), X(12),
+            X(16), X(20), X(24), X(28)
+#undef X
+    };
+    advanceIPBy = 4;
     switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
         case Opcode::b:
@@ -917,7 +930,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::bl:
             [this, &instruction]() {
-
                 if (ac_.conditionCodeIs<0b100>()) {
                     ipRelativeBranch(instruction.getDisplacement());
                 }
@@ -1035,7 +1047,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::testl:
             [this, &instruction]() {
                 getRegister(instruction.getSrc1()).setOrdinal(ac_.conditionCodeIs<0b100>() ? 1 : 0);
-
             }();
             break;
         case Opcode::testne:
@@ -1054,13 +1065,37 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::bbc:
+            // branch if bit is clear
             [this, &instruction]() {
-
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                advanceIPBy = 0;
+                if ((bitpos & src) == 0) {
+                    ac_.setConditionCode(0b010);
+                    // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+                    // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+                    ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
+                } else {
+                    ac_.setConditionCode(0b000);
+                    ip_.setOrdinal(ip_.getOrdinal() + 4);
+                }
             }();
             break;
         case Opcode::bbs:
             [this, &instruction]() {
 
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                advanceIPBy = 0;
+                if ((bitpos & src) != 0) {
+                    ac_.setConditionCode(0b010);
+                    // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+                    // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+                    ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
+                } else {
+                    ac_.setConditionCode(0b000);
+                    ip_.setOrdinal(ip_.getOrdinal() + 4);
+                }
             }();
             break;
         case Opcode::cmpobg:
@@ -1366,12 +1401,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::alterbit:
             [this, &instruction]() {
-                constexpr Ordinal bitPositions[32] {
-#define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
-                    X(0), X(4), X(8), X(12),
-                    X(16), X(20), X(24), X(28)
-#undef X
-                };
                 auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
                 auto src = getRegister(instruction.getSrc2()).getOrdinal();
                 auto& dest = getRegister(instruction.getSrcDest(false));
