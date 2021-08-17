@@ -700,6 +700,15 @@ public:
     virtual ByteOrdinal loadByte(Address destination) = 0;
     virtual ShortOrdinal loadShort(Address destination) = 0;
     virtual LongOrdinal loadLong(Address destination) = 0;
+    void load(Address destination, TripleRegister& reg) noexcept {
+        reg.setOrdinal(load(destination + 0), 0);
+        reg.setOrdinal(load(destination + 4), 1);
+        reg.setOrdinal(load(destination + 8), 2);
+    }
+    void load(Address destination, QuadRegister& reg) noexcept {
+        reg.setHalf(loadLong(destination + 0), 0);
+        reg.setHalf(loadLong(destination + 8), 1);
+    }
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
     DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
@@ -723,6 +732,7 @@ private:
     inline void saveLocals(Address baseAddress) noexcept { saveRegisterFrame(locals, baseAddress); }
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
     inline void restoreLocals(Address baseAddress) noexcept { restoreRegisterFrame(locals, baseAddress); }
+    Ordinal computeMemoryAddress(const Instruction& instruction) noexcept;
 private:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
@@ -1250,7 +1260,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             // MEM Format
         case Opcode::ldob:
             [this, &instruction]() {
-
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(loadByte(computeMemoryAddress(instruction)));
             }();
             break;
         case Opcode::stob:
@@ -1275,7 +1286,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::ldos:
             [this, &instruction]() {
-
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(loadShort(computeMemoryAddress(instruction)));
             }();
             break;
         case Opcode::stos:
@@ -1290,7 +1302,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::ld:
             [this, &instruction]() {
-
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(load(computeMemoryAddress(instruction)));
             }();
             break;
         case Opcode::st:
@@ -1300,7 +1313,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::ldl:
             [this, &instruction]() {
-
+                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+                dest.setLongOrdinal(loadLong(computeMemoryAddress(instruction)));
             }();
             break;
         case Opcode::stl:
@@ -1310,7 +1324,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::ldt:
             [this, &instruction]() {
-
+                load(computeMemoryAddress(instruction),
+                     getTripleRegister(instruction.getSrcDest(false)));
             }();
             break;
         case Opcode::stt:
@@ -1320,7 +1335,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::ldq:
             [this, &instruction]() {
-
+                load(computeMemoryAddress(instruction),
+                     getQuadRegister(instruction.getSrcDest(false)));
             }();
             break;
         case Opcode::stq:
