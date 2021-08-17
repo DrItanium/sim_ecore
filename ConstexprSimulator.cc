@@ -16,6 +16,13 @@ using LongReal = double;
 using ExtendedReal = long double;
 #endif
 
+enum class Opcode : FullOpcode  {
+    None = 0,
+#define X(value, name) name = value ,
+#include "OpcodesRaw.h"
+#undef X
+    Bad = 0xFFFF,
+};
 
 enum class RegisterIndex : uint8_t {
     Local0 = 0,
