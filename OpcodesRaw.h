@@ -83,7 +83,9 @@
             X(0x5A6, cmpdeco)
             X(0x5A7, cmpdeci)
             X(0x5AC, scanbyte)
+#ifdef CORE_ARCHITECTURE_EXTENSIONS
             X(0x5AD, bswap)
+#endif
             X(0x5AE, chkbit)
             X(0x5B0, addc)
             X(0x5B2, subc)
