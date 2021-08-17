@@ -633,6 +633,42 @@ public:
             X(28),
 #undef X
     };
+    static constexpr DoubleRegister LongOrdinalLiterals[32] {
+#define X(base) DoubleRegister(base + 0), DoubleRegister(base + 1), DoubleRegister(base + 2), DoubleRegister(base + 3)
+            X(0),
+            X(4),
+            X(8),
+            X(12),
+            X(16),
+            X(20),
+            X(24),
+            X(28),
+#undef X
+};
+    static constexpr TripleRegister TripleOrdinalLiterals[32] {
+#define X(base) TripleRegister(base + 0), TripleRegister(base + 1), TripleRegister(base + 2), TripleRegister(base + 3)
+            X(0),
+            X(4),
+            X(8),
+            X(12),
+            X(16),
+            X(20),
+            X(24),
+            X(28),
+#undef X
+};
+    static constexpr QuadRegister QuadOrdinalLiterals[32] {
+#define X(base) QuadRegister(base + 0), QuadRegister(base + 1), QuadRegister(base + 2), QuadRegister(base + 3)
+            X(0),
+            X(4),
+            X(8),
+            X(12),
+            X(16),
+            X(20),
+            X(24),
+            X(28),
+#undef X
+};
 public:
     Core() : ip_(0), ac_(0) { };
     virtual ~Core() = default;
@@ -664,6 +700,9 @@ public:
     QuadRegister& getQuadRegister(RegisterIndex targetIndex);
     const QuadRegister& getQuadRegister(RegisterIndex targetIndex) const;
 private:
+    void ipRelativeBranch(Integer displacement) noexcept {
+        ip_.setInteger(ip_.getInteger() + displacement);
+    }
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
 private:
@@ -684,9 +723,48 @@ private:
 Register&
 Core::getRegister(RegisterIndex targetIndex) {
     if (isLocalRegister(targetIndex)) {
-        return locals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+        return locals.getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
-        return globals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+        return globals.getRegister(static_cast<uint8_t>(targetIndex));
+    } else if (isLiteral(targetIndex)) {
+        throw "Literals cannot be modified";
+    } else {
+        throw "Illegal register requested";
+    }
+}
+
+DoubleRegister&
+Core::getDoubleRegister(RegisterIndex targetIndex) {
+    if (isLocalRegister(targetIndex)) {
+        return locals.getDoubleRegister(static_cast<int>(targetIndex));
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.getDoubleRegister(static_cast<int>(targetIndex));
+    } else if (isLiteral(targetIndex)) {
+        throw "Literals cannot be modified";
+    } else {
+        throw "Illegal register requested";
+    }
+}
+
+TripleRegister&
+Core::getTripleRegister(RegisterIndex targetIndex) {
+    if (isLocalRegister(targetIndex)) {
+        return locals.getTripleRegister(static_cast<int>(targetIndex));
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.getTripleRegister(static_cast<int>(targetIndex));
+    } else if (isLiteral(targetIndex)) {
+        throw "Literals cannot be modified";
+    } else {
+        throw "Illegal register requested";
+    }
+}
+
+QuadRegister&
+Core::getQuadRegister(RegisterIndex targetIndex) {
+    if (isLocalRegister(targetIndex)) {
+        return locals.getQuadRegister(static_cast<int>(targetIndex));
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.getQuadRegister(static_cast<int>(targetIndex));
     } else if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
@@ -697,11 +775,53 @@ Core::getRegister(RegisterIndex targetIndex) {
 const Register&
 Core::getRegister(RegisterIndex targetIndex) const {
     if (isLocalRegister(targetIndex)) {
-        return locals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+        return locals.getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
-        return globals.gprs[static_cast<uint8_t>(targetIndex) & 0b1111];
+        return globals.getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isLiteral(targetIndex)) {
         return OrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
+    } else {
+        throw "Illegal register requested";
+    }
+}
+
+const DoubleRegister&
+Core::getDoubleRegister(RegisterIndex targetIndex) const {
+    if (isLocalRegister(targetIndex)) {
+        return locals.getDoubleRegister(static_cast<uint8_t>(targetIndex));
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.getDoubleRegister(static_cast<uint8_t>(targetIndex));
+    } else if (isLiteral(targetIndex)) {
+        /// @todo implement double register literal support, according to the docs it is allowed
+        return LongOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
+    } else {
+        throw "Illegal register requested";
+    }
+}
+
+const TripleRegister&
+Core::getTripleRegister(RegisterIndex targetIndex) const {
+    if (isLocalRegister(targetIndex)) {
+        return locals.getTripleRegister(static_cast<uint8_t>(targetIndex));
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.getTripleRegister(static_cast<uint8_t>(targetIndex));
+    } else if (isLiteral(targetIndex)) {
+        /// @todo implement double register literal support, according to the docs it is allowed
+        return TripleOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
+    } else {
+        throw "Illegal register requested";
+    }
+}
+
+const QuadRegister&
+Core::getQuadRegister(RegisterIndex targetIndex) const {
+    if (isLocalRegister(targetIndex)) {
+        return locals.getQuadRegister(static_cast<uint8_t>(targetIndex));
+    } else if (isGlobalRegister(targetIndex)) {
+        return globals.getQuadRegister(static_cast<uint8_t>(targetIndex));
+    } else if (isLiteral(targetIndex)) {
+        /// @todo implement double register literal support, according to the docs it is allowed
+        return QuadOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
         throw "Illegal register requested";
     }
@@ -734,7 +854,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         // CTRL Format opcodes
         case Opcode::b:
             [this, &instruction]() {
-
+                ipRelativeBranch(instruction.getDisplacement());
             }();
             break;
         case Opcode::call:
@@ -749,12 +869,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::bal:
             [this, &instruction]() {
-
+                auto& g14 = getRegister(RegisterIndex::Global14);
+                g14.setOrdinal(ip_.getOrdinal() + 4);
+                ipRelativeBranch(instruction.getDisplacement());
             }();
             break;
         case Opcode::bno:
             [this, &instruction]() {
-
+                if (ac_.conditionCodeIs<0b000>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
             }();
             break;
         case Opcode::bg:
