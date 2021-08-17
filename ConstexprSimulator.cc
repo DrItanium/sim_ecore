@@ -1517,7 +1517,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setLongOrdinal(src2 * src1);
             }();
             break;
-        case Opcode::extract
+        case Opcode::extract:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto bitpos = getRegister(instruction.getSrc1()).getOrdinal();
+                auto len = getRegister(instruction.getSrc2()).getOrdinal();
+                // taken from the Hx manual as it isn't insane
+                auto shiftAmount = bitpos > 32 ? 32 : bitpos;
+                dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
+            }();
+            break;
         default:
             /// @todo implement fault invocation
             break;
