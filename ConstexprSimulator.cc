@@ -1637,6 +1637,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     dest.setInteger(result);
                 }
             }();
+            break;
+        case Opcode::modify:
+            [this, &instruction]() {
+                // this is my encode operation but expanded out
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal((src & mask) | (dest.getOrdinal() & ~mask));
+            }();
+            break;
         default:
             /// @todo implement fault invocation
             break;
