@@ -1229,6 +1229,24 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::cmpibo:
             cmpibx(0b111);
             break;
+        case Opcode::concmpi:
+            [this, &instruction]() {
+                if ((ac_.getConditionCode() & 0b100) == 0) {
+                    auto src1 = getRegister(instruction.getSrc1()).getInteger();
+                    auto src2 = getRegister(instruction.getSrc2()).getInteger();
+                    ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
+                }
+            }();
+            break;
+        case Opcode::concmpo:
+            [this, &instruction]() {
+                if ((ac_.getConditionCode() & 0b100) == 0) {
+                    auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
+                    auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+                    ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
+                }
+            }();
+            break;
             // MEM Format
         case Opcode::ldob:
             [this, &instruction]() {
