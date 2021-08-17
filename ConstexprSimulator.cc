@@ -1715,6 +1715,20 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
             }();
             break;
+        case Opcode::atmod:
+            [this, &instruction]() {
+                // copies the src/dest value (logical version) into the memory location specifeid by src1.
+                // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
+                // value from memory is stored in src/dest
+                syncf();
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto temp = atomicLoad(addr);
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc2()).getOrdinal();
+                atomicStore(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
+                dest.setOrdinal(temp);
+            }();
+            break;
     }
 }
 

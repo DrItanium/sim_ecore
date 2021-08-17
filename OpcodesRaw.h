@@ -94,7 +94,10 @@
             X(0x5B5, inten)
 #endif
             X(0x5CC, mov)
+#ifdef CORE_ARCHITECTURE_EXTENSIONS
+// not found on Kx and Sx processors
             X(0x5D8, eshro)
+#endif
             X(0x5DC, movl)
             X(0x5EC, movt)
             X(0x5FC, movq)
