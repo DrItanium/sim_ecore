@@ -250,6 +250,7 @@ public:
         }
         return normalOpcode;
     }
+    constexpr auto identifyOpcode() const noexcept { return static_cast<Opcode>(getOpcode()); }
     constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
     constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getOpcode()); }
     constexpr auto isCOBRFormat() const noexcept { return ::isCOBRFormat(getOpcode()); }
@@ -628,7 +629,7 @@ public:
             X(24),
             X(28),
 #undef X
-                };
+    };
 public:
     Core() : ip_(0), ac_(0) { };
     virtual ~Core() = default;
@@ -715,6 +716,249 @@ Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcep
     for (auto& reg : theFrame.gprs) {
         reg.setOrdinal(load(baseAddress));
         baseAddress += 4;
+    }
+}
+
+void
+Core::executeInstruction(const Instruction &instruction) noexcept {
+    switch (instruction.identifyOpcode()) {
+        // REG format
+        case Opcode::addi:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setInteger(getRegister(instruction.getSrc2()).getInteger() +
+                                                                      getRegister(instruction.getSrc1()).getInteger());
+            }();
+        case Opcode::addo:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() +
+                                                                      getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+            // CTRL Format opcodes
+        case Opcode::b:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::call:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ret:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bal:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bno:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bg:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::be:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bge:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bl:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bne:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ble:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bo:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faultno:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faultg:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faulte:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faultge:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faultl:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faultne:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faultle:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::faulto:
+            [this, &instruction]() {
+
+            }();
+            break;
+            // COBR Format
+        case Opcode::testno:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::testg:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::teste:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::testge:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::testl:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::testne:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::testle:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::testo:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bbc:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bbs:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpobg:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpobe:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpobge:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpobl:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpobne:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpoble:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpibno:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpibg:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpibe:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpibge:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpibl:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpibne:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpible:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::cmpibo:
+            [this, &instruction]() {
+
+            }();
+            break;
+        default:
+            /// @todo implement fault invocation
+            break;
     }
 }
 
