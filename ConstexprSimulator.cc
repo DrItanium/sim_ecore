@@ -956,6 +956,107 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 
             }();
             break;
+            // MEM Format
+        case Opcode::ldob:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::stob:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::bx:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::balx:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::callx:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ldos:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::stos:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::lda:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ld:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::st:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ldl:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::stl:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ldt:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::stt:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ldq:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::stq:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ldib:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::stib:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::ldis:
+            [this, &instruction]() {
+
+            }();
+            break;
+        case Opcode::stis:
+            [this, &instruction]() {
+
+            }();
+            break;
         default:
             /// @todo implement fault invocation
             break;

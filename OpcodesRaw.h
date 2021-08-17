@@ -173,6 +173,7 @@
             X(0x900, ld)
             X(0x920, st )
             X(0x980, ldl)
+            X(0x9A0, stl)
             X(0xA00, ldt)
             X(0xA20, stt)
             X(0xB00, ldq)
