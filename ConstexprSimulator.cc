@@ -1490,6 +1490,34 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 }
             }();
             break;
+        case Opcode::ediv:
+            [this, &instruction]() {
+                auto denomord = getRegister(instruction.getSrc1()).getOrdinal();
+                if (denomord == 0) {
+                    // raise an arithmetic zero divide fault
+                    generateFault(0, 0); /// @todo flesh this out
+                } else {
+                    auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
+                    auto denominator = static_cast<LongOrdinal>(denomord);
+                    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+                    // taken from the manual
+                    auto remainder = static_cast<Ordinal>(numerator - (numerator / denominator) * denominator);
+                    auto quotient = static_cast<Ordinal>(numerator / denominator);
+                    dest.setOrdinal(remainder, 0);
+                    dest.setOrdinal(quotient, 1);
+                }
+            }();
+            break;
+        case Opcode::emul:
+            [this, &instruction]() {
+                auto src2 = static_cast<LongOrdinal>(getRegister(instruction.getSrc2()).getOrdinal());
+                auto src1 = static_cast<LongOrdinal>(getRegister(instruction.getSrc2()).getOrdinal());
+                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+                // taken from the manual
+                dest.setLongOrdinal(src2 * src1);
+            }();
+            break;
+        case Opcode::extract
         default:
             /// @todo implement fault invocation
             break;
