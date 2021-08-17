@@ -104,6 +104,10 @@ enum class RegisterIndex : uint8_t {
     Literal1_0f = 0b010'10110,
 #endif
     Bad = 0b1111'1111,
+    PFP = Local0,
+    SP = Local1,
+    RIP = Local2,
+    FP = Global15,
 };
 static_assert(static_cast<uint8_t>(RegisterIndex::Literal0) == 0b1'00000, "Literal 0 needs to be 0b100000 to accurately reflect the i960 design");
 
@@ -678,22 +682,22 @@ public:
 #undef X
 };
 public:
-    Core() : ip_(0), ac_(0) { };
+public:
+    explicit Core(Ordinal salign = 4) : ip_(0), ac_(0), salign_(salign), c_((salign * 16) - 1) { };
     virtual ~Core() = default;
+protected:
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
     virtual void storeLong(Address destination, LongOrdinal value) = 0;
     virtual void storeWord(Address destination, Ordinal value) = 0;
-    virtual void storeTriple(Address destination, Ordinal lowest, Ordinal middle, Ordinal highest) {
-        storeWord(destination + 0, lowest);
-        storeWord(destination + 4, middle);
-        storeWord(destination + 8, highest);
+    virtual void storeTriple(Address destination, const TripleRegister& reg) {
+        storeWord(destination + 0, reg.getOrdinal(0));
+        storeWord(destination + 4, reg.getOrdinal(1));
+        storeWord(destination + 8, reg.getOrdinal(2));
     }
-    virtual void storeQuad(Address destination, Ordinal a, Ordinal b, Ordinal c, Ordinal d) {
-        storeWord(destination + 0, a);
-        storeWord(destination + 4, b);
-        storeWord(destination + 8, c);
-        storeWord(destination + 12, d);
+    virtual void storeQuad(Address destination, const QuadRegister& reg) {
+        storeLong(destination + 0, reg.getHalf(0));
+        storeLong(destination + 8, reg.getHalf(1));
     }
     virtual Ordinal load(Address destination) = 0;
     virtual ByteOrdinal loadByte(Address destination) = 0;
@@ -716,6 +720,31 @@ public:
     const TripleRegister& getTripleRegister(RegisterIndex targetIndex) const;
     QuadRegister& getQuadRegister(RegisterIndex targetIndex);
     const QuadRegister& getQuadRegister(RegisterIndex targetIndex) const;
+    Register& getStackPointer() noexcept {
+        return getRegister(RegisterIndex::SP);
+    }
+    const Register& getStackPointer() const noexcept {
+        return getRegister(RegisterIndex::SP);
+    }
+    Register& getFramePointer() noexcept {
+        return getRegister(RegisterIndex::FP);
+    }
+    const Register& getFramePointer() const noexcept {
+        return getRegister(RegisterIndex::FP);
+    }
+    Register& getPFP() noexcept {
+        return getRegister(RegisterIndex::PFP);
+    }
+    const Register& getPFP() const noexcept {
+        return getRegister(RegisterIndex::PFP);
+    }
+    Register& getRIP() noexcept {
+        return getRegister(RegisterIndex::RIP);
+    }
+    const Register& getRIP() const noexcept {
+        return getRegister(RegisterIndex::RIP);
+    }
+
 private:
     void ipRelativeBranch(Integer displacement) noexcept {
         advanceIPBy = 0;
@@ -741,6 +770,8 @@ private:
     ExtendedReal fpRegs[4] = { 0 };
 #endif
     Ordinal advanceIPBy = 0;
+    Ordinal salign_;
+    Ordinal c_;
 };
 
 void
@@ -969,16 +1000,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::b:
             [this, &instruction]() {
                 ipRelativeBranch(instruction.getDisplacement());
-            }();
-            break;
-        case Opcode::call:
-            [this, &instruction]() {
-
-            }();
-            break;
-        case Opcode::ret:
-            [this, &instruction]() {
-
             }();
             break;
         case Opcode::bal:
@@ -1299,21 +1320,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stob:
             [this, &instruction]() {
 
+                /// @todo implement
             }();
             break;
         case Opcode::bx:
             [this, &instruction]() {
-
+                advanceIPBy = 0;
+                ip_.setOrdinal(computeMemoryAddress(instruction));
             }();
             break;
         case Opcode::balx:
             [this, &instruction]() {
-
-            }();
-            break;
-        case Opcode::callx:
-            [this, &instruction]() {
-
+                auto& g14 = getRegister(RegisterIndex::Global14);
+                auto address = computeMemoryAddress(instruction);
+                g14.setOrdinal(ip_.getOrdinal() + advanceIPBy);
+                ip_.setOrdinal(address);
+                advanceIPBy = 0;
             }();
             break;
         case Opcode::ldos:
@@ -1448,6 +1470,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::notbit:
             [this, &instruction]() {
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(src ^ bitpos);
             }();
             break;
         case Opcode::setbit:
@@ -1647,6 +1673,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal((src & mask) | (dest.getOrdinal() & ~mask));
             }();
             break;
+        case Opcode::call:
+            [this, &instruction]() {
+                /// @todo implement
+            }();
+            break;
+        case Opcode::callx:
+            [this, &instruction]() {
+
+                /// @todo implement
+            }();
+            break;
+        case Opcode::ret:
+            [this, &instruction]() {
+                            /// @todo implement
+                        }();
+                        break;
         default:
             /// @todo implement fault invocation
             break;
