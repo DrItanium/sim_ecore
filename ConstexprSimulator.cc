@@ -1334,12 +1334,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(loadByte(computeMemoryAddress(instruction)));
             }();
             break;
-        case Opcode::stob:
-            [this, &instruction]() {
-
-                /// @todo implement
-            }();
-            break;
         case Opcode::bx:
             [this, &instruction]() {
                 advanceIPBy = 0;
@@ -1361,11 +1355,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(loadShort(computeMemoryAddress(instruction)));
             }();
             break;
-        case Opcode::stos:
-            [this, &instruction]() {
-
-            }();
-            break;
         case Opcode::lda:
             [this, &instruction]() {
                 // compute the effective address (memory address) and store it in destination
@@ -1379,20 +1368,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(load(computeMemoryAddress(instruction)));
             }();
             break;
-        case Opcode::st:
-            [this, &instruction]() {
-
-            }();
-            break;
         case Opcode::ldl:
             [this, &instruction]() {
                 auto& dest = getDoubleRegister(instruction.getSrcDest(false));
                 dest.setLongOrdinal(loadLong(computeMemoryAddress(instruction)));
-            }();
-            break;
-        case Opcode::stl:
-            [this, &instruction]() {
-
             }();
             break;
         case Opcode::ldt:
@@ -1401,40 +1380,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                      getTripleRegister(instruction.getSrcDest(false)));
             }();
             break;
-        case Opcode::stt:
-            [this, &instruction]() {
-
-            }();
-            break;
         case Opcode::ldq:
             [this, &instruction]() {
                 load(computeMemoryAddress(instruction),
                      getQuadRegister(instruction.getSrcDest(false)));
-            }();
-            break;
-        case Opcode::stq:
-            [this, &instruction]() {
-
-            }();
-            break;
-        case Opcode::ldib:
-            [this, &instruction]() {
-
-            }();
-            break;
-        case Opcode::stib:
-            [this, &instruction]() {
-
-            }();
-            break;
-        case Opcode::ldis:
-            [this, &instruction]() {
-
-            }();
-            break;
-        case Opcode::stis:
-            [this, &instruction]() {
-
             }();
             break;
             // REG format
@@ -1659,16 +1608,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(ac_.modify(mask, src));
             }( );
             break;
-        case Opcode::modpc:
-            [this, &instruction]() {
-                /// @todo implement
-            }( );
-            break;
-        case Opcode::modtc:
-            [this, &instruction]() {
-                /// @todo implement
-            }( );
-            break;
         case Opcode::modi:
             [this, &instruction]() {
                 auto denominator = getRegister(instruction.getSrc1()) .getInteger();
@@ -1724,16 +1663,19 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 getStackPointer().setOrdinal(temp + 64);
             }();
             break;
-        case Opcode::calls:
+        case Opcode::shlo:
             [this, &instruction]() {
-                /// @todo implement
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto len = getRegister(instruction.getSrc1()).getOrdinal();
+                if (len < 32) {
+                    auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                    dest.setOrdinal(src << len);
+                } else {
+                    dest.setOrdinal(0);
+                }
+
             }();
-           break;
-        case Opcode::ret:
-            [this, &instruction]() {
-                            /// @todo implement
-                        }();
-                        break;
+            break;
     }
 }
 
