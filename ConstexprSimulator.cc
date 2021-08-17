@@ -448,6 +448,12 @@ private:
 class PreviousFramePointer {
 public:
     explicit PreviousFramePointer(Register& targetRegister) : reg_(targetRegister) {}
+    constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.getOrdinal() & 0b1000); }
+    void enablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() | 0b1000); }
+    void disablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() & ~static_cast<Ordinal>(0b1000)); }
+    void setPrereturnTraceFlag(bool value) const noexcept {
+        value ? enablePrereturnTraceFlag() : disablePrereturnTraceFlag();
+    }
 private:
     Register& reg_;
 };
@@ -600,6 +606,7 @@ private:
     ExtendedReal lreal_;
 #endif
 };
+
 union RegisterFrame {
     RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),
                                       Register(), Register(), Register(), Register(),
@@ -1435,7 +1442,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 getRegister(instruction.getSrcDest(false)).setInteger(getRegister(instruction.getSrc2()).getInteger() +
                                                                       getRegister(instruction.getSrc1()).getInteger());
-            }();
+            }( );
+            break;
         case Opcode::addo:
             [this, &instruction]() {
                 getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() +
@@ -1447,6 +1455,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 getRegister(instruction.getSrcDest(false)).setInteger(
                         getRegister(instruction.getSrc2()).getInteger() - getRegister(instruction.getSrc1()).getInteger());
             }();
+            break;
         case Opcode::subo:
             [this, &instruction]() {
                 getRegister(instruction.getSrcDest(false)).setOrdinal(
@@ -1458,6 +1467,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 getRegister(instruction.getSrcDest(false)).setInteger(
                         getRegister(instruction.getSrc2()).getInteger() * getRegister(instruction.getSrc1()).getInteger());
             }();
+            break;
         case Opcode::mulo:
             [this, &instruction]() {
                 getRegister(instruction.getSrcDest(false)).setOrdinal(
@@ -1533,6 +1543,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto len = getRegister(instruction.getSrc1()).getOrdinal();
                 dest.setOrdinal(rotateOperation(src, len));
             }();
+            break;
         case Opcode::mov:
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
@@ -1693,25 +1704,36 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 /// @todo implement support for caching register frames
                 saveRegisterFrame(locals, getFramePointer().getOrdinal());
                 ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+                /// @todo expand pfp and fp to accurately model how this works
                 getPFP().setOrdinal(fp);
-                getPFP().setOrdinal(temp);
+                getFramePointer().setOrdinal(temp);
                 getStackPointer().setOrdinal(temp + 64);
             }();
             break;
         case Opcode::callx:
             [this, &instruction]() {
-
-                /// @todo implement
+                // wait for any uncompleted instructions to finish
+                auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+                auto fp = getFramePointer().getOrdinal();
+                getRIP().setOrdinal(ip_.getOrdinal());
+                /// @todo implement support for caching register frames
+                saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                ip_.setInteger(computeMemoryAddress(instruction));
+                getPFP().setOrdinal(fp);
+                getFramePointer().setOrdinal(temp);
+                getStackPointer().setOrdinal(temp + 64);
             }();
             break;
+        case Opcode::calls:
+            [this, &instruction]() {
+                /// @todo implement
+            }();
+           break;
         case Opcode::ret:
             [this, &instruction]() {
                             /// @todo implement
                         }();
                         break;
-        default:
-            /// @todo implement fault invocation
-            break;
     }
 }
 

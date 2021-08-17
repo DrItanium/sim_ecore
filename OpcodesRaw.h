@@ -62,10 +62,12 @@
             X(0x591, addi)
             X(0x592, subo)
             X(0x593, subi )
+#ifdef CORE_ARCHITECTURE_EXTENSIONS
             X(0x594, cmpob)
             X(0x595, cmpib)
             X(0x596, cmpos)
             X(0x597, cmpis)
+#endif
             X(0x598, shro)
             X(0x59A, shrdi)
             X(0x59B, shri)
@@ -85,13 +87,20 @@
             X(0x5AE, chkbit)
             X(0x5B0, addc)
             X(0x5B2, subc)
+#ifdef CORE_ARCHITECTURE_EXTENSIONS
             X(0x5B4, intdis)
             X(0x5B5, inten)
+#endif
             X(0x5CC, mov)
             X(0x5D8, eshro)
             X(0x5DC, movl)
             X(0x5EC, movt)
             X(0x5FC, movq)
+            // i960Sx specific {
+            X(0x600, synmov)
+            X(0x601, synmovl)
+            X(0x602, synmovq)
+            // }
             X(0x610, atmod)
             X(0x612, atadd)
             X(0x640, spanbit)
@@ -106,10 +115,13 @@
             X(0x651, extract)
             X(0x654, modtc)
             X(0x655, modpc)
+#ifdef CORE_ARCHITECTURE_EXTENSIONS_JX_SPECIFIC
             X(0x658, intctl)
             X(0x659, sysctl)
             X(0x65B, icctl)
             X(0x65C, dcctl)
+            X(0x65D, halt)
+#endif
             X(0x660, calls)
             X(0x66B, mark)
             X(0x66C, fmark)
@@ -124,6 +136,7 @@
             X(0x748, remi)
             X(0x749, modi)
             X(0x74B, divi)
+#ifdef CORE_ARCHITECTURE_EXTENSIONS
             X(0x780, addono )
             X(0x781, addino )
             X(0x782, subono )
@@ -164,6 +177,7 @@
             X(0x7F2, suboo)
             X(0x7F3, subio)
             X(0x7F4, selo)
+#endif
             X(0x800, ldob)
             X(0x820, stob)
             X(0x840, bx)
