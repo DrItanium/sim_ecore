@@ -1776,6 +1776,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // set the carry out bit
             }();
             break;
+        case Opcode::subc:
+            [this, &instruction]() {
+                auto& src1 = getRegister(instruction.getSrc1());
+                auto& src2 = getRegister(instruction.getSrc2());
+                union {
+                    LongOrdinal value = 0;
+                    Ordinal halves[2];
+                } result;
+                result.value = static_cast<LongOrdinal>(src2.getOrdinal()) - static_cast<LongOrdinal>(src1.getOrdinal()) - 1 + (ac_.getCarryBit() ? 1 : 0);
+                // the result will be larger than 32-bits so we have to keep that in mind
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(result.halves[0]);
+                // do computation here
+                ac_.setConditionCode(0);
+                if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+                    // set the overflow bit in ac
+                    ac_.setOverflowBit(1);
+                }
+                ac_.setCarryBit(result.halves[1] != 0);
+                // set the carry out bit
+            }();
+            break;
     }
 }
 
