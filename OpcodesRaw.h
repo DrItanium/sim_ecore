@@ -105,6 +105,7 @@
             X(0x600, synmov)
             X(0x601, synmovl)
             X(0x602, synmovq)
+            X(0x615, synld)
             // }
             X(0x610, atmod)
             X(0x612, atadd)

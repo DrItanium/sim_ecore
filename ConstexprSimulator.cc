@@ -806,7 +806,11 @@ private:
 };
 void
 Core::syncf() noexcept {
-    // do nothing at this point
+    if (ac_.getNoImpreciseFaults()) {
+
+    } else {
+        /// @todo wait until no imprecise faults can occur associated with any uncompleted instructions
+    }
 }
 
 void
@@ -1907,6 +1911,23 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 } else {
                     dest.setInteger(0);
                 }
+            }();
+            break;
+        case Opcode::synld:
+            [this, &instruction]() {
+                // wait until another execution unit sets the condition codes to continue after requesting a load.
+                // In the case of this emulator, it really doesn't mean anything but I can see this being a synld followed by a wait
+                // for synchronization. It also allows access to internal memory mapped items.
+                // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
+                // with condition code assignments and forced alignments
+
+                auto address = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force word alignment
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                // load basically takes care of accessing different registers and such even memory mapped ones
+                dest.setOrdinal(load(address));
+                // there is a _fail_ condition where a bad access condition will result in 0b000
+                /// @todo implement support for bad access conditions
+                ac_.setConditionCode(0b010);
             }();
             break;
     }
