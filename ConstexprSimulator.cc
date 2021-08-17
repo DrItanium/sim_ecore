@@ -1603,6 +1603,40 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 /// @todo implement
             }();
                 break;
+
+        case Opcode::modac:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(ac_.modify(mask, src));
+            }( );
+            break;
+        case Opcode::modpc:
+            [this, &instruction]() {
+                /// @todo implement
+            }( );
+            break;
+        case Opcode::modtc:
+            [this, &instruction]() {
+                /// @todo implement
+            }( );
+            break;
+        case Opcode::modi:
+            [this, &instruction]() {
+                auto denominator = getRegister(instruction.getSrc1()) .getInteger();
+                if (denominator == 0) {
+                    generateFault(0, 0); /// @todo make this an Arithmetic Zero Divide
+                } else {
+                    auto numerator = getRegister(instruction.getSrc2()).getInteger();
+                    auto& dest = getRegister(instruction.getSrcDest(false));
+                    auto result = numerator - ((numerator / denominator) * denominator);
+                    if (((numerator * denominator) < 0) && (result != 0)) {
+                        result += denominator;
+                    }
+                    dest.setInteger(result);
+                }
+            }();
         default:
             /// @todo implement fault invocation
             break;
