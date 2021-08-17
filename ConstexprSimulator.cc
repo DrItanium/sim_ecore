@@ -1132,7 +1132,35 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 cmpi(getRegister(instruction.getSrc1()).getInteger(),
                      getRegister(instruction.getSrc2()).getInteger());
             }();
-                break;
+            break;
+        case Opcode::cmpdeco:
+            [this, &instruction]() {
+                auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+                cmpo(getRegister(instruction.getSrc1()).getOrdinal(), src2);
+                getRegister(instruction.getSrcDest(false)).setOrdinal(src2 - 1);
+            }();
+            break;
+        case Opcode::cmpdeci:
+            [this, &instruction]() {
+                auto src2 = getRegister(instruction.getSrc2()).getInteger();
+                cmpi(getRegister(instruction.getSrc1()).getInteger(), src2);
+                getRegister(instruction.getSrcDest(false)).setInteger(src2 - 1);
+            }();
+            break;
+        case Opcode::cmpinco:
+            [this, &instruction]() {
+                auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+                cmpo(getRegister(instruction.getSrc1()).getOrdinal(), src2);
+                getRegister(instruction.getSrcDest(false)).setOrdinal(src2 + 1);
+            }();
+            break;
+        case Opcode::cmpinci:
+            [this, &instruction]() {
+                auto src2 = getRegister(instruction.getSrc2()).getInteger();
+                cmpi(getRegister(instruction.getSrc1()).getInteger(), src2);
+                getRegister(instruction.getSrcDest(false)).setInteger(src2 + 1);
+                    }();
+                    break;
         case Opcode::cmpobg:
             [this, &instruction]() {
 
