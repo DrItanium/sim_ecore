@@ -1810,6 +1810,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setInteger(loadShort(computeMemoryAddress(instruction)));
             }();
             break;
+        case Opcode::st:
+            [this, &instruction]() {
+                auto addr = computeMemoryAddress(instruction);
+                auto src = getRegister(instruction.getSrcDest(true)).getOrdinal();
+                store(addr, src);
+            }();
+            break;
 
     }
 }
