@@ -474,6 +474,9 @@ public:
 #undef Y
 #undef X
 public:
+    template<uint8_t value>
+    constexpr bool conditionCodeIs() const noexcept { return (getConditionCode() & value) == 0; };
+    constexpr bool conditionCodeIs(uint8_t value) const noexcept  { return (getConditionCode()  & value) == 0; }
     /**
      * Reads and modifies contents of this object
      */
@@ -654,6 +657,12 @@ public:
     virtual LongOrdinal loadLong(Address destination) = 0;
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
+    DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
+    const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const;
+    TripleRegister& getTripleRegister(RegisterIndex targetIndex);
+    const TripleRegister& getTripleRegister(RegisterIndex targetIndex) const;
+    QuadRegister& getQuadRegister(RegisterIndex targetIndex);
+    const QuadRegister& getQuadRegister(RegisterIndex targetIndex) const;
 private:
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
@@ -1097,6 +1106,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
             }();
             break;
+        case Opcode::setbit:
+            [this, &instruction]() {
+            }();
+            break;
+        case Opcode::clrbit:
+            [this, &instruction]() {
+            }();
+            break;
         case Opcode::logicalAnd: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() & getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::logicalOr: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::logicalXor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() ^ getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
@@ -1126,6 +1143,65 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(src2 - ((src2 / src1) * src1));
             }();
                 break;
+        case Opcode::rotate:
+            [this, &instruction]() {
+                auto rotateOperation = [](Ordinal src, Ordinal length)  {
+                    return (src << length)  | (src >> ((-length) & 31u));
+                };
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto len = getRegister(instruction.getSrc1()).getOrdinal();
+                dest.setOrdinal(rotateOperation(src, len));
+            }();
+        case Opcode::mov:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::movl:
+            [this, &instruction]() {
+                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+                dest.setLongOrdinal(getDoubleRegister(instruction.getSrc1()).getLongOrdinal());
+            }();
+            break;
+        case Opcode::movt:
+            [this, &instruction]() {
+                auto& dest = getTripleRegister(instruction.getSrcDest(false));
+                const auto& src = getTripleRegister(instruction.getSrc1());
+                dest.setOrdinal(src.getOrdinal(0), 0);
+                dest.setOrdinal(src.getOrdinal(1), 1);
+                dest.setOrdinal(src.getOrdinal(2), 2);
+            }();
+            break;
+        case Opcode::movq:
+            [this, &instruction]() {
+                auto& dest = getQuadRegister(instruction.getSrcDest(false));
+                const auto& src = getQuadRegister(instruction.getSrc1());
+                dest.setOrdinal(src.getOrdinal(0), 0);
+                dest.setOrdinal(src.getOrdinal(1), 1);
+                dest.setOrdinal(src.getOrdinal(2), 2);
+                dest.setOrdinal(src.getOrdinal(3), 3);
+            }();
+            break;
+        case Opcode::alterbit:
+            [this, &instruction]() {
+                constexpr Ordinal bitPositions[32] {
+#define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
+                    X(0), X(4), X(8), X(12),
+                    X(16), X(20), X(24), X(28)
+#undef X
+                };
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                if (ac_.conditionCodeIs(0b010)) {
+                    dest.setOrdinal(src & ~bitpos);
+                } else {
+                    dest.setOrdinal(src | bitpos);
+                }
+            }();
+            break;
         default:
             /// @todo implement fault invocation
             break;
