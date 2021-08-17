@@ -755,6 +755,7 @@ private:
     void generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept;
     void cmpi(Integer src1, Integer src2) noexcept;
     void cmpo(Ordinal src1, Ordinal src2) noexcept;
+    void cycle() noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     inline void saveLocals(Address baseAddress) noexcept { saveRegisterFrame(locals, baseAddress); }
@@ -772,7 +773,17 @@ private:
     Ordinal advanceIPBy = 0;
     Ordinal salign_;
     Ordinal c_;
+    bool executing_ = false;
 };
+
+void
+Core::cycle() noexcept {
+    advanceIPBy = 4;
+    executeInstruction(loadInstruction(ip_.getOrdinal()));
+    if (advanceIPBy > 0)  {
+        ip_.setOrdinal(ip_.getOrdinal() + advanceIPBy);
+    }
+}
 
 void
 Core::cmpi(Integer src1, Integer src2) noexcept {
@@ -968,7 +979,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             X(16), X(20), X(24), X(28)
 #undef X
     };
-    advanceIPBy = 4;
     auto cmpobx = [this, &instruction](uint8_t mask) noexcept {
         auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
         auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
