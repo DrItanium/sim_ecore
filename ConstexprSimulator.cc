@@ -710,6 +710,7 @@ private:
     }
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
+    void generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     inline void saveLocals(Address baseAddress) noexcept { saveRegisterFrame(locals, baseAddress); }
@@ -854,6 +855,10 @@ Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcep
 }
 
 void
+Core::generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept {
+
+}
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
@@ -943,42 +948,64 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::faultno:
             [this, &instruction]() {
-
+                if (ac_.conditionCodeIs<0b000>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
             }();
             break;
         case Opcode::faultg:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b001>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
 
             }();
             break;
         case Opcode::faulte:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b010>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
 
             }();
             break;
         case Opcode::faultge:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b011>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
 
             }();
             break;
         case Opcode::faultl:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b100>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
 
             }();
             break;
         case Opcode::faultne:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b101>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
 
             }();
             break;
         case Opcode::faultle:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b110>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
 
             }();
             break;
         case Opcode::faulto:
             [this, &instruction]() {
-
+                if (ac_.conditionCodeIs<0b111>()) {
+                    generateFault(0, 0); /// @todo implement proper fault types
+                }
             }();
             break;
             // COBR Format
