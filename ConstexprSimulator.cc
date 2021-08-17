@@ -475,8 +475,13 @@ public:
 #undef X
 public:
     template<uint8_t value>
-    constexpr bool conditionCodeIs() const noexcept { return (getConditionCode() & value) == 0; };
-    constexpr bool conditionCodeIs(uint8_t value) const noexcept  { return (getConditionCode()  & value) == 0; }
+    constexpr bool conditionCodeIs() const noexcept {
+        if constexpr ((value & 0b111) == 0b000) {
+            return (getConditionCode() & (value & 0b111)) == 0;
+        } else {
+            return (getConditionCode() & (value & 0b111)) != 0;
+        }
+    };
     /**
      * Reads and modifies contents of this object
      */
@@ -883,37 +888,57 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::bg:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b001>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
 
             }();
             break;
         case Opcode::be:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b010>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
 
             }();
             break;
         case Opcode::bge:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b011>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
 
             }();
             break;
         case Opcode::bl:
             [this, &instruction]() {
 
+                if (ac_.conditionCodeIs<0b100>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
             }();
             break;
         case Opcode::bne:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b101>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
 
             }();
             break;
         case Opcode::ble:
             [this, &instruction]() {
+                if (ac_.conditionCodeIs<0b110>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
 
             }();
             break;
         case Opcode::bo:
             [this, &instruction]() {
-
+                if (ac_.conditionCodeIs<0b111>()) {
+                    ipRelativeBranch(instruction.getDisplacement());
+                }
             }();
             break;
         case Opcode::faultno:
@@ -1319,10 +1344,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
                 auto src = getRegister(instruction.getSrc2()).getOrdinal();
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                if (ac_.conditionCodeIs(0b010)) {
-                    dest.setOrdinal(src & ~bitpos);
-                } else {
+                if (ac_.getConditionCode() & 0b010) {
                     dest.setOrdinal(src | bitpos);
+                } else {
+                    dest.setOrdinal(src & ~bitpos);
                 }
             }();
             break;
