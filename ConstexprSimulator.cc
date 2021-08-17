@@ -1798,6 +1798,18 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // set the carry out bit
             }();
             break;
+        case Opcode::ldib:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setInteger(loadByte(computeMemoryAddress(instruction)));
+            }();
+            break;
+        case Opcode::ldis:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setInteger(loadShort(computeMemoryAddress(instruction)));
+            }();
+            break;
     }
 }
 
