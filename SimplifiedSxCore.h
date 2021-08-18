@@ -14,7 +14,6 @@ protected:
     void boot() override;
     Ordinal getSystemAddressTableBase() const noexcept override;
     Ordinal getPRCBPtrBase() const noexcept override;
-    Ordinal getFirstIP() const noexcept override;
     bool continueToExecute() const noexcept override;
     void storeByte(Address destination, ByteOrdinal value) override;
     void storeShort(Address destination, ShortOrdinal value) override;
@@ -35,8 +34,8 @@ protected:
 private:
     Ordinal systemAddressTableBase_ = 0;
     Ordinal prcbBase_ = 0;
-    Ordinal startIP_ = 0;
     bool executing_ = false;
+    bool initialized_ = false;
 };
 
 #endif //SIM3_SIMPLIFIEDSXCORE_H

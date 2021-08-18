@@ -1309,23 +1309,27 @@ Core::run() {
 }
 Ordinal
 Core::getSystemProcedureTableBase() {
-    return 0;
+    return load(getSystemAddressTableBase() + 120);
 }
 Ordinal
 Core::getFaultProcedureTableBase() {
-    return 0;
+    return load(getSystemAddressTableBase() + 152);
 
 }
 Ordinal
 Core::getTraceTablePointer() {
-    return 0;
-
+    return load(getSystemAddressTableBase() + 168);
 }
 Ordinal
 Core::getInterruptTableBase() {
-    return 0;
+    return load(getPRCBPtrBase() + 20);
 }
 Ordinal
 Core::getFaultTableBase() {
-    return 0;
+    return load(getPRCBPtrBase() + 40);
+}
+
+Ordinal
+Core::getInterruptStackPointer() {
+   return load(getPRCBPtrBase() + 24);
 }

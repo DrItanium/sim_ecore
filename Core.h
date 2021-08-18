@@ -97,13 +97,13 @@ protected:
     virtual void boot() = 0;
     virtual Ordinal getSystemAddressTableBase() const noexcept = 0;
     virtual Ordinal getPRCBPtrBase() const noexcept = 0;
-    virtual Ordinal getFirstIP() const noexcept = 0;
     virtual bool continueToExecute() const noexcept = 0;
     virtual Ordinal getSystemProcedureTableBase() ;
     virtual Ordinal getFaultProcedureTableBase() ;
     virtual Ordinal getTraceTablePointer() ;
     virtual Ordinal getInterruptTableBase() ;
     virtual Ordinal getFaultTableBase() ;
+    virtual Ordinal getInterruptStackPointer();
     virtual void generateFault(FaultType fault);
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
@@ -175,7 +175,7 @@ private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
     Ordinal computeMemoryAddress(const Instruction& instruction) noexcept;
-private:
+protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
     ProcessControls pc_;
