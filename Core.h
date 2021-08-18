@@ -105,8 +105,6 @@ protected:
     virtual Ordinal getFaultTableBase() ;
     virtual Ordinal getInterruptStackPointer();
     virtual void generateFault(FaultType fault);
-    virtual void storeByte(Address destination, ByteOrdinal value) = 0;
-    virtual void storeShort(Address destination, ShortOrdinal value) = 0;
     virtual void storeLong(Address destination, LongOrdinal value) {
         DoubleRegister wrapper(value);
         store(destination + 0, wrapper.getOrdinal(0));
@@ -115,7 +113,6 @@ protected:
     virtual void atomicStore(Address destination, Ordinal value) {
         store(destination, value);
     }
-    virtual void store(Address destination, Ordinal value) = 0;
     virtual void store(Address destination, const TripleRegister& reg) {
         store(destination, reg.getOrdinal(0));
         store(destination+4, reg.getOrdinal(1));
@@ -141,12 +138,9 @@ protected:
         thing.in = value;
         storeByte(destination, thing.out);
     }
-    virtual Ordinal load(Address destination) = 0;
     virtual Ordinal atomicLoad(Address destination) {
         return load(destination);
     }
-    virtual ByteOrdinal loadByte(Address destination) = 0;
-    virtual ShortOrdinal loadShort(Address destination) = 0;
     virtual LongOrdinal loadLong(Address destination) {
         return DoubleRegister(load(destination), load(destination + 4)).getLongOrdinal();
     }
@@ -164,6 +158,18 @@ protected:
         load(destination, tmp);
         return tmp;
     }
+    virtual ByteOrdinal loadByte(Address destination) {
+        // force the unaligned access to be handled in load
+        return static_cast<ByteOrdinal>(load(destination));
+    }
+    virtual ShortOrdinal loadShort(Address destination) {
+        // just like with
+        return static_cast<ShortOrdinal>(load(destination));
+    }
+    virtual void storeByte(Address destination, ByteOrdinal value) = 0;
+    virtual void storeShort(Address destination, ShortOrdinal value) = 0;
+    virtual Ordinal load(Address destination) = 0;
+    virtual void store(Address destination, Ordinal value) = 0;
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
     DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
