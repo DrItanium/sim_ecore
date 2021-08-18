@@ -186,4 +186,11 @@ constexpr Ordinal getLiteralOrdinal(RegisterIndex index) noexcept {
         return 0xFFFF'FFFF;
     }
 }
+
+constexpr auto operator "" _KB(unsigned long long value) noexcept {
+    return value * 1024;
+}
+constexpr auto operator "" _MB(unsigned long long value) noexcept {
+    return value * 1024 * 1024;
+}
 #endif //SIM3_TYPES_H
