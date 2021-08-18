@@ -248,6 +248,7 @@ void printSomeStuffToTheScreen() {
 
 }
 int main(int /*argc*/, char** /*argv*/) {
+    // two test cases to start off with
     standardHaltState();
     printSomeStuffToTheScreen();
     return 0;
