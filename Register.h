@@ -251,26 +251,6 @@ constexpr Ordinal modify(Ordinal mask, Ordinal src, Ordinal srcDest) noexcept {
 }
 
 
-Ordinal
-ArithmeticControls::modify(Ordinal mask, Ordinal src) noexcept {
-    auto tmp = ord_;
-    ord_ = ::modify(mask, src, ord_);
-    return tmp;
-}
-
-Ordinal
-ProcessControls::modify(Ordinal mask, Ordinal src) noexcept {
-    auto tmp = ord_;
-    ord_ = ::modify(mask, src, ord_);
-    return tmp;
-}
-
-Ordinal
-TraceControls::modify(Ordinal mask, Ordinal src) noexcept {
-    auto tmp = ord_;
-    ord_ = ::modify(mask, src, ord_);
-    return tmp;
-}
 
 union DoubleRegister {
 public:
