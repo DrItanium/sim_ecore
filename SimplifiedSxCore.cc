@@ -8,7 +8,7 @@ void
 SimplifiedSxCore::boot() {
     if (!initialized_) {
         initialized_ = true;
-        auto q = loadQuad(0); // load four words starting at address 0
+        auto q = loadQuad(0);
         systemAddressTableBase_ = q.getOrdinal(0);
         prcbBase_ = q.getOrdinal(1);
         // skip the check words

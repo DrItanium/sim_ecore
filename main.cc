@@ -54,7 +54,7 @@ protected:
     Ordinal load(Address address) override {
         // get target thing
         if (inRAMArea(address)) {
-            auto alignedAddress = address & ~0b11;
+            auto alignedAddress = address >> 2;
             auto offset = address & 0b11;
             auto& cell = memory_[alignedAddress];
             switch (offset) {
@@ -101,7 +101,7 @@ protected:
 
     void store(Address address, Ordinal value) override {
         if (inRAMArea(address)) {
-            auto alignedAddress = address & ~0b11;
+            auto alignedAddress = address >> 2;
             auto offset = address & 0b11;
             auto& cell = memory_[alignedAddress];
             MemoryCell temp(value);
@@ -165,11 +165,11 @@ int main(int /*argc*/, char** /*argv*/) {
     ZCT_Core core;
     core.clearMemory(); // make doubly sure
     // install the imi for testing purposes
-    core.installBlockToMemory(0, 0x0000'0000u, // sat_address
-                                 0x0000'00b0u, // prcb_ptr
-                                 0x0000'0000u, // check word
-                                 0x0000'032cu, // start ip
-                                 0xffff'fc24u /* cs1 */);
+    core.installBlockToMemory(0, 0x0000'0000, // sat_address
+                                 0x0000'00b0, // prcb_ptr
+                                 0x0000'0000, // check word
+                                 0x0000'032c, // start ip
+                                 0xffff'fc24 /* cs1 */);
     core.installToMemory(0x1c, 0xffff'ffff);
     core.installBlockToMemory(0x78, 0x0000'0180,
                               0x3040'00fb);

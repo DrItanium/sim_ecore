@@ -142,7 +142,9 @@ protected:
         return load(destination);
     }
     virtual LongOrdinal loadLong(Address destination) {
-        return DoubleRegister(load(destination), load(destination + 4)).getLongOrdinal();
+        auto lower = load(destination);
+        auto upper = load(destination + 4);
+        return DoubleRegister(lower, upper).getLongOrdinal();
     }
     virtual void load(Address destination, TripleRegister& reg) noexcept {
         reg.setOrdinal(load(destination), 0);
