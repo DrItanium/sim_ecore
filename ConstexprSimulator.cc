@@ -1505,14 +1505,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(src ^ bitpos);
             }();
             break;
-        case Opcode::setbit:
-            [this, &instruction]() {
-            }();
-            break;
-        case Opcode::clrbit:
-            [this, &instruction]() {
-            }();
-            break;
         case Opcode::logicalAnd: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() & getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::logicalOr: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::logicalXor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() ^ getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
@@ -1647,6 +1639,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 
                 // if pc.te == 1 then raiseFault(BreakpointTraceFault)
                 /// @todo implement
+                if (pc_.getTraceEnable()) {
+                    generateFault(0, 0); /// @todo raise trace breakpoint fault
+                }
             }();
             break;
         case Opcode::mark:
@@ -1654,7 +1649,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
                 // The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
                 // controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
-                if (pc_.getTraceEnable()) {
+                if (pc_.getTraceEnable() && tc_.getBreakpointTraceMode()) {
                     generateFault(0, 0); /// @todo raise trace breakpoint fault
                 }
                 // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
