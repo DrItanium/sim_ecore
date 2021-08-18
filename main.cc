@@ -84,9 +84,12 @@ protected:
         } else if (inIACSpace(address)) {
             // we use IAC space as a hack to "map" in all of our peripherals for this custom core
             switch (address & 0x00FF'FFFF) {
-                case 0: // Serial read / write
+                case 0:
+                    haltExecution();
+                    break;
+                case 4: // Serial read / write
                     return static_cast<Ordinal>(std::cin.get());
-                case 4:
+                case 8:
                     std::cout.flush();
                     break;
                 default:
@@ -131,12 +134,16 @@ protected:
             }
         } else if (inIACSpace(address)) {
             switch (address & 0x00FF'FFFF) {
-                case 0: // serial console input output
+                case 0:
+                    haltExecution();
+                    break;
+                case 4: // serial console input output
                     std::cout.put(static_cast<char>(value));
                     break;
-                case 4:
+                case 8:
                     std::cout.flush();
                     break;
+
                 default:
                     // do nothing
                     break;
