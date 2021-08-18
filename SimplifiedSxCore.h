@@ -15,12 +15,6 @@ protected:
     Ordinal getSystemAddressTableBase() const noexcept override;
     Ordinal getPRCBPtrBase() const noexcept override;
     bool continueToExecute() const noexcept override;
-    void atomicStore(Address destination, Ordinal value) override;
-    void store(Address destination, const TripleRegister &reg) override;
-    void store(Address destination, const QuadRegister &reg) override;
-    Ordinal atomicLoad(Address destination) override;
-    void load(Address destination, TripleRegister &reg) noexcept override;
-    void load(Address destination, QuadRegister &reg) noexcept override;
 private:
     Ordinal systemAddressTableBase_ = 0;
     Ordinal prcbBase_ = 0;

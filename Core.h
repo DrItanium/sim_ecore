@@ -108,19 +108,37 @@ protected:
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
     virtual void storeLong(Address destination, LongOrdinal value) = 0;
-    virtual void atomicStore(Address destination, Ordinal value) = 0;
+    virtual void atomicStore(Address destination, Ordinal value) {
+        store(destination, value);
+    }
     virtual void store(Address destination, Ordinal value) = 0;
-    virtual void store(Address destination, const TripleRegister& reg) = 0;
-    virtual void store(Address destination, const QuadRegister& reg) = 0;
+    virtual void store(Address destination, const TripleRegister& reg) {
+        store(destination, reg.getOrdinal(0));
+        store(destination+4, reg.getOrdinal(1));
+        store(destination+8, reg.getOrdinal(2));
+    }
+    virtual void store(Address destination, const QuadRegister& reg) {
+        storeLong(destination, reg.getHalf(0));
+        storeLong(destination, reg.getHalf(1));
+    }
     virtual void storeShortInteger(Address destination, ShortInteger value) = 0;
     virtual void storeByteInteger(Address destination, ByteInteger value) = 0;
     virtual Ordinal load(Address destination) = 0;
-    virtual Ordinal atomicLoad(Address destination) = 0;
+    virtual Ordinal atomicLoad(Address destination) {
+        return load(destination);
+    }
     virtual ByteOrdinal loadByte(Address destination) = 0;
     virtual ShortOrdinal loadShort(Address destination) = 0;
     virtual LongOrdinal loadLong(Address destination) = 0;
-    virtual void load(Address destination, TripleRegister& reg) noexcept = 0;
-    virtual void load(Address destination, QuadRegister& reg) noexcept = 0;
+    virtual void load(Address destination, TripleRegister& reg) noexcept {
+        reg.setOrdinal(load(destination), 0);
+        reg.setOrdinal(load(destination + 4), 1);
+        reg.setOrdinal(load(destination + 8), 2);
+    }
+    virtual void load(Address destination, QuadRegister& reg) noexcept {
+        reg.setHalf(loadLong(destination), 0);
+        reg.setHalf(loadLong(destination + 8), 1);
+    }
     QuadRegister loadQuad(Address destination) noexcept {
         QuadRegister tmp;
         load(destination, tmp);
