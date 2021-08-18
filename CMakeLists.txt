@@ -8,5 +8,5 @@ if (MSVC)
 else()
     add_compile_options(-Wall -Wextra)
 endif()
-add_executable(sim3 ConstexprSimulator.cc
+add_executable(sim3 Simulator.cc
                     OpcodesRaw.h)
