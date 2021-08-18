@@ -765,7 +765,34 @@ union RegisterFrame {
     // we put the extended reals in a different location
 };
 
+enum class FaultType : Ordinal {
+    Trace = 0x0001'0000,
+    Instruction_Trace = Trace | 0x02,
+    Branch_Trace = Trace | 0x04,
+    Call_Trace = Trace | 0x08,
+    Return_Trace = Trace | 0x10,
+    Prereturn_Trace = Trace | 0x20,
+    Supervisor_Trace = Trace | 0x40,
+    Breakpoint_Trace = Trace | 0x80,
+    Operation = 0x0002'0000,
+    Operation_InvalidOpcode = Operation | 0x01,
+    Operation_InvalidOperand = Operation | 0x04,
+    Arithmetic = 0x0003'0000,
+    Arithmetic_IntegerOverflow = Arithmetic | 0x01,
+    Arithmetic_ArithmeticZeroDivide = Arithmetic | 0x02,
+#ifdef NUMERICS_ARCHITECTURE
+    FloatingPoint = 0x0004'0000,
+    /// @todo implement floating point faults
+#endif
+    Constraint = 0x0005'0000,
+    Constraint_Range = Constraint | 0x01,
+    Constraint_Privileged = Constraint | 0x02,
 
+    Protection = 0x0007'0000,
+    Protection_Length = Protection | 0x02,
+    Type = 0x000A'0000,
+    Type_Mismatch = Type | 0x01,
+};
 class Core {
 public:
     using Address = Ordinal;
@@ -892,7 +919,7 @@ private:
     }
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
-    void generateFault(ByteOrdinal faultType, ByteOrdinal faultSubtype) noexcept;
+    void generateFault(FaultType fault) noexcept;
     void cmpi(Integer src1, Integer src2) noexcept;
     void cmpo(Ordinal src1, Ordinal src2) noexcept;
     void syncf() noexcept;
@@ -1087,8 +1114,11 @@ Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcep
 }
 
 void
-Core::generateFault(ByteOrdinal /*faultType*/, ByteOrdinal /*faultSubtype*/) noexcept {
-
+Core::generateFault(FaultType) noexcept {
+    /// @todo implement this at some point
+    // lookup fault information
+    // setup fault data frame
+    // call fault handler
 }
 Ordinal
 Core::computeMemoryAddress(const Instruction &instruction) noexcept {
@@ -1165,17 +1195,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     auto condFault = [this](uint8_t mask) {
         if ((ac_.getConditionCode()& mask) != 0) {
             /// @todo constraint range fault
-            generateFault(0, 0);
+            generateFault(FaultType::Constraint_Range);
         }
     };
     switch (instruction.identifyOpcode()) {
-        case Opcode::None:
-        case Opcode::Bad:
-            ipRelativeBranch(instruction.getDisplacement()) ;
-            /// @todo generate fault here
-            break;
             // CTRL Format opcodes
         case Opcode::b:
+            ipRelativeBranch(instruction.getDisplacement()) ;
             break;
         case Opcode::bal:
             getRegister(RegisterIndex::Global14).setOrdinal(ip_.getOrdinal() + 4);
@@ -1210,7 +1236,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::faultno:
             if (ac_.getConditionCode() == 0) {
                 /// @todo make target constraint range fault
-                generateFault(0, 0);
+                generateFault(FaultType::Constraint_Range);
             }
             break;
         case Opcode::faultg:
@@ -1618,7 +1644,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto denomord = getRegister(instruction.getSrc1()).getOrdinal();
                 if (denomord == 0) {
                     // raise an arithmetic zero divide fault
-                    generateFault(0, 0); /// @todo flesh this out
+                    generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
                 } else {
                     auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
                     auto denominator = static_cast<LongOrdinal>(denomord);
@@ -1665,7 +1691,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // if pc.te == 1 then raiseFault(BreakpointTraceFault)
                 /// @todo implement
                 if (pc_.getTraceEnable()) {
-                    generateFault(0, 0); /// @todo raise trace breakpoint fault
+                    generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
                 }
             }();
             break;
@@ -1675,7 +1701,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
                 // controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
                 if (pc_.getTraceEnable() && tc_.getBreakpointTraceMode()) {
-                    generateFault(0, 0); /// @todo raise trace breakpoint fault
+                    generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
                 }
                 // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
                 /// @todo implement
@@ -1694,7 +1720,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto denominator = getRegister(instruction.getSrc1()) .getInteger();
                 if (denominator == 0) {
-                    generateFault(0, 0); /// @todo make this an Arithmetic Zero Divide
+                    generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
                 } else {
                     auto numerator = getRegister(instruction.getSrc2()).getInteger();
                     auto& dest = getRegister(instruction.getSrcDest(false));
@@ -2073,7 +2099,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 if (mask != 0) {
                     if (!pc_.inSupervisorMode()) {
-                        generateFault(0, 0); /// @todo TYPE.MISMATCH
+                        generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
                     } else {
                         auto src = getRegister(instruction.getSrc2()).getOrdinal();
                         dest.setOrdinal(pc_.modify(mask, src));
@@ -2115,7 +2141,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto targ = getRegister(instruction.getSrc1()).getOrdinal();
                 if (targ > 259) {
-                    generateFault(0, 0); /// @todo protection length fault
+                    generateFault(FaultType::Protection_Length);
                 } else {
                    syncf();
                    auto tempPE = load(getSystemProcedureTableBase() + 48 + (4 * targ));
@@ -2212,6 +2238,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                         break;
                 }
             }();
+            break;
+        default:
+            generateFault(FaultType::Operation_InvalidOpcode);
             break;
     }
 }
