@@ -58,10 +58,7 @@ union Instruction {
 public:
     constexpr Instruction(Ordinal lower, Ordinal upper) noexcept : parts{lower, upper} { }
     constexpr explicit Instruction(LongOrdinal value = 0) noexcept : wholeValue_(value) { }
-    constexpr auto getWideValue() const noexcept { return wholeValue_; }
     constexpr auto getHalf(int offset) const noexcept { return parts[offset & 1]; }
-    constexpr auto getLowerHalf() const noexcept { return getHalf(0); }
-    constexpr auto getUpperHalf() const noexcept { return getHalf(1); }
     constexpr FullOpcode getOpcode() const noexcept {
         // by default the opcode is only 8-bits wide...except for REG format instructions, they are 12-bits instead
         // so to make everything much simpler, we should just make a 16-bit opcode in all cases.
