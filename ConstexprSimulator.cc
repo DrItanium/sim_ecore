@@ -2058,6 +2058,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(tc_.modify(mask, src));
             }( );
             break;
+        case Opcode::setbit:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(src | bitpos);
+            }();
+            break;
+        case Opcode::clrbit:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(src & ~bitpos);
+            }();
+            break;
     }
 }
 
