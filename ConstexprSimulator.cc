@@ -1845,13 +1845,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stib:
             [this, &instruction]() {
                 auto src = getRegister(instruction.getSrcDest(true)).getInteger();
-                storeByteInteger(computeMemoryAddress(instruction), src);
+                storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(src));
             }();
             break;
         case Opcode::stis:
             [this, &instruction]() {
                 auto src = getRegister(instruction.getSrcDest(true)).getInteger();
-                storeShortInteger(computeMemoryAddress(instruction), src);
+                storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(src));
             }();
             break;
         case Opcode::shri:
