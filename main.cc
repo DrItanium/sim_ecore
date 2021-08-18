@@ -25,6 +25,9 @@ class ZCT_Core : public SimplifiedSxCore {
 public:
     using Parent = SimplifiedSxCore;
     using Parent::Parent;
+    static constexpr Address HaltRegisterOffset = 0x00FF'FFFC;
+    static constexpr Address ConsoleRegisterOffset = 0x00E0'0000;
+    static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
     static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell);
     ZCT_Core() : Parent(), memory_(std::make_unique<MemoryCell[]>(MemorySize)) {}
     ~ZCT_Core() override = default;
@@ -84,12 +87,12 @@ protected:
         } else if (inIACSpace(address)) {
             // we use IAC space as a hack to "map" in all of our peripherals for this custom core
             switch (address & 0x00FF'FFFF) {
-                case 0:
+                case HaltRegisterOffset:
                     haltExecution();
                     break;
-                case 4: // Serial read / write
+                case ConsoleRegisterOffset: // Serial read / write
                     return static_cast<Ordinal>(std::cin.get());
-                case 8:
+                case ConsoleFlushOffset:
                     std::cout.flush();
                     break;
                 default:
@@ -134,13 +137,13 @@ protected:
             }
         } else if (inIACSpace(address)) {
             switch (address & 0x00FF'FFFF) {
-                case 0:
+                case HaltRegisterOffset:
                     haltExecution();
                     break;
-                case 4: // serial console input output
+                case ConsoleRegisterOffset: // serial console input output
                     std::cout.put(static_cast<char>(value));
                     break;
-                case 8:
+                case ConsoleFlushOffset:
                     std::cout.flush();
                     break;
 
