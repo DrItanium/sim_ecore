@@ -107,7 +107,11 @@ protected:
     virtual void generateFault(FaultType fault);
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
-    virtual void storeLong(Address destination, LongOrdinal value) = 0;
+    virtual void storeLong(Address destination, LongOrdinal value) {
+        DoubleRegister wrapper(value);
+        store(destination + 0, wrapper.getOrdinal(0));
+        store(destination + 4, wrapper.getOrdinal(1));
+    }
     virtual void atomicStore(Address destination, Ordinal value) {
         store(destination, value);
     }
@@ -129,7 +133,9 @@ protected:
     }
     virtual ByteOrdinal loadByte(Address destination) = 0;
     virtual ShortOrdinal loadShort(Address destination) = 0;
-    virtual LongOrdinal loadLong(Address destination) = 0;
+    virtual LongOrdinal loadLong(Address destination) {
+        return DoubleRegister(load(destination), load(destination + 4)).getLongOrdinal();
+    }
     virtual void load(Address destination, TripleRegister& reg) noexcept {
         reg.setOrdinal(load(destination), 0);
         reg.setOrdinal(load(destination + 4), 1);

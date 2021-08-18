@@ -255,6 +255,7 @@ constexpr Ordinal modify(Ordinal mask, Ordinal src, Ordinal srcDest) noexcept {
 union DoubleRegister {
 public:
     constexpr explicit DoubleRegister(LongOrdinal value = 0) noexcept : lord_(value) { }
+    constexpr DoubleRegister(Ordinal lower, Ordinal upper) noexcept : parts_{lower, upper} { }
     constexpr auto getLongOrdinal() const noexcept { return lord_; }
     constexpr auto getLongInteger() const noexcept { return lint_; }
     constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which & 0b01]; }
