@@ -2150,7 +2150,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::ret:
-            [this, &instruction]() {
+            [this]() {
                 syncf();
                 PreviousFramePointer pfp(getPFP());
                 auto restoreStandardFrame = [this]() {
@@ -2165,18 +2165,29 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                         restoreStandardFrame();
                         break;
                     case 0b001:
-                        [this, &instruction]() {
-
+                        [this, &restoreStandardFrame]() {
+                            auto& fp = getFramePointer();
+                            auto x = load(fp.getOrdinal() - 16);
+                            auto y = load(fp.getOrdinal() - 12);
+                            restoreStandardFrame();
+                            ac_.setValue(y);
+                            if (pc_.inSupervisorMode()) {
+                                pc_.setValue(x);
+                            }
                         }();
                         break;
                     case 0b010:
-                        [this, &instruction]() {
-
+                        [this, &restoreStandardFrame]() {
+                            if (pc_.inSupervisorMode()) {
+                                pc_.setTraceEnable(false);
+                                pc_.setExecutionMode(false);
+                            }
+                            restoreStandardFrame();
                         }();
                         break;
                     case 0b011:
                         [this, &restoreStandardFrame]() {
-                            if (!pc_.inUserMode())  {
+                            if (pc_.inSupervisorMode())  {
                                 pc_.setTraceEnable(true);
                                 pc_.setExecutionMode(false);
                             }
@@ -2184,8 +2195,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                         }();
                         break;
                     case 0b111: // interrupt return
-                        [this,&instruction]() {
-
+                        [this,&restoreStandardFrame]() {
+                            auto& fp = getFramePointer();
+                            auto x = load(fp.getOrdinal() - 16);
+                            auto y = load(fp.getOrdinal() - 12);
+                            restoreStandardFrame();
+                            ac_.setValue(y);
+                            if (pc_.inSupervisorMode()) {
+                                pc_.setValue(x);
+                                /// @todo check_pending_interrupts
+                            }
                         }();
                         break;
                     default:
