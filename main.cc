@@ -4,6 +4,7 @@
 #include "SimplifiedSxCore.h"
 #include <array>
 #include <iostream>
+#include <memory>
 union MemoryCell {
     constexpr MemoryCell(Ordinal value = 0) noexcept : raw(value) { }
 
@@ -24,10 +25,12 @@ class ZCT_Core : public SimplifiedSxCore {
 public:
     using Parent = SimplifiedSxCore;
     using Parent::Parent;
+    static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell);
+    ZCT_Core() : Parent(), memory_(std::make_unique<MemoryCell[]>(MemorySize)) {}
     ~ZCT_Core() override = default;
     void clearMemory() noexcept {
-        for (auto& cell : memory_) {
-            cell.raw = 0;
+        for (size_t i = 0; i < MemorySize; ++i) {
+            memory_[i].raw = 0;
         }
     }
     /**
@@ -149,7 +152,7 @@ private:
     }
 private:
     // allocate a 128 megabyte memory storage buffer
-    std::array<MemoryCell, 64_MB / sizeof(MemoryCell)> memory_;
+    std::unique_ptr<MemoryCell[]> memory_;
 };
 int main(int /*argc*/, char** /*argv*/) {
     ZCT_Core core;
@@ -167,7 +170,17 @@ int main(int /*argc*/, char** /*argv*/) {
                               0x00fc'00fb);
     core.installBlockToMemory(0x98, 0x0000'0180,
                               0x304000fb);
-    core.installBlockToMemory(0xa8, 0x0000'0200,
-                                    0x304000fb);
+    core.installBlockToMemory(0xa8, 0x0000'0200u,
+                              0x304000fbu);
+    core.installBlockToMemory(0xb0, 0x0,
+                              0xc);
+    core.installBlockToMemory(0xc4,
+                              0x6c0,
+                              0x810500,
+                              0,
+                              0x1ff,
+                              0x27f,
+                              0x500);
+    core.installBlockToMemory(0x18c, 0x00820501);
     return 0;
 }
