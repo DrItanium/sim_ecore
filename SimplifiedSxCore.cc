@@ -53,3 +53,21 @@ void
 SimplifiedSxCore::resetExecutionStatus() noexcept {
     executing_ = true;
 }
+void
+SimplifiedSxCore::synchronizedStore(Core::Address destination, const DoubleRegister &value) noexcept {
+    // no special IAC locations when dealing with long versions so cool beans
+    store(destination, value.getLongOrdinal());
+}
+void
+SimplifiedSxCore::synchronizedStore(Core::Address destination, const QuadRegister &value) noexcept {
+    if (destination == 0xFF00'0010) {
+        // there are special IAC messages we need to handle here
+    } else {
+        store(destination, value);
+    }
+}
+void
+SimplifiedSxCore::synchronizedStore(Core::Address destination, const Register &value) noexcept {
+    // there is a lookup for an interrupt control register, in the Sx manual, we are going to ignore that for now
+    store(destination, value.getOrdinal());
+}
