@@ -1307,3 +1307,25 @@ Core::run() {
         cycle();
     }
 }
+Ordinal
+Core::getSystemProcedureTableBase() {
+    return 0;
+}
+Ordinal
+Core::getFaultProcedureTableBase() {
+    return 0;
+
+}
+Ordinal
+Core::getTraceTablePointer() {
+    return 0;
+
+}
+Ordinal
+Core::getInterruptTableBase() {
+    return 0;
+}
+Ordinal
+Core::getFaultTableBase() {
+    return 0;
+}

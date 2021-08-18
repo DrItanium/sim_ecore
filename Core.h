@@ -99,11 +99,11 @@ protected:
     virtual Ordinal getPRCBPtrBase() const noexcept = 0;
     virtual Ordinal getFirstIP() const noexcept = 0;
     virtual bool continueToExecute() const noexcept = 0;
-    virtual Ordinal getSystemProcedureTableBase() const noexcept;
-    virtual Ordinal getFaultProcedureTableBase() const noexcept;
-    virtual Ordinal getTraceTablePointer() const noexcept;
-    virtual Ordinal getInterruptTableBase() const noexcept;
-    virtual Ordinal getFaultTableBase() const noexcept;
+    virtual Ordinal getSystemProcedureTableBase() ;
+    virtual Ordinal getFaultProcedureTableBase() ;
+    virtual Ordinal getTraceTablePointer() ;
+    virtual Ordinal getInterruptTableBase() ;
+    virtual Ordinal getFaultTableBase() ;
     virtual void generateFault(FaultType fault);
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
