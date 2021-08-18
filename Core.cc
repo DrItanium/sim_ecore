@@ -656,7 +656,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::mov:
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setOrdinal(getRegister(instruction.getSrc1()).getOrdinal());
+                auto srcValue = getSourceRegister(instruction.getSrc1()).getOrdinal();
+                dest.setOrdinal(srcValue);
             }();
             break;
         case Opcode::movl:

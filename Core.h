@@ -188,6 +188,7 @@ protected:
     virtual void store(Address destination, Ordinal value) = 0;
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
+    const Register& getSourceRegister(RegisterIndex targetIndex) const { return getRegister(targetIndex); }
     DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
     const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const;
     TripleRegister& getTripleRegister(RegisterIndex targetIndex);
