@@ -182,6 +182,9 @@ protected:
         load(destination, tmp);
         return tmp;
     }
+    virtual void synchronizedStore(Address destination, const DoubleRegister& value) noexcept = 0;
+    virtual void synchronizedStore(Address destination, const QuadRegister& value) noexcept = 0;
+    virtual void synchronizedStore(Address destination, const Register& value) noexcept = 0;
     virtual ByteOrdinal loadByte(Address destination) {
         // force the unaligned access to be handled in load
         return static_cast<ByteOrdinal>(load(destination));

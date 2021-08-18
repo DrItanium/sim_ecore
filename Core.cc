@@ -1148,8 +1148,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // load from memory and then store to another address in a synchronous fashion
                 auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
                 auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // align
-                auto temp = load(src);
-                store(addr, temp);
+                Register temp(load(src));
+                synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
                 ac_.setConditionCode(0b010);
             }();
@@ -1158,8 +1158,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
                 auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF8; // align
-                auto temp = loadLong(src);
-                storeLong(addr, temp);
+                DoubleRegister temp(loadLong(src));
+                synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
                 ac_.setConditionCode(0b010);
             }();
@@ -1169,7 +1169,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
                 auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF0; // align
                 QuadRegister temp = loadQuad(src);
-                store(addr, temp);
+                synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
                 ac_.setConditionCode(0b010);
             }();
