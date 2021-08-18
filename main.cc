@@ -135,7 +135,6 @@ protected:
         } else if (inIACSpace(address)) {
             switch (address & 0x00FF'FFFF) {
                 case 0:
-                    std::cout << "CALLED HALT EXECUTION!" << std::endl;
                     haltExecution();
                     break;
                 case 4: // serial console input output

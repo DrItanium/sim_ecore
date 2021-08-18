@@ -16,7 +16,9 @@ Core::syncf() noexcept {
 void
 Core::cycle() noexcept {
     advanceIPBy = 4;
-    executeInstruction(loadInstruction(ip_.getOrdinal()));
+    auto instruction = loadInstruction(ip_.getOrdinal());
+    executeInstruction(instruction);
+    //executeInstruction(loadInstruction(ip_.getOrdinal()));
     if (advanceIPBy > 0)  {
         ip_.setOrdinal(ip_.getOrdinal() + advanceIPBy);
     }
@@ -153,7 +155,9 @@ Core::getQuadRegister(RegisterIndex targetIndex) const {
 Instruction
 Core::loadInstruction(Address baseAddress) noexcept {
     // load words 64-bits at a time for simplicity, we increment by eight on double wide instructions and four on single wide
-    return Instruction(loadLong(baseAddress & (~static_cast<Address>(0b111))));
+    auto targetAddress = baseAddress & ~(static_cast<Address>(0b11));
+    auto theLong = loadLong(targetAddress);
+    return Instruction(theLong);
 }
 
 void
