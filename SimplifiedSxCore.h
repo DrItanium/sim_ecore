@@ -16,6 +16,7 @@ protected:
     Ordinal getPRCBPtrBase() const noexcept override;
     bool continueToExecute() const noexcept override;
     constexpr bool initialized() const noexcept { return initialized_; }
+    void resetExecutionStatus() noexcept override;
     void haltExecution() noexcept { executing_ = false; }
 private:
     Ordinal systemAddressTableBase_ = 0;

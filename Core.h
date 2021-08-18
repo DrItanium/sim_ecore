@@ -221,6 +221,7 @@ protected:
     }
 protected:
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
+    virtual void resetExecutionStatus() noexcept = 0;
 private:
     void ipRelativeBranch(Integer displacement) noexcept {
         advanceIPBy = 0;

@@ -31,3 +31,7 @@ bool
 SimplifiedSxCore::continueToExecute() const noexcept {
     return executing_;
 }
+void
+SimplifiedSxCore::resetExecutionStatus() noexcept {
+    executing_ = true;
+}
