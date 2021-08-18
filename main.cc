@@ -198,7 +198,7 @@ void standardHaltState() {
     core.installBlockToMemory(0x18c, 0x00820501);
     // now just install our simple three line program into memory to test execution
     core.installBlockToMemory(0x32c, 0x5cf0'1e00, // mov 0, g14
-                              0x8c80'3000, 0xff00'0000, // lda 0xFF00'0000, g0
+                              0x8c80'3000, 0xffff'fffc, // lda HaltRegister, g0
                               0x92f4'2000 /* st g14, 0(g0) */);
     core.run();
 }
@@ -233,16 +233,16 @@ void printSomeStuffToTheScreen() {
     // now just install our simple three line program into memory to test execution
     core.installBlockToMemory(0x32c,
                               0x5cf0'1e00, // mov 0, g14
-                              0x8c80'3000, 0xff00'0004, // lda 0xFF00'0004, g0
+                              0x8c80'3000, 0xffe0'0000, // lda console_write_char, g0
                               0x8cf0'0061, // lda 'a', g14
                               0x92f4'2000, // st g14, 0(g0)
                               0x8cf0'0062, // lda 'b', g14
                               0x92f4'2000, // st g14, 0(g0)
                               0x5cf0'1e00, // mov 0, g14
-                              0x8c80'3000, 0xff00'0008, // lda 0xFF00'0008, g0
+                              0x8c80'3000, 0xffe0'0004, // lda consoleflush_register, g0
                               0x92f4'2000, /* st g14, 0(g0) */
                               0x5cf0'1e00, // mov 0, g14
-                              0x8c80'3000, 0xff00'0000, // lda 0xFF00'0000, g0
+                              0x8c80'3000, 0xffff'fffc, // lda HaltRegister, g0
                               0x92f4'2000 /* st g14, 0(g0) */);
     core.run();
 
