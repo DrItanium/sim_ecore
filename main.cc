@@ -3,6 +3,6 @@
 //
 #include "SimplifiedSxCore.h"
 int main(int /*argc*/, char** /*argv*/) {
-    SimplifiedSxCore core;
+    //SimplifiedSxCore core;
     return 0;
 }
