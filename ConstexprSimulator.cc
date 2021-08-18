@@ -458,6 +458,90 @@ public:
 private:
     Register& reg_;
 };
+union TraceControls {
+public:
+    constexpr explicit TraceControls(Ordinal value = 0) noexcept : ord_(value) { }
+    constexpr auto getValue() const noexcept { return ord_; }
+    void setValue(Ordinal value) noexcept { ord_ = value; }
+#define X(name, field, type) \
+constexpr type get ## name () const noexcept { return field ; } \
+void set ## name( type value) noexcept { field  = value ; }
+#define Y(particleName, particleField)  \
+    X(particleName ## TraceMode, particleField ## TraceMode, bool); \
+    X(particleName ## TraceEvent, particleField ## TraceEvent, bool)
+    Y(Instruction, instruction);
+    Y(Branch, branch);
+    Y(Call, call);
+    Y(Return, return);
+    Y(Prereturn, prereturn);
+    Y(Supervisor, supervisor);
+    Y(Breakpoint, breakpoint);
+#undef Y
+#undef X
+    /**
+     * Reads and modifies contents of this object
+     */
+    Ordinal modify(Ordinal mask, Ordinal src) noexcept;
+private:
+    Ordinal ord_ = 0;
+    struct {
+        Ordinal unused0 : 1; // 0
+        Ordinal instructionTraceMode : 1; // 1
+        Ordinal branchTraceMode : 1; // 2
+        Ordinal callTraceMode : 1; // 3
+        Ordinal returnTraceMode : 1; // 4
+        Ordinal prereturnTraceMode : 1; // 5
+        Ordinal supervisorTraceMode : 1; // 6
+        Ordinal breakpointTraceMode : 1; // 7
+        Ordinal unused1 : 9; // 8, 9, 10, 11, 12, 13, 14, 15, 16
+        Ordinal instructionTraceEvent : 1; // 17
+        Ordinal branchTraceEvent : 1; // 18
+        Ordinal callTraceEvent : 1; // 19
+        Ordinal returnTraceEvent : 1; // 20
+        Ordinal prereturnTraceEvent : 1; // 21
+        Ordinal supervisorTraceEvent : 1; // 22
+        Ordinal breakpointTraceEvent : 1; // 23
+        Ordinal unused2 : 8;
+    };
+};
+static_assert (sizeof(TraceControls) == sizeof(Ordinal), "ArithmeticControls must be the width of a single Ordinal");
+union ProcessControls {
+public:
+    constexpr explicit ProcessControls(Ordinal value = 0) noexcept : ord_(value) { }
+    constexpr auto getValue() const noexcept { return ord_; }
+    void setValue(Ordinal value) noexcept { ord_ = value; }
+#define X(name, field, type) \
+constexpr type get ## name () const noexcept { return field ; } \
+void set ## name( type value) noexcept { field  = value ; }
+    X(TraceEnable, traceEnable, bool);
+    X(ExecutionMode, executionMode, bool);
+    X(Resume, resume, bool);
+    X(TraceFaultPending, traceFaultPending, bool);
+    X(State, state, bool);
+    X(Priority, priority, Ordinal);
+    X(InternalState, internalState, Ordinal);
+#undef X
+    /**
+     * Reads and modifies contents of this object
+     */
+    Ordinal modify(Ordinal mask, Ordinal src) noexcept;
+private:
+    Ordinal ord_ = 0;
+    struct {
+        Ordinal traceEnable : 1; // 0
+        Ordinal executionMode : 1; // 1
+        Ordinal unused0 : 7;  // 2, 3, 4, 5, 6, 7, 8
+        Ordinal resume : 1; // 9
+        Ordinal traceFaultPending : 1; // 10
+        Ordinal unused1 : 2; // 11, 12
+        Ordinal state : 1; // 13
+        Ordinal unused2 : 2; // 14, 15
+        Ordinal priority : 5; // 16, 17, 18, 19, 20
+        Ordinal internalState : 11; // 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+    };
+};
+static_assert (sizeof(ProcessControls) == sizeof(Ordinal), "ArithmeticControls must be the width of a single Ordinal");
+
 
 union ArithmeticControls {
 public:
@@ -549,7 +633,6 @@ private:
         Ordinal unused3 : 16;
 #endif // end defined(NUMERICS_ARCHITECTURE)
     };
-
 };
 static_assert (sizeof(ArithmeticControls) == sizeof(Ordinal), "ArithmeticControls must be the width of a single Ordinal");
 
@@ -560,6 +643,20 @@ constexpr Ordinal modify(Ordinal mask, Ordinal src, Ordinal srcDest) noexcept {
 
 Ordinal
 ArithmeticControls::modify(Ordinal mask, Ordinal src) noexcept {
+    auto tmp = ord_;
+    ord_ = ::modify(mask, src, ord_);
+    return tmp;
+}
+
+Ordinal
+ProcessControls::modify(Ordinal mask, Ordinal src) noexcept {
+    auto tmp = ord_;
+    ord_ = ::modify(mask, src, ord_);
+    return tmp;
+}
+
+Ordinal
+TraceControls::modify(Ordinal mask, Ordinal src) noexcept {
     auto tmp = ord_;
     ord_ = ::modify(mask, src, ord_);
     return tmp;
@@ -707,7 +804,7 @@ public:
     };
 public:
 public:
-    explicit Core(Ordinal salign = 4) : ip_(0), ac_(0), salign_(salign), c_((salign * 16) - 1) { };
+    explicit Core(Ordinal salign = 4) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) { };
     virtual ~Core() = default;
 protected:
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
@@ -785,6 +882,8 @@ private:
 private:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
+    ProcessControls pc_;
+    TraceControls tc_;
     RegisterFrame locals;
     RegisterFrame globals;
 #ifdef NUMERICS_ARCHITECTURE
@@ -1555,7 +1654,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
                 // The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
                 // controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
-
+                if (pc_.getTraceEnable()) {
+                    generateFault(0, 0); /// @todo raise trace breakpoint fault
+                }
                 // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
                 /// @todo implement
             }();
@@ -1945,6 +2046,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 /// @todo figure out how to support bad access conditions
                 ac_.setConditionCode(0b010);
             }();
+            break;
+        case Opcode::modpc:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(pc_.modify(mask, src));
+            }( );
+                break;
+        case Opcode::modtc:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(tc_.modify(mask, src));
+            }( );
             break;
     }
 }
