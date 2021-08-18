@@ -1,4 +1,4 @@
-
+#include "Types.h"
 
 
 enum class MEMFormatMode : uint8_t {
