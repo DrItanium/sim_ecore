@@ -715,15 +715,8 @@ protected:
     virtual void storeLong(Address destination, LongOrdinal value) = 0;
     virtual void atomicStore(Address destination, Ordinal value) = 0;
     virtual void store(Address destination, Ordinal value) = 0;
-    virtual void storeTriple(Address destination, const TripleRegister& reg) {
-        store(destination + 0, reg.getOrdinal(0));
-        store(destination + 4, reg.getOrdinal(1));
-        store(destination + 8, reg.getOrdinal(2));
-    }
-    virtual void storeQuad(Address destination, const QuadRegister& reg) {
-        storeLong(destination + 0, reg.getHalf(0));
-        storeLong(destination + 8, reg.getHalf(1));
-    }
+    virtual void store(Address destination, const TripleRegister& reg) = 0;
+    virtual void store(Address destination, const QuadRegister& reg) = 0;
     virtual void storeShortInteger(Address destination, ShortInteger value) = 0;
     virtual void storeByteInteger(Address destination, ByteInteger value) = 0;
     virtual Ordinal load(Address destination) = 0;
@@ -731,14 +724,12 @@ protected:
     virtual ByteOrdinal loadByte(Address destination) = 0;
     virtual ShortOrdinal loadShort(Address destination) = 0;
     virtual LongOrdinal loadLong(Address destination) = 0;
-    void load(Address destination, TripleRegister& reg) noexcept {
-        reg.setOrdinal(load(destination + 0), 0);
-        reg.setOrdinal(load(destination + 4), 1);
-        reg.setOrdinal(load(destination + 8), 2);
-    }
-    void load(Address destination, QuadRegister& reg) noexcept {
-        reg.setHalf(loadLong(destination + 0), 0);
-        reg.setHalf(loadLong(destination + 8), 1);
+    virtual void load(Address destination, TripleRegister& reg) noexcept = 0;
+    virtual void load(Address destination, QuadRegister& reg) noexcept = 0;
+    QuadRegister loadQuad(Address destination) noexcept {
+        QuadRegister tmp;
+        load(destination, tmp);
+        return tmp;
     }
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
@@ -1842,13 +1833,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stt:
             [this, &instruction]() {
                 auto& src = getTripleRegister(instruction.getSrcDest(true));
-                storeTriple(computeMemoryAddress(instruction), src);
+                store(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::stq:
             [this, &instruction]() {
                 auto& src = getQuadRegister(instruction.getSrcDest(true));
-                storeQuad(computeMemoryAddress(instruction), src);
+                store(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::stib:
@@ -1927,6 +1918,37 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setOrdinal(load(address));
                 // there is a _fail_ condition where a bad access condition will result in 0b000
                 /// @todo implement support for bad access conditions
+                ac_.setConditionCode(0b010);
+            }();
+            break;
+        case Opcode::synmov:
+            [this, &instruction]() {
+                // load from memory and then store to another address in a synchronous fashion
+                auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // align
+                auto temp = load(src);
+                store(addr, temp);
+                /// @todo figure out how to support bad access conditions
+                ac_.setConditionCode(0b010);
+            }();
+            break;
+        case Opcode::synmovl:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF8; // align
+                auto temp = loadLong(src);
+                storeLong(addr, temp);
+                /// @todo figure out how to support bad access conditions
+                ac_.setConditionCode(0b010);
+            }();
+            break;
+        case Opcode::synmovq:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF0; // align
+                QuadRegister temp = loadQuad(addr);
+                store(addr, temp);
+                /// @todo figure out how to support bad access conditions
                 ac_.setConditionCode(0b010);
             }();
             break;
