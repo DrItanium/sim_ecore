@@ -165,14 +165,14 @@ int main(int /*argc*/, char** /*argv*/) {
     ZCT_Core core;
     core.clearMemory(); // make doubly sure
     // install the imi for testing purposes
-    core.installBlockToMemory(0, 0x0000'0000u,
-                                 0x0000'00b0u,
-                                 0x0000'0000u,
-                                 0x0000'032cu,
-                                 0xffff'fc24u);
+    core.installBlockToMemory(0, 0x0000'0000u, // sat_address
+                                 0x0000'00b0u, // prcb_ptr
+                                 0x0000'0000u, // check word
+                                 0x0000'032cu, // start ip
+                                 0xffff'fc24u /* cs1 */);
     core.installToMemory(0x1c, 0xffff'ffff);
     core.installBlockToMemory(0x78, 0x0000'0180,
-                              0x3040'00fb); // prcb_ptr
+                              0x3040'00fb);
     core.installBlockToMemory(0x88, 0u,
                               0x00fc'00fb);
     core.installBlockToMemory(0x98, 0x0000'0180,
@@ -189,5 +189,10 @@ int main(int /*argc*/, char** /*argv*/) {
                               0x27f,
                               0x500);
     core.installBlockToMemory(0x18c, 0x00820501);
+    // now just install our simple three line program into memory to test execution
+    core.installBlockToMemory(0x32c, 0x5cf0'1e00, // mov 0, g14
+                                     0x8c80'3000, 0xff00'0000, // lda 0xFF00'0000, g0
+                                     0x92f4'2000 /* st g14, 0(g0) */);
+    core.run();
     return 0;
 }
