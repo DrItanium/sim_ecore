@@ -1856,12 +1856,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::shri:
             [this, &instruction]() {
-                static constexpr Integer bitPositions[32] {
-#define X(base) 1 << (base + 0), 1 << (base + 1), 1 << (base + 2), 1 << (base + 3)
-                        X(0), X(4), X(8), X(12),
-                        X(16), X(20), X(24), X(28)
-#undef X
-                };
                 /*
                  * if (src >= 0) {
                  *  if (len < 32) {
@@ -1946,7 +1940,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
                 auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF0; // align
-                QuadRegister temp = loadQuad(addr);
+                QuadRegister temp = loadQuad(src);
                 store(addr, temp);
                 /// @todo figure out how to support bad access conditions
                 ac_.setConditionCode(0b010);
