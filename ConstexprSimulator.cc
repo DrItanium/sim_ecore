@@ -455,6 +455,18 @@ public:
     void setPrereturnTraceFlag(bool value) const noexcept {
         value ? enablePrereturnTraceFlag() : disablePrereturnTraceFlag();
     }
+    constexpr Ordinal getReturnType() const noexcept { return reg_.getOrdinal() & 0b111; }
+    void setReturnType(Ordinal value) noexcept { reg_.setOrdinal((reg_.getOrdinal() & ~0b111) | (value & 0b111)); }
+    constexpr Ordinal getAddress() const noexcept {
+        // according to the i960Sx manual, the lowest 6 bits are ignored but the lowest 4 bits are always confirmed
+        return reg_.getOrdinal() & ~0b1'111;
+    }
+    void setAddress(Ordinal value) noexcept {
+        auto lowerBits = reg_.getOrdinal() & 0b1'111;
+        reg_.setOrdinal((value & ~0b1'111) | lowerBits);
+    }
+    constexpr auto getWhole() const noexcept { return reg_.getOrdinal(); }
+    void setWhole(Ordinal value) noexcept { reg_.setOrdinal(value); }
 private:
     Register& reg_;
 };
@@ -510,6 +522,9 @@ public:
     constexpr explicit ProcessControls(Ordinal value = 0) noexcept : ord_(value) { }
     constexpr auto getValue() const noexcept { return ord_; }
     void setValue(Ordinal value) noexcept { ord_ = value; }
+    constexpr bool inSupervisorMode() const noexcept { return getExecutionMode(); }
+    constexpr bool inUserMode() const noexcept { return !getExecutionMode(); }
+
 #define X(name, field, type) \
 constexpr type get ## name () const noexcept { return field ; } \
 void set ## name( type value) noexcept { field  = value ; }
@@ -860,7 +875,16 @@ protected:
     const Register& getRIP() const noexcept {
         return getRegister(RegisterIndex::RIP);
     }
-
+protected:
+    virtual void boot() = 0;
+    virtual Ordinal getSystemAddressTableBase() const noexcept = 0;
+    virtual Ordinal getSystemProcedureTableBase() const noexcept = 0;
+    virtual Ordinal getFaultProcedureTableBase() const noexcept = 0;
+    virtual Ordinal getPRCBPtrBase() const noexcept = 0;
+    virtual Ordinal getFirstIP() const noexcept = 0;
+    virtual Ordinal getInterruptTableBase() const noexcept = 0;
+    virtual Ordinal getFaultTableBase() const noexcept = 0;
+    inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
 private:
     void ipRelativeBranch(Integer displacement) noexcept {
         advanceIPBy = 0;
@@ -892,6 +916,7 @@ private:
     Ordinal advanceIPBy = 0;
     Ordinal salign_;
     Ordinal c_;
+protected:
     bool executing_ = false;
 };
 void
@@ -2072,6 +2097,44 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
                 auto src = getRegister(instruction.getSrc2()).getOrdinal();
                 dest.setOrdinal(src & ~bitpos);
+            }();
+            break;
+        case Opcode::calls:
+            [this, &instruction]() {
+                auto targ = getRegister(instruction.getSrc1()).getOrdinal();
+                if (targ > 259) {
+                    generateFault(0, 0); /// @todo protection length fault
+                } else {
+                   syncf();
+                   auto tempPE = load(getSystemProcedureTableBase() + 48 + (4 * targ));
+                   auto type = tempPE & 0b11;
+                   auto procedureAddress = tempPE & ~0b11;
+                   // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
+                   getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal());
+                   advanceIPBy = 0;
+                   ip_.setOrdinal(procedureAddress);
+                   Ordinal temp = 0;
+                   Ordinal tempRRR = 0;
+                   if ((type == 0b00) || pc_.inSupervisorMode()) {
+                       temp = (getStackPointer().getOrdinal() + c_) & ~c_;
+                       tempRRR = 0;
+                   } else {
+                       temp = getSupervisorStackPointer();
+                       tempRRR = 0b010 | (pc_.getTraceEnable() ? 0b001 : 0);
+                       pc_.setExecutionMode(true);
+                       pc_.setTraceEnable(temp & 0b1);
+                   }
+
+                    /// @todo implement support for caching register frames
+                    saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                    /// @todo expand pfp and fp to accurately model how this works
+                    PreviousFramePointer pfp(getPFP());
+                    pfp.setAddress(getFramePointer().getOrdinal());
+                    pfp.setReturnType(tempRRR);
+                    getFramePointer().setOrdinal(temp);
+                    getStackPointer().setOrdinal(temp + 64);
+
+                }
             }();
             break;
     }
