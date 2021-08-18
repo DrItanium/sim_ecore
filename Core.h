@@ -125,8 +125,22 @@ protected:
         storeLong(destination, reg.getHalf(0));
         storeLong(destination, reg.getHalf(1));
     }
-    virtual void storeShortInteger(Address destination, ShortInteger value) = 0;
-    virtual void storeByteInteger(Address destination, ByteInteger value) = 0;
+    virtual void storeShortInteger(Address destination, ShortInteger value) {
+        union {
+            ShortInteger in;
+            ShortOrdinal out;
+        } thing;
+        thing.in = value;
+        storeShort(destination, thing.out);
+    }
+    virtual void storeByteInteger(Address destination, ByteInteger value) {
+        union {
+            ByteInteger in;
+            ByteOrdinal out;
+        } thing;
+        thing.in = value;
+        storeByte(destination, thing.out);
+    }
     virtual Ordinal load(Address destination) = 0;
     virtual Ordinal atomicLoad(Address destination) {
         return load(destination);
