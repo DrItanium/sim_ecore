@@ -91,6 +91,8 @@ public:
 public:
     explicit Core(Ordinal salign = 4) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) { };
     virtual ~Core() = default;
+public:
+    void run();
 protected:
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
@@ -155,6 +157,8 @@ protected:
     virtual Ordinal getInterruptTableBase() const noexcept = 0;
     virtual Ordinal getFaultTableBase() const noexcept = 0;
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
+    virtual void generateFault(FaultType fault);
+    virtual bool continueToExecute() const noexcept = 0;
 private:
     void ipRelativeBranch(Integer displacement) noexcept {
         advanceIPBy = 0;
@@ -162,7 +166,6 @@ private:
     }
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
-    void generateFault(FaultType fault) noexcept;
     void cmpi(Integer src1, Integer src2) noexcept;
     void cmpo(Ordinal src1, Ordinal src2) noexcept;
     void syncf() noexcept;
@@ -184,7 +187,5 @@ private:
     Ordinal advanceIPBy = 0;
     Ordinal salign_;
     Ordinal c_;
-protected:
-    bool executing_ = false;
 };
 #endif //SIM3_CORE_H

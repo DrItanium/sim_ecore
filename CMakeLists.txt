@@ -9,4 +9,4 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 add_executable(sim3
-        OpcodesRaw.h main.cc Core.h Core.cc Types.h Instruction.h Register.h Register.cc)
+        OpcodesRaw.h main.cc Core.h Core.cc Types.h Instruction.h Register.h Register.cc SimplifiedSxCore.cc SimplifiedSxCore.h)

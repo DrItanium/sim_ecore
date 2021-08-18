@@ -172,7 +172,7 @@ Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcep
 }
 
 void
-Core::generateFault(FaultType) noexcept {
+Core::generateFault(FaultType) {
     /// @todo implement this at some point
     // lookup fault information
     // setup fault data frame
@@ -558,61 +558,61 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 getRegister(instruction.getSrcDest(false)).setInteger(getRegister(instruction.getSrc2()).getInteger() +
                                                                       getRegister(instruction.getSrc1()).getInteger());
-                                                                                                                                                                                                                                                        }( );
-                                                                                                                                                                                                                                                        break;
-                                                                                                                                                                                                                                                        case Opcode::addo:
-                                                                                                                                                                                                                                                            [this, &instruction]() {
-                                                                                                                                                                                                                                                                getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() +
-                                                                                                                                                                                                                                                                getRegister(instruction.getSrc1()).getOrdinal());
-                                                                                                                                                                                                                                                            }();
-                                                                                                                                                                                                                                                            break;
-                                                                                                                                                                                                                                                            case Opcode::subi:
-                                                                                                                                                                                                                                                                [this, &instruction]() {
-                                                                                                                                                                                                                                                                    getRegister(instruction.getSrcDest(false)).setInteger(
-                                                                                                                                                                                                                                                                            getRegister(instruction.getSrc2()).getInteger() - getRegister(instruction.getSrc1()).getInteger());
-                                                                                                                                                                                                                                                                }();
-                                                                                                                                                                                                                                                                break;
-                                                                                                                                                                                                                                                                case Opcode::subo:
-                                                                                                                                                                                                                                                                    [this, &instruction]() {
-                                                                                                                                                                                                                                                                        getRegister(instruction.getSrcDest(false)).setOrdinal(
-                                                                                                                                                                                                                                                                                getRegister(instruction.getSrc2()).getOrdinal() - getRegister(instruction.getSrc1()).getOrdinal());
-                                                                                                                                                                                                                                                                    }();
-                                                                                                                                                                                                                                                                    break;
-                                                                                                                                                                                                                                                                    case Opcode::muli:
-                                                                                                                                                                                                                                                                        [this, &instruction]() {
-                                                                                                                                                                                                                                                                            getRegister(instruction.getSrcDest(false)).setInteger(
-                                                                                                                                                                                                                                                                                    getRegister(instruction.getSrc2()).getInteger() * getRegister(instruction.getSrc1()).getInteger());
-                                                                                                                                                                                                                                                                        }();
-                                                                                                                                                                                                                                                                        break;
-                                                                                                                                                                                                                                                                        case Opcode::mulo:
-                                                                                                                                                                                                                                                                            [this, &instruction]() {
-                                                                                                                                                                                                                                                                                getRegister(instruction.getSrcDest(false)).setOrdinal(
-                                                                                                                                                                                                                                                                                        getRegister(instruction.getSrc2()).getOrdinal() * getRegister(instruction.getSrc1()).getOrdinal());
-                                                                                                                                                                                                                                                                            }();
-                                                                                                                                                                                                                                                                            break;
-                                                                                                                                                                                                                                                                            case Opcode::divo:
-                                                                                                                                                                                                                                                                                [this, &instruction]() {
-                                                                                                                                                                                                                                                                                    /// @todo check denominator and do proper handling
-                                                                                                                                                                                                                                                                                    getRegister(instruction.getSrcDest(false)).setOrdinal(
-                                                                                                                                                                                                                                                                                            getRegister(instruction.getSrc2()).getOrdinal() / getRegister(instruction.getSrc1()).getOrdinal());
-                                                                                                                                                                                                                                                                                }();
-                                                                                                                                                                                                                                                                                break;
-                                                                                                                                                                                                                                                                                case Opcode::divi:
-                                                                                                                                                                                                                                                                                    [this, &instruction]() {
-                                                                                                                                                                                                                                                                                        /// @todo check denominator and do proper handling
-                                                                                                                                                                                                                                                                                        getRegister(instruction.getSrcDest(false)).setInteger(
-                                                                                                                                                                                                                                                                                                getRegister(instruction.getSrc2()).getInteger() / getRegister(instruction.getSrc1()).getInteger());
-                                                                                                                                                                                                                                                                                    }();
-                                                                                                                                                                                                                                                                                    break;
-                                                                                                                                                                                                                                                                                    case Opcode::notbit:
-                                                                                                                                                                                                                                                                                        [this, &instruction]() {
-                                                                                                                                                                                                                                                                                            auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                                                                                                                                                                                                                                                                                            auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                                                                                                                                                                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                                                                                                                            dest.setOrdinal(src ^ bitpos);
-                                                                                                                                                                                                                                                                                        }();
-                                                                                                                                                                                                                                                                                        break;
-                                                                                                                                                                                                                                                                                        case Opcode::logicalAnd: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() & getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+            }( );
+            break;
+        case Opcode::addo:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() +
+                                                                      getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::subi:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setInteger(
+                        getRegister(instruction.getSrc2()).getInteger() - getRegister(instruction.getSrc1()).getInteger());
+            }();
+            break;
+        case Opcode::subo:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setOrdinal(
+                        getRegister(instruction.getSrc2()).getOrdinal() - getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::muli:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setInteger(
+                        getRegister(instruction.getSrc2()).getInteger() * getRegister(instruction.getSrc1()).getInteger());
+            }();
+            break;
+        case Opcode::mulo:
+            [this, &instruction]() {
+                getRegister(instruction.getSrcDest(false)).setOrdinal(
+                        getRegister(instruction.getSrc2()).getOrdinal() * getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::divo:
+            [this, &instruction]() {
+                /// @todo check denominator and do proper handling
+                getRegister(instruction.getSrcDest(false)).setOrdinal(
+                        getRegister(instruction.getSrc2()).getOrdinal() / getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::divi:
+            [this, &instruction]() {
+                /// @todo check denominator and do proper handling
+                getRegister(instruction.getSrcDest(false)).setInteger(
+                        getRegister(instruction.getSrc2()).getInteger() / getRegister(instruction.getSrc1()).getInteger());
+            }();
+            break;
+        case Opcode::notbit:
+            [this, &instruction]() {
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(src ^ bitpos);
+            }();
+            break;
+        case Opcode::logicalAnd: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() & getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::logicalOr: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::logicalXor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() ^ getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::logicalXnor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getRegister(instruction.getSrc2()).getOrdinal() ^ getRegister(instruction.getSrc1()).getOrdinal())); }(); break;
@@ -632,671 +632,677 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 dest.setInteger(src2 - ((src2 / src1) * src1));
             }();
             break;
-            case Opcode::remo:
-                [this, &instruction]() {
+        case Opcode::remo:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+                auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
+                // taken from the i960Sx manual
+                dest.setOrdinal(src2 - ((src2 / src1) * src1));
+            }();
+            break;
+        case Opcode::rotate:
+            [this, &instruction]() {
+                auto rotateOperation = [](Ordinal src, Ordinal length)  {
+                    return (src << length)  | (src >> ((-length) & 31u));
+                };
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto len = getRegister(instruction.getSrc1()).getOrdinal();
+                dest.setOrdinal(rotateOperation(src, len));
+            }();
+            break;
+        case Opcode::mov:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(getRegister(instruction.getSrc1()).getOrdinal());
+            }();
+            break;
+        case Opcode::movl:
+            [this, &instruction]() {
+                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+                dest.setLongOrdinal(getDoubleRegister(instruction.getSrc1()).getLongOrdinal());
+            }();
+            break;
+        case Opcode::movt:
+            [this, &instruction]() {
+                auto& dest = getTripleRegister(instruction.getSrcDest(false));
+                const auto& src = getTripleRegister(instruction.getSrc1());
+                dest.setOrdinal(src.getOrdinal(0), 0);
+                dest.setOrdinal(src.getOrdinal(1), 1);
+                dest.setOrdinal(src.getOrdinal(2), 2);
+            }();
+            break;
+        case Opcode::movq:
+            [this, &instruction]() {
+                auto& dest = getQuadRegister(instruction.getSrcDest(false));
+                const auto& src = getQuadRegister(instruction.getSrc1());
+                dest.setOrdinal(src.getOrdinal(0), 0);
+                dest.setOrdinal(src.getOrdinal(1), 1);
+                dest.setOrdinal(src.getOrdinal(2), 2);
+                dest.setOrdinal(src.getOrdinal(3), 3);
+            }();
+            break;
+        case Opcode::alterbit:
+            [this, &instruction]() {
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                if (ac_.getConditionCode() & 0b010) {
+                    dest.setOrdinal(src | bitpos);
+                } else {
+                    dest.setOrdinal(src & ~bitpos);
+                }
+            }();
+            break;
+        case Opcode::ediv:
+            [this, &instruction]() {
+                auto denomord = getRegister(instruction.getSrc1()).getOrdinal();
+                if (denomord == 0) {
+                    // raise an arithmetic zero divide fault
+                    generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
+                } else {
+                    auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
+                    auto denominator = static_cast<LongOrdinal>(denomord);
+                    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+                    // taken from the manual
+                    auto remainder = static_cast<Ordinal>(numerator - (numerator / denominator) * denominator);
+                    auto quotient = static_cast<Ordinal>(numerator / denominator);
+                    dest.setOrdinal(remainder, 0);
+                    dest.setOrdinal(quotient, 1);
+                }
+            }();
+            break;
+        case Opcode::emul:
+            [this, &instruction]() {
+                auto src2 = static_cast<LongOrdinal>(getRegister(instruction.getSrc2()).getOrdinal());
+                auto src1 = static_cast<LongOrdinal>(getRegister(instruction.getSrc2()).getOrdinal());
+                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+                // taken from the manual
+                dest.setLongOrdinal(src2 * src1);
+            }();
+            break;
+        case Opcode::extract:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto bitpos = getRegister(instruction.getSrc1()).getOrdinal();
+                auto len = getRegister(instruction.getSrc2()).getOrdinal();
+                // taken from the Hx manual as it isn't insane
+                auto shiftAmount = bitpos > 32 ? 32 : bitpos;
+                dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
+            }();
+            break;
+        case Opcode::flushreg:
+            [this, &instruction]() {
+                /// @todo expand this instruction to dump saved register sets to stack in the right places
+                // currently this does nothing because I haven't implemented the register frame stack yet
+            }();
+            break;
+        case Opcode::fmark:
+            [this, &instruction]() {
+                // Generates a breakpoint trace-event. This instruction causes a breakpoint trace-event to be generated, regardless of the
+                // setting of the breakpoint trace mode flag (to be implemented), providing the trace-enable bit (bit 0) of the process
+                // controls is set.
+
+                // if pc.te == 1 then raiseFault(BreakpointTraceFault)
+                /// @todo implement
+                if (pc_.getTraceEnable()) {
+                    generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
+                }
+            }();
+            break;
+        case Opcode::mark:
+            [this, &instruction]() {
+                // Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
+                // The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
+                // controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
+                if (pc_.getTraceEnable() && tc_.getBreakpointTraceMode()) {
+                    generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
+                }
+                // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
+                /// @todo implement
+            }();
+            break;
+
+        case Opcode::modac:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(ac_.modify(mask, src));
+            }( );
+            break;
+        case Opcode::modi:
+            [this, &instruction]() {
+                auto denominator = getRegister(instruction.getSrc1()) .getInteger();
+                if (denominator == 0) {
+                    generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
+                } else {
+                    auto numerator = getRegister(instruction.getSrc2()).getInteger();
                     auto& dest = getRegister(instruction.getSrcDest(false));
-                    auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
-                    auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
-                    // taken from the i960Sx manual
-                    dest.setOrdinal(src2 - ((src2 / src1) * src1));
-                }();
-                break;
-                case Opcode::rotate:
-                    [this, &instruction]() {
-                        auto rotateOperation = [](Ordinal src, Ordinal length)  {
-                            return (src << length)  | (src >> ((-length) & 31u));
-                        };
-                        auto& dest = getRegister(instruction.getSrcDest(false));
+                    auto result = numerator - ((numerator / denominator) * denominator);
+                    if (((numerator * denominator) < 0) && (result != 0)) {
+                        result += denominator;
+                    }
+                    dest.setInteger(result);
+                }
+            }();
+            break;
+        case Opcode::modify:
+            [this, &instruction]() {
+                // this is my encode operation but expanded out
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal((src & mask) | (dest.getOrdinal() & ~mask));
+            }();
+            break;
+        case Opcode::call:
+            [this, &instruction]() {
+                /// @todo implement
+                // wait for any uncompleted instructions to finish
+                auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+                auto fp = getFramePointer().getOrdinal();
+                getRIP().setOrdinal(ip_.getOrdinal());
+                /// @todo implement support for caching register frames
+                saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+                /// @todo expand pfp and fp to accurately model how this works
+                getPFP().setOrdinal(fp);
+                getFramePointer().setOrdinal(temp);
+                getStackPointer().setOrdinal(temp + 64);
+            }();
+            break;
+        case Opcode::callx:
+            [this, &instruction]() {
+                // wait for any uncompleted instructions to finish
+                auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+                auto fp = getFramePointer().getOrdinal();
+                getRIP().setOrdinal(ip_.getOrdinal());
+                /// @todo implement support for caching register frames
+                saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                ip_.setInteger(computeMemoryAddress(instruction));
+                getPFP().setOrdinal(fp);
+                getFramePointer().setOrdinal(temp);
+                getStackPointer().setOrdinal(temp + 64);
+            }();
+            break;
+        case Opcode::shlo:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto len = getRegister(instruction.getSrc1()).getOrdinal();
+                if (len < 32) {
+                    auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                    dest.setOrdinal(src << len);
+                } else {
+                    dest.setOrdinal(0);
+                }
+            }();
+            break;
+        case Opcode::shro:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto len = getRegister(instruction.getSrc1()).getOrdinal();
+                /// @todo implement "speed" optimization by only getting src if we need it
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(src >> len);
+            }();
+            break;
+        case Opcode::shli:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto len = getRegister(instruction.getSrc1()).getInteger();
+                auto src = getRegister(instruction.getSrc2()).getInteger();
+                dest.setInteger(src << len);
+            }();
+            break;
+        case Opcode::scanbyte:
+            [this, &instruction]() {
+                auto& src1 = getRegister(instruction.getSrc1());
+                auto& src2 = getRegister(instruction.getSrc2());
+                auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.getByteOrdinal(which) == src2.getByteOrdinal(which); };
+                ac_.setConditionCode((bytesEqual(0) || bytesEqual(1) || bytesEqual(2) || bytesEqual(3)) ? 0b010 : 0b000);
+            }();
+            break;
+        case Opcode::scanbit:
+            [this, &instruction]() {
+                constexpr Ordinal reverseBitPositions[32] {
+#define X(base) 1u << (base + 3), 1u << (base + 2), 1u << (base + 1), 1u << (base + 0)
+                        X(28), X(24), X(20), X(16),
+                        X(12), X(8), X(4), X(0),
+#undef X
+                };
+                // perform a sanity check
+                static_assert(reverseBitPositions[0] == (1u << 31));
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc1()).getOrdinal();
+                dest.setOrdinal(0xFFFF'FFFF);
+                ac_.setConditionCode(0);
+                Ordinal index = 31;
+                for (auto mask : reverseBitPositions) {
+                    if ((src & mask) != 0) {
+                        dest.setOrdinal(index);
+                        ac_.setConditionCode(0b010);
+                        return;
+                    }
+                    --index;
+                }
+            }();
+            break;
+        case Opcode::spanbit:
+            [this, &instruction]() {
+                constexpr Ordinal reverseBitPositions[32] {
+#define X(base) 1u << (base + 3), 1u << (base + 2), 1u << (base + 1), 1u << (base + 0)
+                        X(28), X(24), X(20), X(16),
+                        X(12), X(8), X(4), X(0),
+#undef X
+                };
+                // perform a sanity check
+                static_assert(reverseBitPositions[0] == (1u << 31));
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc1()).getOrdinal();
+                dest.setOrdinal(0xFFFF'FFFF);
+                ac_.setConditionCode(0);
+                Ordinal index = 31;
+                for (auto mask : reverseBitPositions) {
+                    if ((src & mask) == 0) {
+                        dest.setOrdinal(index);
+                        ac_.setConditionCode(0b010);
+                        return;
+                    }
+                    --index;
+                }
+            }();
+            break;
+        case Opcode::syncf:
+            syncf();
+            break;
+        case Opcode::atadd:
+            [this, &instruction]() {
+                // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
+                // The initial value from memory is stored in dst (internally src/dst).
+                syncf();
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto temp = atomicLoad(addr);
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                atomicStore(addr, temp + src);
+                getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
+            }();
+            break;
+        case Opcode::atmod:
+            [this, &instruction]() {
+                // copies the src/dest value (logical version) into the memory location specifeid by src1.
+                // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
+                // value from memory is stored in src/dest
+                syncf();
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto temp = atomicLoad(addr);
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc2()).getOrdinal();
+                atomicStore(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
+                dest.setOrdinal(temp);
+            }();
+            break;
+        case Opcode::chkbit:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
+            }();
+            break;
+        case Opcode::addc:
+            [this, &instruction]() {
+                auto& src1 = getRegister(instruction.getSrc1());
+                auto& src2 = getRegister(instruction.getSrc2());
+                union {
+                    LongOrdinal value = 0;
+                    Ordinal halves[2];
+                } result;
+                result.value = static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0);
+                // the result will be larger than 32-bits so we have to keep that in mind
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(result.halves[0]);
+                // do computation here
+                ac_.setConditionCode(0);
+                if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+                    // set the overflow bit in ac
+                    ac_.setOverflowBit(1);
+                }
+                ac_.setCarryBit(result.halves[1] != 0);
+
+                // set the carry out bit
+            }();
+            break;
+        case Opcode::subc:
+            [this, &instruction]() {
+                auto& src1 = getRegister(instruction.getSrc1());
+                auto& src2 = getRegister(instruction.getSrc2());
+                union {
+                    LongOrdinal value = 0;
+                    Ordinal halves[2];
+                } result;
+                result.value = static_cast<LongOrdinal>(src2.getOrdinal()) - static_cast<LongOrdinal>(src1.getOrdinal()) - 1 + (ac_.getCarryBit() ? 1 : 0);
+                // the result will be larger than 32-bits so we have to keep that in mind
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setOrdinal(result.halves[0]);
+                // do computation here
+                ac_.setConditionCode(0);
+                if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+                    // set the overflow bit in ac
+                    ac_.setOverflowBit(1);
+                }
+                ac_.setCarryBit(result.halves[1] != 0);
+                // set the carry out bit
+            }();
+            break;
+        case Opcode::ldib:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setInteger(loadByte(computeMemoryAddress(instruction)));
+            }();
+            break;
+        case Opcode::ldis:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                dest.setInteger(loadShort(computeMemoryAddress(instruction)));
+            }();
+            break;
+        case Opcode::st:
+            [this, &instruction]() {
+                auto addr = computeMemoryAddress(instruction);
+                auto src = getRegister(instruction.getSrcDest(true)).getOrdinal();
+                store(addr, src);
+            }();
+            break;
+        case Opcode::stob:
+            [this, &instruction]() {
+                auto addr = computeMemoryAddress(instruction);
+                auto src = getRegister(instruction.getSrcDest(true)).getByteOrdinal();
+                storeByte(addr, src);
+            }();
+            break;
+        case Opcode::stos:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrcDest(true)).getShortOrdinal();
+                storeShort(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stl:
+            [this, &instruction]() {
+                auto src = getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal();
+                storeLong(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stt:
+            [this, &instruction]() {
+                auto& src = getTripleRegister(instruction.getSrcDest(true));
+                store(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stq:
+            [this, &instruction]() {
+                auto& src = getQuadRegister(instruction.getSrcDest(true));
+                store(computeMemoryAddress(instruction), src);
+            }();
+            break;
+        case Opcode::stib:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrcDest(true)).getInteger();
+                storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(src));
+            }();
+            break;
+        case Opcode::stis:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrcDest(true)).getInteger();
+                storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(src));
+            }();
+            break;
+        case Opcode::shri:
+            [this, &instruction]() {
+                /*
+                 * if (src >= 0) {
+                 *  if (len < 32) {
+                 *      dest <- src/2^len
+                 *  } else {
+                 *      dest <- 0
+                 *  }
+                 * }else {
+                 *  if (len < 32) {
+                 *      dest <- (src - 2^len + 1)/2^len;
+                 *  } else {
+                 *      dest <- -1;
+                 *   }
+                 * }
+                 *
+                 */
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc2()).getInteger();
+                auto len = getRegister(instruction.getSrc1()).getInteger();
+                /// @todo perhaps implement the extra logic if necessary
+                dest.setInteger(src >> len);
+            }();
+            break;
+        case Opcode::shrdi:
+            [this, &instruction]() {
+                static constexpr Integer bitPositions[32] {
+#define X(base) 1 << (base + 0), 1 << (base + 1), 1 << (base + 2), 1 << (base + 3)
+                        X(0), X(4), X(8), X(12),
+                        X(16), X(20), X(24), X(28)
+#undef X
+                };
+                // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto src = getRegister(instruction.getSrc2()).getInteger();
+                auto len = getRegister(instruction.getSrc1()).getInteger();
+                if (len < 32) {
+                    dest.setInteger(src / bitPositions[len]);
+                } else {
+                    dest.setInteger(0);
+                }
+            }();
+            break;
+        case Opcode::synld:
+            [this, &instruction]() {
+                // wait until another execution unit sets the condition codes to continue after requesting a load.
+                // In the case of this emulator, it really doesn't mean anything but I can see this being a synld followed by a wait
+                // for synchronization. It also allows access to internal memory mapped items.
+                // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
+                // with condition code assignments and forced alignments
+
+                auto address = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force word alignment
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                // load basically takes care of accessing different registers and such even memory mapped ones
+                dest.setOrdinal(load(address));
+                // there is a _fail_ condition where a bad access condition will result in 0b000
+                /// @todo implement support for bad access conditions
+                ac_.setConditionCode(0b010);
+            }();
+            break;
+        case Opcode::synmov:
+            [this, &instruction]() {
+                // load from memory and then store to another address in a synchronous fashion
+                auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // align
+                auto temp = load(src);
+                store(addr, temp);
+                /// @todo figure out how to support bad access conditions
+                ac_.setConditionCode(0b010);
+            }();
+            break;
+        case Opcode::synmovl:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF8; // align
+                auto temp = loadLong(src);
+                storeLong(addr, temp);
+                /// @todo figure out how to support bad access conditions
+                ac_.setConditionCode(0b010);
+            }();
+            break;
+        case Opcode::synmovq:
+            [this, &instruction]() {
+                auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
+                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF0; // align
+                QuadRegister temp = loadQuad(src);
+                store(addr, temp);
+                /// @todo figure out how to support bad access conditions
+                ac_.setConditionCode(0b010);
+            }();
+            break;
+        case Opcode::modpc:
+            [this, &instruction]() {
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                if (mask != 0) {
+                    if (!pc_.inSupervisorMode()) {
+                        generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
+                    } else {
                         auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                        auto len = getRegister(instruction.getSrc1()).getOrdinal();
-                        dest.setOrdinal(rotateOperation(src, len));
-                    }();
-                    break;
-                    case Opcode::mov:
-                        [this, &instruction]() {
-                            auto& dest = getRegister(instruction.getSrcDest(false));
-                            dest.setOrdinal(getRegister(instruction.getSrc1()).getOrdinal());
+                        dest.setOrdinal(pc_.modify(mask, src));
+                        ProcessControls tmp(dest.getOrdinal());
+                        if (tmp.getPriority() > pc_.getPriority()) {
+                            /// @todo check for pending interrupts
+                        }
+                    }
+                } else {
+                    dest.setOrdinal(pc_.getValue());
+                }
+            }( );
+            break;
+        case Opcode::modtc:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(tc_.modify(mask, src));
+            }( );
+            break;
+        case Opcode::setbit:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(src | bitpos);
+            }();
+            break;
+        case Opcode::clrbit:
+            [this, &instruction]() {
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(src & ~bitpos);
+            }();
+            break;
+        case Opcode::calls:
+            [this, &instruction]() {
+                auto targ = getRegister(instruction.getSrc1()).getOrdinal();
+                if (targ > 259) {
+                    generateFault(FaultType::Protection_Length);
+                } else {
+                    syncf();
+                    auto tempPE = load(getSystemProcedureTableBase() + 48 + (4 * targ));
+                    auto type = tempPE & 0b11;
+                    auto procedureAddress = tempPE & ~0b11;
+                    // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
+                    getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal());
+                    advanceIPBy = 0;
+                    ip_.setOrdinal(procedureAddress);
+                    Ordinal temp = 0;
+                    Ordinal tempRRR = 0;
+                    if ((type == 0b00) || pc_.inSupervisorMode()) {
+                        temp = (getStackPointer().getOrdinal() + c_) & ~c_;
+                        tempRRR = 0;
+                    } else {
+                        temp = getSupervisorStackPointer();
+                        tempRRR = 0b010 | (pc_.getTraceEnable() ? 0b001 : 0);
+                        pc_.setExecutionMode(true);
+                        pc_.setTraceEnable(temp & 0b1);
+                    }
+
+                    /// @todo implement support for caching register frames
+                    saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                    /// @todo expand pfp and fp to accurately model how this works
+                    PreviousFramePointer pfp(getPFP());
+                    pfp.setAddress(getFramePointer().getOrdinal());
+                    pfp.setReturnType(tempRRR);
+                    getFramePointer().setOrdinal(temp);
+                    getStackPointer().setOrdinal(temp + 64);
+
+                }
+            }();
+            break;
+        case Opcode::ret:
+            [this]() {
+                syncf();
+                PreviousFramePointer pfp(getPFP());
+                auto restoreStandardFrame = [this]() {
+                    getFramePointer().setOrdinal(getPFP().getOrdinal());
+                    /// @todo implement local register frame stack
+                    restoreRegisterFrame(locals, getFramePointer().getOrdinal());
+                    advanceIPBy = 0;
+                    ip_.setOrdinal(getRIP().getOrdinal());
+                };
+                switch (pfp.getReturnType()) {
+                    case 0b000:
+                        restoreStandardFrame();
+                        break;
+                    case 0b001:
+                        [this, &restoreStandardFrame]() {
+                            auto& fp = getFramePointer();
+                            auto x = load(fp.getOrdinal() - 16);
+                            auto y = load(fp.getOrdinal() - 12);
+                            restoreStandardFrame();
+                            ac_.setValue(y);
+                            if (pc_.inSupervisorMode()) {
+                                pc_.setValue(x);
+                            }
                         }();
                         break;
-                        case Opcode::movl:
-                            [this, &instruction]() {
-                                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                                dest.setLongOrdinal(getDoubleRegister(instruction.getSrc1()).getLongOrdinal());
-                            }();
-                            break;
-                            case Opcode::movt:
-                                [this, &instruction]() {
-                                    auto& dest = getTripleRegister(instruction.getSrcDest(false));
-                                    const auto& src = getTripleRegister(instruction.getSrc1());
-                                    dest.setOrdinal(src.getOrdinal(0), 0);
-                                    dest.setOrdinal(src.getOrdinal(1), 1);
-                                    dest.setOrdinal(src.getOrdinal(2), 2);
-                                }();
-                                break;
-                                case Opcode::movq:
-                                    [this, &instruction]() {
-                                        auto& dest = getQuadRegister(instruction.getSrcDest(false));
-                                        const auto& src = getQuadRegister(instruction.getSrc1());
-                                        dest.setOrdinal(src.getOrdinal(0), 0);
-                                        dest.setOrdinal(src.getOrdinal(1), 1);
-                                        dest.setOrdinal(src.getOrdinal(2), 2);
-                                        dest.setOrdinal(src.getOrdinal(3), 3);
-                                    }();
-                                    break;
-                                    case Opcode::alterbit:
-                                        [this, &instruction]() {
-                                            auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                                            auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                            if (ac_.getConditionCode() & 0b010) {
-                                                dest.setOrdinal(src | bitpos);
-                                            } else {
-                                                dest.setOrdinal(src & ~bitpos);
-                                            }
-                                        }();
-                                        break;
-                                        case Opcode::ediv:
-                                            [this, &instruction]() {
-                                                auto denomord = getRegister(instruction.getSrc1()).getOrdinal();
-                                                if (denomord == 0) {
-                                                    // raise an arithmetic zero divide fault
-                                                    generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
-                                                } else {
-                                                    auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
-                                                    auto denominator = static_cast<LongOrdinal>(denomord);
-                                                    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                                                    // taken from the manual
-                                                    auto remainder = static_cast<Ordinal>(numerator - (numerator / denominator) * denominator);
-                                                    auto quotient = static_cast<Ordinal>(numerator / denominator);
-                                                    dest.setOrdinal(remainder, 0);
-                                                    dest.setOrdinal(quotient, 1);
-                                                }
-                                            }();
-                                            break;
-                                            case Opcode::emul:
-                                                [this, &instruction]() {
-                                                    auto src2 = static_cast<LongOrdinal>(getRegister(instruction.getSrc2()).getOrdinal());
-                                                    auto src1 = static_cast<LongOrdinal>(getRegister(instruction.getSrc2()).getOrdinal());
-                                                    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                                                    // taken from the manual
-                                                    dest.setLongOrdinal(src2 * src1);
-                                                }();
-                                                break;
-                                                case Opcode::extract:
-                                                    [this, &instruction]() {
-                                                        auto& dest = getRegister(instruction.getSrcDest(false));
-                                                        auto bitpos = getRegister(instruction.getSrc1()).getOrdinal();
-                                                        auto len = getRegister(instruction.getSrc2()).getOrdinal();
-                                                        // taken from the Hx manual as it isn't insane
-                                                        auto shiftAmount = bitpos > 32 ? 32 : bitpos;
-                                                        dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
-                                                    }();
-                                                    break;
-                                                    case Opcode::flushreg:
-                                                        [this, &instruction]() {
-                                                            /// @todo expand this instruction to dump saved register sets to stack in the right places
-                                                            // currently this does nothing because I haven't implemented the register frame stack yet
-                                                        }();
-                                                        break;
-                                                        case Opcode::fmark:
-                                                            [this, &instruction]() {
-                                                                // Generates a breakpoint trace-event. This instruction causes a breakpoint trace-event to be generated, regardless of the
-                                                                // setting of the breakpoint trace mode flag (to be implemented), providing the trace-enable bit (bit 0) of the process
-                                                                // controls is set.
-
-                                                                // if pc.te == 1 then raiseFault(BreakpointTraceFault)
-                                                                /// @todo implement
-                                                                if (pc_.getTraceEnable()) {
-                                                                    generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
-                                                                }
-                                                            }();
-                                                            break;
-                                                            case Opcode::mark:
-                                                                [this, &instruction]() {
-                                                                    // Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
-                                                                    // The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
-                                                                    // controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
-                                                                    if (pc_.getTraceEnable() && tc_.getBreakpointTraceMode()) {
-                                                                        generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
-                                                                    }
-                                                                    // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
-                                                                    /// @todo implement
-                                                                }();
-                                                                break;
-
-                                                                case Opcode::modac:
-                                                                    [this, &instruction]() {
-                                                                        auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                        auto mask = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                        auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                        dest.setOrdinal(ac_.modify(mask, src));
-                                                                    }( );
-                                                                    break;
-                                                                    case Opcode::modi:
-                                                                        [this, &instruction]() {
-                                                                            auto denominator = getRegister(instruction.getSrc1()) .getInteger();
-                                                                            if (denominator == 0) {
-                                                                                generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
-                                                                            } else {
-                                                                                auto numerator = getRegister(instruction.getSrc2()).getInteger();
-                                                                                auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                auto result = numerator - ((numerator / denominator) * denominator);
-                                                                                if (((numerator * denominator) < 0) && (result != 0)) {
-                                                                                    result += denominator;
-                                                                                }
-                                                                                dest.setInteger(result);
-                                                                            }
-                                                                        }();
-                                                                        break;
-                                                                        case Opcode::modify:
-                                                                            [this, &instruction]() {
-                                                                                // this is my encode operation but expanded out
-                                                                                auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                dest.setOrdinal((src & mask) | (dest.getOrdinal() & ~mask));
-                                                                            }();
-                                                                            break;
-                                                                            case Opcode::call:
-                                                                                [this, &instruction]() {
-                                                                                    /// @todo implement
-                                                                                    // wait for any uncompleted instructions to finish
-                                                                                    auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
-                                                                                    auto fp = getFramePointer().getOrdinal();
-                                                                                    getRIP().setOrdinal(ip_.getOrdinal());
-                                                                                    /// @todo implement support for caching register frames
-                                                                                    saveRegisterFrame(locals, getFramePointer().getOrdinal());
-                                                                                    ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
-                                                                                    /// @todo expand pfp and fp to accurately model how this works
-                                                                                    getPFP().setOrdinal(fp);
-                                                                                    getFramePointer().setOrdinal(temp);
-                                                                                    getStackPointer().setOrdinal(temp + 64);
-                                                                                }();
-                                                                                break;
-                                                                                case Opcode::callx:
-                                                                                    [this, &instruction]() {
-                                                                                        // wait for any uncompleted instructions to finish
-                                                                                        auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
-                                                                                        auto fp = getFramePointer().getOrdinal();
-                                                                                        getRIP().setOrdinal(ip_.getOrdinal());
-                                                                                        /// @todo implement support for caching register frames
-                                                                                        saveRegisterFrame(locals, getFramePointer().getOrdinal());
-                                                                                        ip_.setInteger(computeMemoryAddress(instruction));
-                                                                                        getPFP().setOrdinal(fp);
-                                                                                        getFramePointer().setOrdinal(temp);
-                                                                                        getStackPointer().setOrdinal(temp + 64);
-                                                                                    }();
-                                                                                    break;
-                                                                                    case Opcode::shlo:
-                                                                                        [this, &instruction]() {
-                                                                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                            auto len = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                            if (len < 32) {
-                                                                                                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                dest.setOrdinal(src << len);
-                                                                                            } else {
-                                                                                                dest.setOrdinal(0);
-                                                                                            }
-                                                                                        }();
-                                                                                        break;
-                                                                                        case Opcode::shro:
-                                                                                            [this, &instruction]() {
-                                                                                                auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                auto len = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                                /// @todo implement "speed" optimization by only getting src if we need it
-                                                                                                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                dest.setOrdinal(src >> len);
-                                                                                            }();
-                                                                                            break;
-                                                                                            case Opcode::shli:
-                                                                                                [this, &instruction]() {
-                                                                                                    auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                    auto len = getRegister(instruction.getSrc1()).getInteger();
-                                                                                                    auto src = getRegister(instruction.getSrc2()).getInteger();
-                                                                                                    dest.setInteger(src << len);
-                                                                                                }();
-                                                                                                break;
-                                                                                                case Opcode::scanbyte:
-                                                                                                    [this, &instruction]() {
-                                                                                                        auto& src1 = getRegister(instruction.getSrc1());
-                                                                                                        auto& src2 = getRegister(instruction.getSrc2());
-                                                                                                        auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.getByteOrdinal(which) == src2.getByteOrdinal(which); };
-                                                                                                        ac_.setConditionCode((bytesEqual(0) || bytesEqual(1) || bytesEqual(2) || bytesEqual(3)) ? 0b010 : 0b000);
-                                                                                                    }();
-                                                                                                    break;
-                                                                                                    case Opcode::scanbit:
-                                                                                                        [this, &instruction]() {
-                                                                                                            constexpr Ordinal reverseBitPositions[32] {
-#define X(base) 1u << (base + 3), 1u << (base + 2), 1u << (base + 1), 1u << (base + 0)
-                                                                                                                X(28), X(24), X(20), X(16),
-                                                                                                                        X(12), X(8), X(4), X(0),
-#undef X
-};
-                                                                                                            // perform a sanity check
-                                                                                                            static_assert(reverseBitPositions[0] == (1u << 31));
-                                                                                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                            auto src = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                                            dest.setOrdinal(0xFFFF'FFFF);
-                                                                                                            ac_.setConditionCode(0);
-                                                                                                            Ordinal index = 31;
-                                                                                                            for (auto mask : reverseBitPositions) {
-                                                                                                                if ((src & mask) != 0) {
-                                                                                                                    dest.setOrdinal(index);
-                                                                                                                    ac_.setConditionCode(0b010);
-                                                                                                                    return;
-                                                                                                                }
-                                                                                                                --index;
-                                                                                                            }
-                                                                                                        }();
-                                                                                                        break;
-                                                                                                        case Opcode::spanbit:
-                                                                                                            [this, &instruction]() {
-                                                                                                                constexpr Ordinal reverseBitPositions[32] {
-#define X(base) 1u << (base + 3), 1u << (base + 2), 1u << (base + 1), 1u << (base + 0)
-                                                                                                                    X(28), X(24), X(20), X(16),
-                                                                                                                            X(12), X(8), X(4), X(0),
-#undef X
-};
-                                                                                                                // perform a sanity check
-                                                                                                                static_assert(reverseBitPositions[0] == (1u << 31));
-                                                                                                                auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                auto src = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                                                dest.setOrdinal(0xFFFF'FFFF);
-                                                                                                                ac_.setConditionCode(0);
-                                                                                                                Ordinal index = 31;
-                                                                                                                for (auto mask : reverseBitPositions) {
-                                                                                                                    if ((src & mask) == 0) {
-                                                                                                                        dest.setOrdinal(index);
-                                                                                                                        ac_.setConditionCode(0b010);
-                                                                                                                        return;
-                                                                                                                    }
-                                                                                                                    --index;
-                                                                                                                }
-                                                                                                            }();
-                                                                                                            break;
-                                                                                                            case Opcode::syncf:
-                                                                                                                syncf();
-                                                                                                                break;
-                                                                                                                case Opcode::atadd:
-                                                                                                                    [this, &instruction]() {
-                                                                                                                        // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
-                                                                                                                        // The initial value from memory is stored in dst (internally src/dst).
-                                                                                                                        syncf();
-                                                                                                                        auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
-                                                                                                                        auto temp = atomicLoad(addr);
-                                                                                                                        auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                        atomicStore(addr, temp + src);
-                                                                                                                        getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
-                                                                                                                    }();
-                                                                                                                    break;
-                                                                                                                    case Opcode::atmod:
-                                                                                                                        [this, &instruction]() {
-                                                                                                                            // copies the src/dest value (logical version) into the memory location specifeid by src1.
-                                                                                                                            // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
-                                                                                                                            // value from memory is stored in src/dest
-                                                                                                                            syncf();
-                                                                                                                            auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
-                                                                                                                            auto temp = atomicLoad(addr);
-                                                                                                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                            auto mask = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                            atomicStore(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
-                                                                                                                            dest.setOrdinal(temp);
-                                                                                                                        }();
-                                                                                                                        break;
-                                                                                                                        case Opcode::chkbit:
-                                                                                                                            [this, &instruction]() {
-                                                                                                                                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                                                                                                                                ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
-                                                                                                                            }();
-                                                                                                                            break;
-                                                                                                                            case Opcode::addc:
-                                                                                                                                [this, &instruction]() {
-                                                                                                                                    auto& src1 = getRegister(instruction.getSrc1());
-                                                                                                                                    auto& src2 = getRegister(instruction.getSrc2());
-                                                                                                                                    union {
-                                                                                                                                        LongOrdinal value = 0;
-                                                                                                                                        Ordinal halves[2];
-                                                                                                                                    } result;
-                                                                                                                                    result.value = static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0);
-                                                                                                                                    // the result will be larger than 32-bits so we have to keep that in mind
-                                                                                                                                    auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                    dest.setOrdinal(result.halves[0]);
-                                                                                                                                    // do computation here
-                                                                                                                                    ac_.setConditionCode(0);
-                                                                                                                                    if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
-                                                                                                                                        // set the overflow bit in ac
-                                                                                                                                        ac_.setOverflowBit(1);
-                                                                                                                                    }
-                                                                                                                                    ac_.setCarryBit(result.halves[1] != 0);
-
-                                                                                                                                    // set the carry out bit
-                                                                                                                                }();
-                                                                                                                                break;
-                                                                                                                                case Opcode::subc:
-                                                                                                                                    [this, &instruction]() {
-                                                                                                                                        auto& src1 = getRegister(instruction.getSrc1());
-                                                                                                                                        auto& src2 = getRegister(instruction.getSrc2());
-                                                                                                                                        union {
-                                                                                                                                            LongOrdinal value = 0;
-                                                                                                                                            Ordinal halves[2];
-                                                                                                                                        } result;
-                                                                                                                                        result.value = static_cast<LongOrdinal>(src2.getOrdinal()) - static_cast<LongOrdinal>(src1.getOrdinal()) - 1 + (ac_.getCarryBit() ? 1 : 0);
-                                                                                                                                        // the result will be larger than 32-bits so we have to keep that in mind
-                                                                                                                                        auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                        dest.setOrdinal(result.halves[0]);
-                                                                                                                                        // do computation here
-                                                                                                                                        ac_.setConditionCode(0);
-                                                                                                                                        if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
-                                                                                                                                            // set the overflow bit in ac
-                                                                                                                                            ac_.setOverflowBit(1);
-                                                                                                                                        }
-                                                                                                                                        ac_.setCarryBit(result.halves[1] != 0);
-                                                                                                                                        // set the carry out bit
-                                                                                                                                    }();
-                                                                                                                                    break;
-                                                                                                                                    case Opcode::ldib:
-                                                                                                                                        [this, &instruction]() {
-                                                                                                                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                            dest.setInteger(loadByte(computeMemoryAddress(instruction)));
-                                                                                                                                        }();
-                                                                                                                                        break;
-                                                                                                                                        case Opcode::ldis:
-                                                                                                                                            [this, &instruction]() {
-                                                                                                                                                auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                dest.setInteger(loadShort(computeMemoryAddress(instruction)));
-                                                                                                                                            }();
-                                                                                                                                            break;
-                                                                                                                                            case Opcode::st:
-                                                                                                                                                [this, &instruction]() {
-                                                                                                                                                    auto addr = computeMemoryAddress(instruction);
-                                                                                                                                                    auto src = getRegister(instruction.getSrcDest(true)).getOrdinal();
-                                                                                                                                                    store(addr, src);
-                                                                                                                                                }();
-                                                                                                                                                break;
-                                                                                                                                                case Opcode::stob:
-                                                                                                                                                    [this, &instruction]() {
-                                                                                                                                                        auto addr = computeMemoryAddress(instruction);
-                                                                                                                                                        auto src = getRegister(instruction.getSrcDest(true)).getByteOrdinal();
-                                                                                                                                                        storeByte(addr, src);
-                                                                                                                                                    }();
-                                                                                                                                                    break;
-                                                                                                                                                    case Opcode::stos:
-                                                                                                                                                        [this, &instruction]() {
-                                                                                                                                                            auto src = getRegister(instruction.getSrcDest(true)).getShortOrdinal();
-                                                                                                                                                            storeShort(computeMemoryAddress(instruction), src);
-                                                                                                                                                        }();
-                                                                                                                                                        break;
-                                                                                                                                                        case Opcode::stl:
-                                                                                                                                                            [this, &instruction]() {
-                                                                                                                                                                auto src = getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal();
-                                                                                                                                                                storeLong(computeMemoryAddress(instruction), src);
-                                                                                                                                                            }();
-                                                                                                                                                            break;
-                                                                                                                                                            case Opcode::stt:
-                                                                                                                                                                [this, &instruction]() {
-                                                                                                                                                                    auto& src = getTripleRegister(instruction.getSrcDest(true));
-                                                                                                                                                                    store(computeMemoryAddress(instruction), src);
-                                                                                                                                                                }();
-                                                                                                                                                                break;
-                                                                                                                                                                case Opcode::stq:
-                                                                                                                                                                    [this, &instruction]() {
-                                                                                                                                                                        auto& src = getQuadRegister(instruction.getSrcDest(true));
-                                                                                                                                                                        store(computeMemoryAddress(instruction), src);
-                                                                                                                                                                    }();
-                                                                                                                                                                    break;
-                                                                                                                                                                    case Opcode::stib:
-                                                                                                                                                                        [this, &instruction]() {
-                                                                                                                                                                            auto src = getRegister(instruction.getSrcDest(true)).getInteger();
-                                                                                                                                                                            storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(src));
-                                                                                                                                                                        }();
-                                                                                                                                                                        break;
-                                                                                                                                                                        case Opcode::stis:
-                                                                                                                                                                            [this, &instruction]() {
-                                                                                                                                                                                auto src = getRegister(instruction.getSrcDest(true)).getInteger();
-                                                                                                                                                                                storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(src));
-                                                                                                                                                                            }();
-                                                                                                                                                                            break;
-                                                                                                                                                                            case Opcode::shri:
-                                                                                                                                                                                [this, &instruction]() {
-                                                                                                                                                                                    /*
-                                                                                                                                                                                     * if (src >= 0) {
-                                                                                                                                                                                     *  if (len < 32) {
-                                                                                                                                                                                     *      dest <- src/2^len
-                                                                                                                                                                                     *  } else {
-                                                                                                                                                                                     *      dest <- 0
-                                                                                                                                                                                     *  }
-                                                                                                                                                                                     * }else {
-                                                                                                                                                                                     *  if (len < 32) {
-                                                                                                                                                                                     *      dest <- (src - 2^len + 1)/2^len;
-                                                                                                                                                                                     *  } else {
-                                                                                                                                                                                     *      dest <- -1;
-                                                                                                                                                                                     *   }
-                                                                                                                                                                                     * }
-                                                                                                                                                                                     *
-                                                                                                                                                                                     */
-                                                                                                                                                                                    auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                    auto src = getRegister(instruction.getSrc2()).getInteger();
-                                                                                                                                                                                    auto len = getRegister(instruction.getSrc1()).getInteger();
-                                                                                                                                                                                    /// @todo perhaps implement the extra logic if necessary
-                                                                                                                                                                                    dest.setInteger(src >> len);
-                                                                                                                                                                                }();
-                                                                                                                                                                                break;
-                                                                                                                                                                                case Opcode::shrdi:
-                                                                                                                                                                                    [this, &instruction]() {
-                                                                                                                                                                                        static constexpr Integer bitPositions[32] {
-#define X(base) 1 << (base + 0), 1 << (base + 1), 1 << (base + 2), 1 << (base + 3)
-                                                                                                                                                                                            X(0), X(4), X(8), X(12),
-                                                                                                                                                                                                    X(16), X(20), X(24), X(28)
-#undef X
-                                                                                                                                                                                        };
-                                                                                                                                                                                        // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
-                                                                                                                                                                                        auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                        auto src = getRegister(instruction.getSrc2()).getInteger();
-                                                                                                                                                                                        auto len = getRegister(instruction.getSrc1()).getInteger();
-                                                                                                                                                                                        if (len < 32) {
-                                                                                                                                                                                            dest.setInteger(src / bitPositions[len]);
-                                                                                                                                                                                        } else {
-                                                                                                                                                                                            dest.setInteger(0);
-                                                                                                                                                                                        }
-                                                                                                                                                                                    }();
-                                                                                                                                                                                    break;
-                                                                                                                                                                                    case Opcode::synld:
-                                                                                                                                                                                        [this, &instruction]() {
-                                                                                                                                                                                            // wait until another execution unit sets the condition codes to continue after requesting a load.
-                                                                                                                                                                                            // In the case of this emulator, it really doesn't mean anything but I can see this being a synld followed by a wait
-                                                                                                                                                                                            // for synchronization. It also allows access to internal memory mapped items.
-                                                                                                                                                                                            // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
-                                                                                                                                                                                            // with condition code assignments and forced alignments
-
-                                                                                                                                                                                            auto address = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force word alignment
-                                                                                                                                                                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                            // load basically takes care of accessing different registers and such even memory mapped ones
-                                                                                                                                                                                            dest.setOrdinal(load(address));
-                                                                                                                                                                                            // there is a _fail_ condition where a bad access condition will result in 0b000
-                                                                                                                                                                                            /// @todo implement support for bad access conditions
-                                                                                                                                                                                            ac_.setConditionCode(0b010);
-                                                                                                                                                                                        }();
-                                                                                                                                                                                        break;
-                                                                                                                                                                                        case Opcode::synmov:
-                                                                                                                                                                                            [this, &instruction]() {
-                                                                                                                                                                                                // load from memory and then store to another address in a synchronous fashion
-                                                                                                                                                                                                auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
-                                                                                                                                                                                                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // align
-                                                                                                                                                                                                auto temp = load(src);
-                                                                                                                                                                                                store(addr, temp);
-                                                                                                                                                                                                /// @todo figure out how to support bad access conditions
-                                                                                                                                                                                                ac_.setConditionCode(0b010);
-                                                                                                                                                                                            }();
-                                                                                                                                                                                            break;
-                                                                                                                                                                                            case Opcode::synmovl:
-                                                                                                                                                                                                [this, &instruction]() {
-                                                                                                                                                                                                    auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
-                                                                                                                                                                                                    auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF8; // align
-                                                                                                                                                                                                    auto temp = loadLong(src);
-                                                                                                                                                                                                    storeLong(addr, temp);
-                                                                                                                                                                                                    /// @todo figure out how to support bad access conditions
-                                                                                                                                                                                                    ac_.setConditionCode(0b010);
-                                                                                                                                                                                                }();
-                                                                                                                                                                                                break;
-                                                                                                                                                                                                case Opcode::synmovq:
-                                                                                                                                                                                                    [this, &instruction]() {
-                                                                                                                                                                                                        auto src = getRegister(instruction.getSrc2()).getOrdinal(); // source address
-                                                                                                                                                                                                        auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF0; // align
-                                                                                                                                                                                                        QuadRegister temp = loadQuad(src);
-                                                                                                                                                                                                        store(addr, temp);
-                                                                                                                                                                                                        /// @todo figure out how to support bad access conditions
-                                                                                                                                                                                                        ac_.setConditionCode(0b010);
-                                                                                                                                                                                                    }();
-                                                                                                                                                                                                    break;
-                                                                                                                                                                                                    case Opcode::modpc:
-                                                                                                                                                                                                        [this, &instruction]() {
-                                                                                                                                                                                                            auto mask = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                                                                                                                                            auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                                            if (mask != 0) {
-                                                                                                                                                                                                                if (!pc_.inSupervisorMode()) {
-                                                                                                                                                                                                                    generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
-                                                                                                                                                                                                                } else {
-                                                                                                                                                                                                                    auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                                                                                                                    dest.setOrdinal(pc_.modify(mask, src));
-                                                                                                                                                                                                                    ProcessControls tmp(dest.getOrdinal());
-                                                                                                                                                                                                                    if (tmp.getPriority() > pc_.getPriority()) {
-                                                                                                                                                                                                                        /// @todo check for pending interrupts
-                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                }
-                                                                                                                                                                                                            } else {
-                                                                                                                                                                                                                dest.setOrdinal(pc_.getValue());
-                                                                                                                                                                                                            }
-                                                                                                                                                                                                        }( );
-                                                                                                                                                                                                        break;
-                                                                                                                                                                                                        case Opcode::modtc:
-                                                                                                                                                                                                            [this, &instruction]() {
-                                                                                                                                                                                                                auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                                                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                                                                                                                                                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                                                                                                                dest.setOrdinal(tc_.modify(mask, src));
-                                                                                                                                                                                                            }( );
-                                                                                                                                                                                                            break;
-                                                                                                                                                                                                            case Opcode::setbit:
-                                                                                                                                                                                                                [this, &instruction]() {
-                                                                                                                                                                                                                    auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                                                    auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                                                                                                                                                                                                                    auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                                                                                                                    dest.setOrdinal(src | bitpos);
-                                                                                                                                                                                                                }();
-                                                                                                                                                                                                                break;
-                                                                                                                                                                                                                case Opcode::clrbit:
-                                                                                                                                                                                                                    [this, &instruction]() {
-                                                                                                                                                                                                                        auto& dest = getRegister(instruction.getSrcDest(false));
-                                                                                                                                                                                                                        auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                                                                                                                                                                                                                        auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                                                                                                                                                                                                                        dest.setOrdinal(src & ~bitpos);
-                                                                                                                                                                                                                    }();
-                                                                                                                                                                                                                    break;
-                                                                                                                                                                                                                    case Opcode::calls:
-                                                                                                                                                                                                                        [this, &instruction]() {
-                                                                                                                                                                                                                            auto targ = getRegister(instruction.getSrc1()).getOrdinal();
-                                                                                                                                                                                                                            if (targ > 259) {
-                                                                                                                                                                                                                                generateFault(FaultType::Protection_Length);
-                                                                                                                                                                                                                            } else {
-                                                                                                                                                                                                                                syncf();
-                                                                                                                                                                                                                                auto tempPE = load(getSystemProcedureTableBase() + 48 + (4 * targ));
-                                                                                                                                                                                                                                auto type = tempPE & 0b11;
-                                                                                                                                                                                                                                auto procedureAddress = tempPE & ~0b11;
-                                                                                                                                                                                                                                // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
-                                                                                                                                                                                                                                getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal());
-                                                                                                                                                                                                                                advanceIPBy = 0;
-                                                                                                                                                                                                                                ip_.setOrdinal(procedureAddress);
-                                                                                                                                                                                                                                Ordinal temp = 0;
-                                                                                                                                                                                                                                Ordinal tempRRR = 0;
-                                                                                                                                                                                                                                if ((type == 0b00) || pc_.inSupervisorMode()) {
-                                                                                                                                                                                                                                    temp = (getStackPointer().getOrdinal() + c_) & ~c_;
-                                                                                                                                                                                                                                    tempRRR = 0;
-                                                                                                                                                                                                                                } else {
-                                                                                                                                                                                                                                    temp = getSupervisorStackPointer();
-                                                                                                                                                                                                                                    tempRRR = 0b010 | (pc_.getTraceEnable() ? 0b001 : 0);
-                                                                                                                                                                                                                                    pc_.setExecutionMode(true);
-                                                                                                                                                                                                                                    pc_.setTraceEnable(temp & 0b1);
-                                                                                                                                                                                                                                }
-
-                                                                                                                                                                                                                                /// @todo implement support for caching register frames
-                                                                                                                                                                                                                                saveRegisterFrame(locals, getFramePointer().getOrdinal());
-                                                                                                                                                                                                                                /// @todo expand pfp and fp to accurately model how this works
-                                                                                                                                                                                                                                PreviousFramePointer pfp(getPFP());
-                                                                                                                                                                                                                                pfp.setAddress(getFramePointer().getOrdinal());
-                                                                                                                                                                                                                                pfp.setReturnType(tempRRR);
-                                                                                                                                                                                                                                getFramePointer().setOrdinal(temp);
-                                                                                                                                                                                                                                getStackPointer().setOrdinal(temp + 64);
-
-                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                        }();
-                                                                                                                                                                                                                        break;
-                                                                                                                                                                                                                        case Opcode::ret:
-                                                                                                                                                                                                                            [this]() {
-                                                                                                                                                                                                                                syncf();
-                                                                                                                                                                                                                                PreviousFramePointer pfp(getPFP());
-                                                                                                                                                                                                                                auto restoreStandardFrame = [this]() {
-                                                                                                                                                                                                                                    getFramePointer().setOrdinal(getPFP().getOrdinal());
-                                                                                                                                                                                                                                    /// @todo implement local register frame stack
-                                                                                                                                                                                                                                    restoreRegisterFrame(locals, getFramePointer().getOrdinal());
-                                                                                                                                                                                                                                    advanceIPBy = 0;
-                                                                                                                                                                                                                                    ip_.setOrdinal(getRIP().getOrdinal());
-                                                                                                                                                                                                                                };
-                                                                                                                                                                                                                                switch (pfp.getReturnType()) {
-                                                                                                                                                                                                                                    case 0b000:
-                                                                                                                                                                                                                                        restoreStandardFrame();
-                                                                                                                                                                                                                                        break;
-                                                                                                                                                                                                                                        case 0b001:
-                                                                                                                                                                                                                                            [this, &restoreStandardFrame]() {
-                                                                                                                                                                                                                                                auto& fp = getFramePointer();
-                                                                                                                                                                                                                                                auto x = load(fp.getOrdinal() - 16);
-                                                                                                                                                                                                                                                auto y = load(fp.getOrdinal() - 12);
-                                                                                                                                                                                                                                                restoreStandardFrame();
-                                                                                                                                                                                                                                                ac_.setValue(y);
-                                                                                                                                                                                                                                                if (pc_.inSupervisorMode()) {
-                                                                                                                                                                                                                                                    pc_.setValue(x);
-                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                            }();
-                                                                                                                                                                                                                                            break;
-                                                                                                                                                                                                                                            case 0b010:
-                                                                                                                                                                                                                                                [this, &restoreStandardFrame]() {
-                                                                                                                                                                                                                                                    if (pc_.inSupervisorMode()) {
-                                                                                                                                                                                                                                                        pc_.setTraceEnable(false);
-                                                                                                                                                                                                                                                        pc_.setExecutionMode(false);
-                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                    restoreStandardFrame();
-                                                                                                                                                                                                                                                }();
-                                                                                                                                                                                                                                                break;
-                                                                                                                                                                                                                                                case 0b011:
-                                                                                                                                                                                                                                                    [this, &restoreStandardFrame]() {
-                                                                                                                                                                                                                                                        if (pc_.inSupervisorMode())  {
-                                                                                                                                                                                                                                                            pc_.setTraceEnable(true);
-                                                                                                                                                                                                                                                            pc_.setExecutionMode(false);
-                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                        restoreStandardFrame();
-                                                                                                                                                                                                                                                    }();
-                                                                                                                                                                                                                                                    break;
-                                                                                                                                                                                                                                                    case 0b111: // interrupt return
-                                                                                                                                                                                                                                                    [this,&restoreStandardFrame]() {
-                                                                                                                                                                                                                                                        auto& fp = getFramePointer();
-                                                                                                                                                                                                                                                        auto x = load(fp.getOrdinal() - 16);
-                                                                                                                                                                                                                                                        auto y = load(fp.getOrdinal() - 12);
-                                                                                                                                                                                                                                                        restoreStandardFrame();
-                                                                                                                                                                                                                                                        ac_.setValue(y);
-                                                                                                                                                                                                                                                        if (pc_.inSupervisorMode()) {
-                                                                                                                                                                                                                                                            pc_.setValue(x);
-                                                                                                                                                                                                                                                            /// @todo check_pending_interrupts
-                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                    }();
-                                                                                                                                                                                                                                                    break;
-                                                                                                                                                                                                                                                    default:
-                                                                                                                                                                                                                                                        // undefined
-                                                                                                                                                                                                                                                        break;
-                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                            }();
-                                                                                                                                                                                                                            break;
-                                                                                                                                                                                                                            default:
-                                                                                                                                                                                                                                generateFault(FaultType::Operation_InvalidOpcode);
-                                                                                                                                                                                                                                break;
+                    case 0b010:
+                        [this, &restoreStandardFrame]() {
+                            if (pc_.inSupervisorMode()) {
+                                pc_.setTraceEnable(false);
+                                pc_.setExecutionMode(false);
+                            }
+                            restoreStandardFrame();
+                        }();
+                        break;
+                    case 0b011:
+                        [this, &restoreStandardFrame]() {
+                            if (pc_.inSupervisorMode())  {
+                                pc_.setTraceEnable(true);
+                                pc_.setExecutionMode(false);
+                            }
+                            restoreStandardFrame();
+                        }();
+                        break;
+                    case 0b111: // interrupt return
+                        [this,&restoreStandardFrame]() {
+                            auto& fp = getFramePointer();
+                            auto x = load(fp.getOrdinal() - 16);
+                            auto y = load(fp.getOrdinal() - 12);
+                            restoreStandardFrame();
+                            ac_.setValue(y);
+                            if (pc_.inSupervisorMode()) {
+                                pc_.setValue(x);
+                                /// @todo check_pending_interrupts
+                            }
+                        }();
+                        break;
+                    default:
+                        // undefined
+                        break;
+                }
+            }();
+            break;
+        default:
+            generateFault(FaultType::Operation_InvalidOpcode);
+            break;
+    }
+}
+void
+Core::run() {
+    while(continueToExecute()) {
+        cycle();
     }
 }
