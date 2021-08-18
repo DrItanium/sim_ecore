@@ -135,6 +135,7 @@ protected:
         } else if (inIACSpace(address)) {
             switch (address & 0x00FF'FFFF) {
                 case 0:
+                    std::cout << "CALLED HALT EXECUTION!" << std::endl;
                     haltExecution();
                     break;
                 case 4: // serial console input output
@@ -149,6 +150,10 @@ protected:
                     break;
             }
         }
+    }
+    void generateFault(FaultType ) override {
+        std::cout << "FAULT GENERATED! HALTING!" << std::endl;
+        haltExecution();
     }
 private:
     static constexpr bool inIACSpace(Address target) noexcept {
