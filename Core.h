@@ -94,6 +94,17 @@ public:
 public:
     void run();
 protected:
+    virtual void boot() = 0;
+    virtual Ordinal getSystemAddressTableBase() const noexcept = 0;
+    virtual Ordinal getPRCBPtrBase() const noexcept = 0;
+    virtual Ordinal getFirstIP() const noexcept = 0;
+    virtual bool continueToExecute() const noexcept = 0;
+    virtual Ordinal getSystemProcedureTableBase() const noexcept;
+    virtual Ordinal getFaultProcedureTableBase() const noexcept;
+    virtual Ordinal getTraceTablePointer() const noexcept;
+    virtual Ordinal getInterruptTableBase() const noexcept;
+    virtual Ordinal getFaultTableBase() const noexcept;
+    virtual void generateFault(FaultType fault);
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual void storeShort(Address destination, ShortOrdinal value) = 0;
     virtual void storeLong(Address destination, LongOrdinal value) = 0;
@@ -148,17 +159,7 @@ protected:
         return getRegister(RegisterIndex::RIP);
     }
 protected:
-    virtual void boot() = 0;
-    virtual Ordinal getSystemAddressTableBase() const noexcept = 0;
-    virtual Ordinal getSystemProcedureTableBase() const noexcept = 0;
-    virtual Ordinal getFaultProcedureTableBase() const noexcept = 0;
-    virtual Ordinal getPRCBPtrBase() const noexcept = 0;
-    virtual Ordinal getFirstIP() const noexcept = 0;
-    virtual Ordinal getInterruptTableBase() const noexcept = 0;
-    virtual Ordinal getFaultTableBase() const noexcept = 0;
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
-    virtual void generateFault(FaultType fault);
-    virtual bool continueToExecute() const noexcept = 0;
 private:
     void ipRelativeBranch(Integer displacement) noexcept {
         advanceIPBy = 0;

@@ -177,6 +177,7 @@ Core::generateFault(FaultType) {
     // lookup fault information
     // setup fault data frame
     // call fault handler
+    // probably should exit or something here
 }
 Ordinal
 Core::computeMemoryAddress(const Instruction &instruction) noexcept {
