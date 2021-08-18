@@ -45,7 +45,7 @@ SimplifiedSxCore::storeLong(Core::Address destination, LongOrdinal value) {
 }
 void
 SimplifiedSxCore::atomicStore(Core::Address destination, Ordinal value) {
-
+    store(destination, value);
 }
 void
 SimplifiedSxCore::store(Core::Address destination, Ordinal value) {
@@ -57,7 +57,8 @@ SimplifiedSxCore::store(Core::Address destination, const TripleRegister &reg) {
 }
 void
 SimplifiedSxCore::store(Core::Address destination, const QuadRegister &reg) {
-
+    storeLong(destination + 0, reg.getHalf(0));
+    storeLong(destination+8, reg.getHalf(1));
 }
 void
 SimplifiedSxCore::storeShortInteger(Core::Address destination, ShortInteger value) {
@@ -73,7 +74,7 @@ SimplifiedSxCore::load(Core::Address destination) {
 }
 Ordinal
 SimplifiedSxCore::atomicLoad(Core::Address destination) {
-    return 0;
+    return load(destination);
 }
 ByteOrdinal
 SimplifiedSxCore::loadByte(Core::Address destination) {
@@ -89,9 +90,12 @@ SimplifiedSxCore::loadLong(Core::Address destination) {
 }
 void
 SimplifiedSxCore::load(Core::Address destination, TripleRegister &reg) noexcept {
-
+    reg.setOrdinal(load(destination + 0), 0);
+    reg.setOrdinal(load(destination + 4), 1);
+    reg.setOrdinal(load(destination + 8), 2);
 }
 void
 SimplifiedSxCore::load(Core::Address destination, QuadRegister &reg) noexcept {
-
+    reg.setHalf(loadLong(destination + 0), 0);
+    reg.setHalf(loadLong(destination + 8), 1);
 }
