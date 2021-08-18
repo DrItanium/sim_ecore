@@ -2242,7 +2242,3 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 }
 
 
-
-int main(int /*argc*/, char** /*argv*/) {
-    return 0;
-}

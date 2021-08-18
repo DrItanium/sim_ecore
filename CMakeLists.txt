@@ -9,4 +9,4 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 add_executable(sim3 Simulator.cc
-                    OpcodesRaw.h)
+                    OpcodesRaw.h main.cc)
