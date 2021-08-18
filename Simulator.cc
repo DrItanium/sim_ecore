@@ -926,9 +926,7 @@ private:
     void cycle() noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
-    inline void saveLocals(Address baseAddress) noexcept { saveRegisterFrame(locals, baseAddress); }
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
-    inline void restoreLocals(Address baseAddress) noexcept { restoreRegisterFrame(locals, baseAddress); }
     Ordinal computeMemoryAddress(const Instruction& instruction) noexcept;
 private:
     Register ip_; // start at address zero
@@ -1194,7 +1192,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     };
     auto condFault = [this](uint8_t mask) {
         if ((ac_.getConditionCode()& mask) != 0) {
-            /// @todo constraint range fault
             generateFault(FaultType::Constraint_Range);
         }
     };
@@ -1235,7 +1232,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::faultno:
             if (ac_.getConditionCode() == 0) {
-                /// @todo make target constraint range fault
                 generateFault(FaultType::Constraint_Range);
             }
             break;
