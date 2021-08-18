@@ -2069,10 +2069,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::modpc:
             [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
                 auto mask = getRegister(instruction.getSrc1()).getOrdinal();
-                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal(pc_.modify(mask, src));
+                auto& dest = getRegister(instruction.getSrcDest(false));
+                if (mask != 0) {
+                    if (!pc_.inSupervisorMode()) {
+                        generateFault(0, 0); /// @todo TYPE.MISMATCH
+                    } else {
+                        auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                        dest.setOrdinal(pc_.modify(mask, src));
+                        ProcessControls tmp(dest.getOrdinal());
+                        if (tmp.getPriority() > pc_.getPriority()) {
+                            /// @todo check for pending interrupts
+                        }
+                    }
+                } else {
+                    dest.setOrdinal(pc_.getValue());
+                }
             }( );
                 break;
         case Opcode::modtc:
@@ -2134,6 +2146,51 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     getFramePointer().setOrdinal(temp);
                     getStackPointer().setOrdinal(temp + 64);
 
+                }
+            }();
+            break;
+        case Opcode::ret:
+            [this, &instruction]() {
+                syncf();
+                PreviousFramePointer pfp(getPFP());
+                auto restoreStandardFrame = [this]() {
+                    getFramePointer().setOrdinal(getPFP().getOrdinal());
+                    /// @todo implement local register frame stack
+                    restoreRegisterFrame(locals, getFramePointer().getOrdinal());
+                    advanceIPBy = 0;
+                    ip_.setOrdinal(getRIP().getOrdinal());
+                };
+                switch (pfp.getReturnType()) {
+                    case 0b000:
+                        restoreStandardFrame();
+                        break;
+                    case 0b001:
+                        [this, &instruction]() {
+
+                        }();
+                        break;
+                    case 0b010:
+                        [this, &instruction]() {
+
+                        }();
+                        break;
+                    case 0b011:
+                        [this, &restoreStandardFrame]() {
+                            if (!pc_.inUserMode())  {
+                                pc_.setTraceEnable(true);
+                                pc_.setExecutionMode(false);
+                            }
+                            restoreStandardFrame();
+                        }();
+                        break;
+                    case 0b111: // interrupt return
+                        [this,&instruction]() {
+
+                        }();
+                        break;
+                    default:
+                        // undefined
+                        break;
                 }
             }();
             break;
