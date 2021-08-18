@@ -166,8 +166,22 @@ protected:
         // just like with
         return static_cast<ShortOrdinal>(load(destination));
     }
-    virtual void storeByte(Address destination, ByteOrdinal value) = 0;
-    virtual void storeShort(Address destination, ShortOrdinal value) = 0;
+    virtual void storeByte(Address destination, ByteOrdinal value) {
+        // terrible implementation but it will work
+        // load a full word, modify it and then commit it back
+        // This method is virtual so we can easily override this train wreck at any time
+        Register memory(load(destination));
+        memory.setByteOrdinal(value, 0);
+        store(destination, memory.getOrdinal());
+    }
+    virtual void storeShort(Address destination, ShortOrdinal value) {
+        // terrible implementation but it will work
+        // load a full word, modify it and then commit it back
+        // This method is virtual so we can easily override this train wreck at any time
+        Register memory(load(destination));
+        memory.setShortOrdinal(value, 0);
+        store(destination, memory.getOrdinal());
+    }
     virtual Ordinal load(Address destination) = 0;
     virtual void store(Address destination, Ordinal value) = 0;
     Register& getRegister(RegisterIndex targetIndex);
