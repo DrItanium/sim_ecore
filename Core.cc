@@ -1303,6 +1303,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 }
 void
 Core::run() {
+    boot();
     while(continueToExecute()) {
         cycle();
     }
