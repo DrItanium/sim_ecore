@@ -32,7 +32,9 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     executing_ = true;
     pc_.setPriority(31);
     pc_.setState(true); // needs to be set as interrupted
-    getRegister(RegisterIndex::FP).setOrdinal(getInterruptStackPointer());
+    auto thePointer = getInterruptStackPointer();
+    std::cout << "Interrupt Stack Pointer: 0x" << std::hex << thePointer << std::endl;
+    getRegister(RegisterIndex::FP).setOrdinal(thePointer);
     advanceIPBy = 0; // make sure that we don't do anything dumb at this point
 }
 void
