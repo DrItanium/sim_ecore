@@ -216,6 +216,7 @@ protected:
     const Register& getSourceRegister(RegisterIndex targetIndex) const { return getRegister(targetIndex); }
     DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
     const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const;
+    const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const { return getDoubleRegister(targetIndex); }
     TripleRegister& getTripleRegister(RegisterIndex targetIndex);
     const TripleRegister& getTripleRegister(RegisterIndex targetIndex) const;
     QuadRegister& getQuadRegister(RegisterIndex targetIndex);

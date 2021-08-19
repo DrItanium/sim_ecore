@@ -89,6 +89,7 @@ Core::getDoubleRegister(RegisterIndex targetIndex) {
     }
 }
 
+
 TripleRegister&
 Core::getTripleRegister(RegisterIndex targetIndex) {
     if (isLocalRegister(targetIndex)) {
@@ -692,7 +693,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::movl:
             [this, &instruction]() {
                 auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                dest.setLongOrdinal(getDoubleRegister(instruction.getSrc1()).getLongOrdinal());
+                const auto& src = getSourceDoubleRegister(instruction.getSrc1());
+                auto srcValue = src.getLongOrdinal();
+                dest.setLongOrdinal(srcValue);
             }();
             break;
         case Opcode::movt:
