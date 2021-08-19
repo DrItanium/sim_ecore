@@ -31,7 +31,7 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     ip_.setOrdinal(startIP);
     executing_ = true;
     pc_.setPriority(31);
-    pc_.setState(1); // needs to be set as interrupted
+    pc_.setState(true); // needs to be set as interrupted
     getRegister(RegisterIndex::FP).setOrdinal(getInterruptStackPointer());
     advanceIPBy = 0; // make sure that we don't do anything dumb at this point
 }
@@ -88,6 +88,9 @@ SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {
             break;
         case 0x93: // reinitialize processor
             std::cout << "REINITAILIZING PROCESSOR!" << std::endl;
+            std::cout << "(reinit-processor 0x" <<  std::hex << message.getField3() <<
+                      " 0x" << std::hex << message.getField4() <<
+                      " 0x" << std::hex << message.getField5() << ")" << std::endl;
             boot0(message.getField3(), message.getField4(), message.getField5());
             break;
         case 0x8F:
