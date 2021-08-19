@@ -1272,8 +1272,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     // we have to use the "c_" parameter for this
                     auto actualAddress = getFramePointer().getOrdinal() & (~c_);
                     restoreRegisterFrame(locals, actualAddress);
-                    advanceIPBy = 0;
-                    ip_.setOrdinal(getRIP().getOrdinal());
+                    auto returnValue = getRIP().getOrdinal();
+                    ip_.setOrdinal(returnValue);
+                    // exploit that we will need to go to the next instruction via normal increment means
+                    // this is not a branch in the conventional sense
                 };
                 switch (pfp.getReturnType()) {
                     case 0b000:
