@@ -64,7 +64,7 @@ protected:
     void synchronizedStore(Address destination, const Register &value) noexcept override;
 protected:
     virtual void processIACMessage(const IACMessage& message) noexcept;
-
+    virtual void boot0(Ordinal sat, Ordinal pcb, Ordinal startIP);
 private:
     Ordinal systemAddressTableBase_ = 0;
     Ordinal prcbBase_ = 0;
