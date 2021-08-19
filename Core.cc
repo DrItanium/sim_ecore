@@ -1238,7 +1238,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     auto procedureAddress = tempPE & ~0b11;
                     // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
                     getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal());
-                    advanceIPBy = 0;
                     ip_.setOrdinal(procedureAddress);
                     Ordinal temp = 0;
                     Ordinal tempRRR = 0;
@@ -1251,16 +1250,17 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                         pc_.setExecutionMode(true);
                         pc_.setTraceEnable(temp & 0b1);
                     }
-
+                    auto frameAddress = getFramePointer().getOrdinal() & (~c_); // make sure the lowest n bits are ignored
                     /// @todo implement support for caching register frames
-                    saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                    saveRegisterFrame(locals, frameAddress);
                     /// @todo expand pfp and fp to accurately model how this works
                     PreviousFramePointer pfp(getPFP());
                     pfp.setAddress(getFramePointer().getOrdinal());
                     pfp.setReturnType(tempRRR);
                     getFramePointer().setOrdinal(temp);
                     getStackPointer().setOrdinal(temp + 64);
-
+                    // we do not want to jump ahead on calls
+                    advanceIPBy = 0;
                 }
             }();
             break;
