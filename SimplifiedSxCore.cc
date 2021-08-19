@@ -21,7 +21,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SimplifiedSxCore.h"
-#include <iostream>
 
 void
 SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
@@ -33,7 +32,6 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     pc_.setPriority(31);
     pc_.setState(true); // needs to be set as interrupted
     auto thePointer = getInterruptStackPointer();
-    std::cout << "Interrupt Stack Pointer: 0x" << std::hex << thePointer << std::endl;
     getRegister(RegisterIndex::FP).setOrdinal(thePointer);
     // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well
     getRegister(RegisterIndex::SP).setOrdinal(thePointer + 64);
@@ -92,10 +90,6 @@ SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {
             // do nothing as we don't have an instruction cache
             break;
         case 0x93: // reinitialize processor
-            std::cout << "REINITAILIZING PROCESSOR!" << std::endl;
-            std::cout << "(reinit-processor 0x" <<  std::hex << message.getField3() <<
-                      " 0x" << std::hex << message.getField4() <<
-                      " 0x" << std::hex << message.getField5() << ")" << std::endl;
             boot0(message.getField3(), message.getField4(), message.getField5());
             break;
         case 0x8F:
