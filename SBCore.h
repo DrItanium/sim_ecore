@@ -26,6 +26,10 @@
 
 #ifndef SIM3_SBCORE_H
 #define SIM3_SBCORE_H
+#include <iostream>
+#include <memory>
+#include <fstream>
+#include <iomanip>
 #include "Core.h"
 #include "SimplifiedSxCore.h"
 
