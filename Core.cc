@@ -243,7 +243,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #undef X
     };
     auto cmpobx = [this, &instruction](uint8_t mask) noexcept {
-        auto src1 = getSourceRegister(instruction.getSrc1()).getOrdinal();
+        auto s1k = instruction.getSrc1();
+        auto& sr1 = getSourceRegister(s1k);
+        auto src1 = sr1.getOrdinal();
         auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
         cmpo(src1, src2);
         if ((mask & ac_.getConditionCode()) != 0) {
@@ -524,7 +526,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::ldob:
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setOrdinal(loadByte(computeMemoryAddress(instruction)));
+                auto address = computeMemoryAddress(instruction);
+                auto result = loadByte(address);
+                dest.setOrdinal(result);
             }();
             break;
         case Opcode::bx:
