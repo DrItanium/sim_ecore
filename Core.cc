@@ -408,7 +408,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::bbs:
             [this, &instruction]() {
 
-                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
                 auto src = getRegister(instruction.getSrc2()).getOrdinal();
                 advanceIPBy = 0;
                 if ((bitpos & src) != 0) {
@@ -533,8 +533,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::bx:
             [this, &instruction]() {
+                auto memoryAddress = computeMemoryAddress(instruction);
+                ip_.setOrdinal(memoryAddress);
                 advanceIPBy = 0;
-                ip_.setOrdinal(computeMemoryAddress(instruction));
             }();
             break;
         case Opcode::balx:
