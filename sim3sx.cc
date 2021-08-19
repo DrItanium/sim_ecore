@@ -25,6 +25,8 @@
 //
 #include <iostream>
 #include <memory>
+#include <fstream>
+#include <iomanip>
 #include "SimplifiedSxCore.h"
 
 union MemoryCell {
@@ -68,6 +70,11 @@ public:
         auto alignedAddress = ((64_MB -1) & loc) >> 2;
         memory_[alignedAddress].raw = value;
     }
+    void installToMemory(Address loc, ByteOrdinal value) {
+        auto alignedAddress = ((64_MB - 1) & loc) >> 2;
+        auto offset = loc & 0b11;
+        memory_[alignedAddress].ordinalBytes[offset] = value;
+    }
     template<typename ... Rest>
     void installBlockToMemory(Address base, Ordinal curr, Rest&& ... values) noexcept {
         installToMemory(base, curr);
@@ -93,6 +100,7 @@ protected:
                 default:
                     break;
             }
+            return 0;
         } else {
             return Core::loadShort(destination);
         }
@@ -237,6 +245,28 @@ private:
     std::unique_ptr<MemoryCell[]> memory_;
 };
 
-int main(int /*argc*/, char** /*argv*/) {
-    return 0;
+int main(int argc, char** argv) {
+    if (argc == 2) {
+        std::ifstream inputFile(argv[1]) ;
+        if (inputFile.is_open())  {
+            // okay install
+            SBCore theCore;
+            theCore.clearMemory();
+            Ordinal currentAddress = 0;
+            while(inputFile.good()) {
+                // install byte by byte into memory
+                theCore.installToMemory(currentAddress, static_cast<ByteOrdinal>(inputFile.get()));
+                ++currentAddress;
+            }
+            // now that we have that setup run the core
+            theCore.run();
+            return 0;
+        } else {
+            std::cout << "The file " << std::quoted(argv[1]) << " could not be opened";
+            return 1;
+        }
+    } else {
+        std::cout << "sim3sx [filename]" << std::endl;
+        return 1;
+    }
 }
