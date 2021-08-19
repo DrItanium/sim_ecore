@@ -35,6 +35,9 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     auto thePointer = getInterruptStackPointer();
     std::cout << "Interrupt Stack Pointer: 0x" << std::hex << thePointer << std::endl;
     getRegister(RegisterIndex::FP).setOrdinal(thePointer);
+    // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well
+    getRegister(RegisterIndex::SP).setOrdinal(thePointer + 64);
+    getRegister(RegisterIndex::PFP).setOrdinal(thePointer);
     advanceIPBy = 0; // make sure that we don't do anything dumb at this point
 }
 void
