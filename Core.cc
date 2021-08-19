@@ -393,15 +393,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                advanceIPBy = 0;
                 if ((bitpos & src) == 0) {
                     ac_.setConditionCode(0b010);
+                    advanceIPBy = 0;
                     // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
                     // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-                    ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
+                    ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
                 } else {
                     ac_.setConditionCode(0b000);
-                    ip_.setOrdinal(ip_.getOrdinal() + 4);
                 }
             }();
             break;
@@ -410,15 +409,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 
                 auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                advanceIPBy = 0;
                 if ((bitpos & src) != 0) {
+                    advanceIPBy = 0;
                     ac_.setConditionCode(0b010);
                     // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
                     // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-                    ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
+                    ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
                 } else {
                     ac_.setConditionCode(0b000);
-                    ip_.setOrdinal(ip_.getOrdinal() + 4);
                 }
             }();
             break;
