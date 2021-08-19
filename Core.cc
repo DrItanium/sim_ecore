@@ -394,16 +394,25 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::bbc:
             // branch if bit is clear
             [this, &instruction]() {
-                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                auto targetRegister = instruction.getSrc1();
+                auto& bpReg = getSourceRegister(targetRegister);
+                auto bpOrd = bpReg.getOrdinal();
+                auto masked = bpOrd & 0b11111;
+                auto srcIndex = instruction.getSrc2();
+                const auto& srcReg = getSourceRegister(srcIndex);
+                auto src = srcReg.getOrdinal();
+                auto bitpos = bitPositions[masked];
+                std::cout << "bbc: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
                 if ((bitpos & src) == 0) {
-                    ac_.setConditionCode(0b010);
-                    advanceIPBy = 0;
+                    // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
+                    ac_.setConditionCode(0b000);
                     // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
                     // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-                    ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+                    auto displacement = instruction.getDisplacement();
+                    ip_.setInteger(ip_.getInteger() + displacement);
+                    advanceIPBy = 0;
                 } else {
-                    ac_.setConditionCode(0b000);
+                    ac_.setConditionCode(0b010);
                 }
             }();
             break;
@@ -417,12 +426,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 const auto& srcReg = getSourceRegister(srcIndex);
                 auto src = srcReg.getOrdinal();
                 auto bitpos = bitPositions[masked];
+                std::cout << "bbs: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
                 if ((bitpos & src) != 0) {
-                    advanceIPBy = 0;
                     ac_.setConditionCode(0b010);
                     // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
                     // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-                    ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+                    auto displacement = instruction.getDisplacement();
+                    ip_.setInteger(ip_.getInteger() + displacement);
+                    advanceIPBy = 0;
                 } else {
                     ac_.setConditionCode(0b000);
                 }
