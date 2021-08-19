@@ -253,11 +253,13 @@ int main(int argc, char** argv) {
             SBCore theCore;
             theCore.clearMemory();
             Ordinal currentAddress = 0;
+            std::cout << "Installing image from: " << std::quoted(argv[1]) << std::endl;
             while(inputFile.good()) {
                 // install byte by byte into memory
                 theCore.installToMemory(currentAddress, static_cast<ByteOrdinal>(inputFile.get()));
                 ++currentAddress;
             }
+            std::cout << "Image installation complete" << std::endl;
             // now that we have that setup run the core
             theCore.run();
             return 0;
