@@ -229,7 +229,7 @@ protected:
         }
     }
     void generateFault(FaultType ) override {
-        std::cout << "FAULT GENERATED! HALTING!" << std::endl;
+        std::cout << "FAULT GENERATED AT 0x" << std::hex << ip_.getOrdinal() << "! HALTING!" << std::endl;
         haltExecution();
     }
 private:
