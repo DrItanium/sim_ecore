@@ -243,29 +243,32 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #undef X
     };
     auto cmpobx = [this, &instruction](uint8_t mask) noexcept {
-        auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
-        auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+        auto src1 = getSourceRegister(instruction.getSrc1()).getOrdinal();
+        auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
         cmpo(src1, src2);
-        advanceIPBy = 0;
         if ((mask & ac_.getConditionCode()) != 0) {
             // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
-            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-            ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
-        } else {
-            ip_.setOrdinal(ip_.getOrdinal() + 4);
+            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...).
+            // I do not know why the Sx manual shows adding four while the hx manual does not
+            // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
+            advanceIPBy = 0;
+            auto destination = ip_.getInteger() + instruction.getDisplacement();
+            ip_.setInteger(destination);
         }
     };
     auto cmpibx = [this, &instruction](uint8_t mask) noexcept {
-        auto src1 = getRegister(instruction.getSrc1()).getInteger();
-        auto src2 = getRegister(instruction.getSrc2()).getInteger();
+        auto src1 = getSourceRegister(instruction.getSrc1()).getInteger();
+        auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
         cmpi(src1, src2);
-        advanceIPBy = 0;
         if ((mask & ac_.getConditionCode()) != 0) {
             // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
             // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-            ip_.setInteger(ip_.getInteger() + 4 + instruction.getDisplacement());
-        } else {
-            ip_.setOrdinal(ip_.getOrdinal() + 4);
+
+            // I do not know why the Sx manual shows adding four while the hx manual does not
+            // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
+            // this will fix an off by four problem I'm currently encountering
+            advanceIPBy = 0;
+            ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
         }
     };
     auto condBranch = [this, &instruction](uint8_t mask) {
