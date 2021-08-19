@@ -142,7 +142,7 @@ protected:
     }
     virtual void store(Address destination, const QuadRegister& reg) {
         storeLong(destination, reg.getHalf(0));
-        storeLong(destination, reg.getHalf(1));
+        storeLong(destination+8, reg.getHalf(1));
     }
     virtual void storeShortInteger(Address destination, ShortInteger value) {
         union {

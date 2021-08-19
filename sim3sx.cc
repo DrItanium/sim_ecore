@@ -130,32 +130,37 @@ protected:
     }
     Ordinal load(Address address) override {
         // get target thing
-//        std::cout << "LOAD: 0x" << std::hex << address << std::endl;
+        std::cout << "LOAD: 0x" << std::hex << address << " yielded 0x" << std::hex;
+        auto result = 0u;
         if (inRAMArea(address)) {
             auto alignedAddress = address >> 2;
             auto offset = address & 0b11;
             auto& cell = memory_[alignedAddress];
             switch (offset) {
                 case 0b00: // ah... aligned :D
-                    return cell.raw;
+                    result = cell.raw;
+                    break;
                 case 0b01: // upper 24 bits of current cell + lowest 8 bits of next cell
-                    return [this, &cell, alignedAddress]() {
+                    result = [this, &cell, alignedAddress]() {
                         auto cell2 = static_cast<Ordinal>(memory_[alignedAddress+1].ordinalBytes[0]) << 24;
                         auto lowerPart = cell.raw >> 8;
                         return cell2 | lowerPart;
                     }();
+                    break;
                 case 0b10: // lower is in this cell, upper is in the next cell
-                    return [this, &cell, alignedAddress]() {
+                    result = [this, &cell, alignedAddress]() {
                         auto upperPart = static_cast<Ordinal>(memory_[alignedAddress+ 1].ordinalShorts[0]) << 16; // instant alignment
                         auto lowerPart = static_cast<Ordinal>(cell.ordinalShorts[1]);
                         return upperPart | lowerPart;
                     }();
+                    break;
                 case 0b11: // requires reading a second word... gross
-                    return [this, &cell, alignedAddress]() {
+                    result = [this, &cell, alignedAddress]() {
                         auto cell2 = (memory_[alignedAddress+ 1].raw) << 8; // instant alignment
                         auto lowerPart = static_cast<Ordinal>(cell.ordinalBytes[0b11]);
                         return cell2 | lowerPart;
                     }();
+                    break;
                 default:
                     throw "IMPOSSIBLE PATH";
             }
@@ -166,19 +171,21 @@ protected:
                     haltExecution();
                     break;
                 case ConsoleRegisterOffset: // Serial read / write
-                    return static_cast<Ordinal>(std::cin.get());
+                    result = static_cast<Ordinal>(std::cin.get());
+                    break;
                 case ConsoleFlushOffset:
                     std::cout.flush();
                     break;
                 default:
-                    return 0;
+                    break;
             }
         }
-        return 0;
+        std::cout << result << "!" << std::endl;
+        return result;
     }
 
     void store(Address address, Ordinal value) override {
-        //std::cout << "STORE 0x" << std::hex << value << " to 0x" << std::hex << address << std::endl;
+        std::cout << "STORE 0x" << std::hex << value << " to 0x" << std::hex << address << std::endl;
         if (inRAMArea(address)) {
             auto alignedAddress = address >> 2;
             auto offset = address & 0b11;
