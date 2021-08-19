@@ -8,5 +8,12 @@ if (MSVC)
 else()
     add_compile_options(-Wall -Wextra)
 endif()
-add_executable(sim3
-        OpcodesRaw.h main.cc Core.h Core.cc Types.h Instruction.h Register.h Register.cc SimplifiedSxCore.cc SimplifiedSxCore.h)
+add_library(sim3core
+        OpcodesRaw.h Core.h Core.cc Types.h Instruction.h Register.h Register.cc SimplifiedSxCore.cc SimplifiedSxCore.h)
+add_executable(sim3_zct
+        main.cc)
+#add_executable(sim3_sx
+#                sim3sx.cc)
+
+target_link_libraries(sim3_zct sim3core)
+#target_link_libraries(sim3_sx sim3core)
