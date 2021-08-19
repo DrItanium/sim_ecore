@@ -830,7 +830,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto spPos = getStackPointer().getOrdinal();
                 auto temp = (spPos + c_) & ~c_; // round to next boundary
                 auto fp = getFramePointer().getOrdinal();
-                getRIP().setOrdinal(ip_.getOrdinal());
+                getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
                 /// @todo implement support for caching register frames
                 // okay we have to properly mask out the frame pointer address like we do for ret
                 auto targetAddress = fp & (~c_);
@@ -848,11 +848,11 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // wait for any uncompleted instructions to finish
                 auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
                 auto fp = getFramePointer().getOrdinal();
-                getRIP().setOrdinal(ip_.getOrdinal());
+                auto memAddr = computeMemoryAddress(instruction);
+                getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy); // we need to save the result correctly
                 /// @todo implement support for caching register frames
                 auto targetAddress = fp & (~c_);
                 saveRegisterFrame(locals, targetAddress);
-                auto memAddr = computeMemoryAddress(instruction);
                 ip_.setOrdinal(memAddr);
                 getPFP().setOrdinal(fp);
                 getFramePointer().setOrdinal(temp);
@@ -1277,8 +1277,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     restoreRegisterFrame(locals, actualAddress);
                     auto returnValue = getRIP().getOrdinal();
                     ip_.setOrdinal(returnValue);
-                    // exploit that we will need to go to the next instruction via normal increment means
-                    // this is not a branch in the conventional sense
+                    advanceIPBy = 0; // we already computed ahead of time where we will return to
                 };
                 switch (pfp.getReturnType()) {
                     case 0b000:
