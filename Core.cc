@@ -867,17 +867,17 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::shro:
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                auto len = getRegister(instruction.getSrc1()).getOrdinal();
+                auto len = getSourceRegister(instruction.getSrc1()).getOrdinal();
                 /// @todo implement "speed" optimization by only getting src if we need it
-                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 dest.setOrdinal(src >> len);
             }();
             break;
         case Opcode::shli:
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                auto len = getRegister(instruction.getSrc1()).getInteger();
-                auto src = getRegister(instruction.getSrc2()).getInteger();
+                auto len = getSourceRegister(instruction.getSrc1()).getInteger();
+                auto src = getSourceRegister(instruction.getSrc2()).getInteger();
                 dest.setInteger(src << len);
             }();
             break;
@@ -900,7 +900,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // perform a sanity check
                 static_assert(reverseBitPositions[0] == (1u << 31));
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
                 dest.setOrdinal(0xFFFF'FFFF);
                 ac_.setConditionCode(0);
                 Ordinal index = 31;
@@ -925,7 +925,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // perform a sanity check
                 static_assert(reverseBitPositions[0] == (1u << 31));
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = getRegister(instruction.getSrc1()).getOrdinal();
+                auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
                 dest.setOrdinal(0xFFFF'FFFF);
                 ac_.setConditionCode(0);
                 Ordinal index = 31;
@@ -947,9 +947,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
                 // The initial value from memory is stored in dst (internally src/dst).
                 syncf();
-                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
                 auto temp = atomicLoad(addr);
-                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 atomicStore(addr, temp + src);
                 getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
             }();
@@ -960,10 +960,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
                 // value from memory is stored in src/dest
                 syncf();
-                auto addr = getRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
                 auto temp = atomicLoad(addr);
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                auto mask = getRegister(instruction.getSrc2()).getOrdinal();
+                auto mask = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 atomicStore(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
                 dest.setOrdinal(temp);
             }();
