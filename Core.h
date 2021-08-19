@@ -187,7 +187,8 @@ protected:
     virtual void synchronizedStore(Address destination, const Register& value) noexcept = 0;
     virtual ByteOrdinal loadByte(Address destination) {
         // force the unaligned access to be handled in load
-        return static_cast<ByteOrdinal>(load(destination));
+        auto result = static_cast<ByteOrdinal>(load (destination));
+        return result;
     }
     virtual ShortOrdinal loadShort(Address destination) {
         // just like with

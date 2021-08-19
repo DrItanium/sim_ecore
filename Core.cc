@@ -238,7 +238,7 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
 }
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
-    std::cout << "IP: 0x" << std::hex << ip_.getOrdinal() << std::endl;
+    //std::cout << "IP: 0x" << std::hex << ip_.getOrdinal() << std::endl;
     static constexpr Ordinal bitPositions[32] {
 #define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
             X(0), X(4), X(8), X(12),
@@ -409,9 +409,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::bbs:
             [this, &instruction]() {
-
-                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                auto targetRegister = instruction.getSrc1();
+                auto& bpReg = getSourceRegister(targetRegister);
+                auto bpOrd = bpReg.getOrdinal();
+                auto masked = bpOrd & 0b11111;
+                auto srcIndex = instruction.getSrc2();
+                const auto& srcReg = getSourceRegister(srcIndex);
+                auto src = srcReg.getOrdinal();
+                auto bitpos = bitPositions[masked];
                 if ((bitpos & src) != 0) {
                     advanceIPBy = 0;
                     ac_.setConditionCode(0b010);
@@ -1064,7 +1069,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stob:
             [this, &instruction]() {
                 auto addr = computeMemoryAddress(instruction);
-                auto src = getSourceRegister(instruction.getSrcDest(true)).getByteOrdinal();
+                auto theIndex = instruction.getSrcDest(true);
+                auto& srcReg = getSourceRegister(theIndex);
+                auto src = srcReg.getByteOrdinal(0);
                 storeByte(addr, src);
             }();
             break;
