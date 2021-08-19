@@ -833,14 +833,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 getRIP().setOrdinal(ip_.getOrdinal());
                 /// @todo implement support for caching register frames
                 // okay we have to properly mask out the frame pointer address like we do for ret
-                auto fpAddr = getFramePointer().getOrdinal();
-                auto targetAddress = fpAddr & (~c_);
+                auto targetAddress = fp & (~c_);
                 saveRegisterFrame(locals, targetAddress);
                 ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
                 /// @todo expand pfp and fp to accurately model how this works
                 getPFP().setOrdinal(fp);
                 getFramePointer().setOrdinal(temp);
                 getStackPointer().setOrdinal(temp + 64);
+                advanceIPBy = 0; // we already know where we are going so do not jump ahead
             }();
             break;
         case Opcode::callx:
@@ -850,11 +850,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto fp = getFramePointer().getOrdinal();
                 getRIP().setOrdinal(ip_.getOrdinal());
                 /// @todo implement support for caching register frames
-                saveRegisterFrame(locals, getFramePointer().getOrdinal());
-                ip_.setInteger(computeMemoryAddress(instruction));
+                auto targetAddress = fp & (~c_);
+                saveRegisterFrame(locals, targetAddress);
+                auto memAddr = computeMemoryAddress(instruction);
+                ip_.setOrdinal(memAddr);
                 getPFP().setOrdinal(fp);
                 getFramePointer().setOrdinal(temp);
                 getStackPointer().setOrdinal(temp + 64);
+                advanceIPBy = 0; // we already know where we are going so do not jump ahead
             }();
             break;
         case Opcode::shlo:
