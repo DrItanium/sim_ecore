@@ -77,6 +77,49 @@ public:
         installToMemory(base, curr);
     }
 protected:
+    ShortOrdinal loadShort(Address destination) override {
+        if (inIOSpace(destination)) {
+            switch (destination & 0x00FF'FFFF) {
+                case 0: // console flush
+                    std::cout.flush();
+                    break;
+                case 2: // console available
+                    return static_cast<ShortOrdinal>(std::cin.peek() != decltype(std::cin)::traits_type::eof() ? 1 : 0);
+                case 4: // console available for write
+                    // always available for writing
+                    return 1;
+                case 6:
+                    return std::cin.get();
+                default:
+                    break;
+            }
+        } else {
+            return Core::loadShort(destination);
+        }
+    }
+    void storeShort(Address destination, ShortOrdinal value) override {
+        if (inIOSpace(destination)) {
+            switch (destination & 0x00FF'FFFF) {
+                case 0: // console flush
+                    std::cout.flush();
+                    break;
+                case 6: // console io
+                    std::cout.put(value);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            Core::storeShort(destination, value);
+        }
+    }
+    ByteOrdinal loadByte(Address destination) override {
+        if (inIOSpace(destination)) {
+            return 0;
+        } else {
+            return Core::loadByte(destination);
+        }
+    }
     Ordinal load(Address address) override {
         // get target thing
         if (inRAMArea(address)) {
