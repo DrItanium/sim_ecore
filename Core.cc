@@ -391,8 +391,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::bbc:
             // branch if bit is clear
             [this, &instruction]() {
-                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 advanceIPBy = 0;
                 if ((bitpos & src) == 0) {
                     ac_.setConditionCode(0b010);
@@ -409,7 +409,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
 
                 auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getRegister(instruction.getSrc2()).getOrdinal();
+                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 advanceIPBy = 0;
                 if ((bitpos & src) != 0) {
                     ac_.setConditionCode(0b010);
@@ -424,41 +424,41 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::cmpo:
             [this, &instruction]() {
-                cmpo(getRegister(instruction.getSrc1()).getOrdinal(),
-                     getRegister(instruction.getSrc2()).getOrdinal());
+                cmpo(getSourceRegister(instruction.getSrc1()).getOrdinal(),
+                     getSourceRegister(instruction.getSrc2()).getOrdinal());
             }();
             break;
         case Opcode::cmpi:
             [this, &instruction]() {
-                cmpi(getRegister(instruction.getSrc1()).getInteger(),
-                     getRegister(instruction.getSrc2()).getInteger());
+                cmpi(getSourceRegister(instruction.getSrc1()).getInteger(),
+                     getSourceRegister(instruction.getSrc2()).getInteger());
             }();
             break;
         case Opcode::cmpdeco:
             [this, &instruction]() {
-                auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
-                cmpo(getRegister(instruction.getSrc1()).getOrdinal(), src2);
+                auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                cmpo(getSourceRegister(instruction.getSrc1()).getOrdinal(), src2);
                 getRegister(instruction.getSrcDest(false)).setOrdinal(src2 - 1);
             }();
             break;
         case Opcode::cmpdeci:
             [this, &instruction]() {
-                auto src2 = getRegister(instruction.getSrc2()).getInteger();
-                cmpi(getRegister(instruction.getSrc1()).getInteger(), src2);
+                auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
+                cmpi(getSourceRegister(instruction.getSrc1()).getInteger(), src2);
                 getRegister(instruction.getSrcDest(false)).setInteger(src2 - 1);
             }();
             break;
         case Opcode::cmpinco:
             [this, &instruction]() {
-                auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
-                cmpo(getRegister(instruction.getSrc1()).getOrdinal(), src2);
+                auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                cmpo(getSourceRegister(instruction.getSrc1()).getOrdinal(), src2);
                 getRegister(instruction.getSrcDest(false)).setOrdinal(src2 + 1);
             }();
             break;
         case Opcode::cmpinci:
             [this, &instruction]() {
-                auto src2 = getRegister(instruction.getSrc2()).getInteger();
-                cmpi(getRegister(instruction.getSrc1()).getInteger(), src2);
+                auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
+                cmpi(getSourceRegister(instruction.getSrc1()).getInteger(), src2);
                 getRegister(instruction.getSrcDest(false)).setInteger(src2 + 1);
             }();
             break;
