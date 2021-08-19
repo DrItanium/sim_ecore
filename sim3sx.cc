@@ -130,7 +130,7 @@ protected:
     }
     Ordinal load(Address address) override {
         // get target thing
-        std::cout << "LOAD: 0x" << std::hex << address << " yielded 0x" << std::hex;
+        //std::cout << "LOAD: 0x" << std::hex << address << " yielded 0x" << std::hex;
         auto result = 0u;
         if (inRAMArea(address)) {
             auto alignedAddress = address >> 2;
@@ -180,12 +180,12 @@ protected:
                     break;
             }
         }
-        std::cout << result << "!" << std::endl;
+        //std::cout << result << "!" << std::endl;
         return result;
     }
 
     void store(Address address, Ordinal value) override {
-        std::cout << "STORE 0x" << std::hex << value << " to 0x" << std::hex << address << std::endl;
+        //std::cout << "STORE 0x" << std::hex << value << " to 0x" << std::hex << address << std::endl;
         if (inRAMArea(address)) {
             auto alignedAddress = address >> 2;
             auto offset = address & 0b11;
