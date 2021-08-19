@@ -109,11 +109,15 @@ public:
             return -1;
         }
     }
-    constexpr RegisterIndex getSrc1() const noexcept {
+    constexpr RegisterIndex getSrc1(bool ignoreM1 = false) const noexcept {
         if (isREGFormat()) {
             return makeRegisterIndex(reg.src1, reg.m1);
         } else if (isCOBRFormat()) {
-            return makeRegister(cobr.src1);
+            if (ignoreM1) {
+                return makeRegister(cobr.src1);
+            } else {
+                return makeRegisterIndex(cobr.src1, cobr.m1);
+            }
         } else {
             return RegisterIndex::Bad;
         }
