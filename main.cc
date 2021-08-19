@@ -47,6 +47,7 @@ public:
     static constexpr Address HaltRegisterOffset = 0x00FF'FFFC;
     static constexpr Address ConsoleRegisterOffset = 0x00E0'0000;
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
+    static constexpr Address IACBaseAddress = 0x0000'0010;
     static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell);
     ZCT_Core() : Parent(), memory_(std::make_unique<MemoryCell[]>(MemorySize)) {}
     ~ZCT_Core() override = default;
