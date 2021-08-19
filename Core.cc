@@ -22,6 +22,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Core.h"
+#include <iostream>
 void
 Core::syncf() noexcept {
     if (ac_.getNoImpreciseFaults()) {
@@ -237,6 +238,7 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
 }
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
+    std::cout << "IP: 0x" << std::hex << ip_.getOrdinal() << std::endl;
     static constexpr Ordinal bitPositions[32] {
 #define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
             X(0), X(4), X(8), X(12),
@@ -539,7 +541,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::balx:
             [this, &instruction]() {
-                auto& g14 = getRegister(RegisterIndex::Global14);
+                auto& g14 = getRegister(instruction.getSrcDest(false));
                 auto address = computeMemoryAddress(instruction);
                 g14.setOrdinal(ip_.getOrdinal() + advanceIPBy);
                 ip_.setOrdinal(address);
