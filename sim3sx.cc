@@ -139,20 +139,20 @@ protected:
                 case 0b00: // ah... aligned :D
                     return cell.raw;
                 case 0b01: // upper 24 bits of current cell + lowest 8 bits of next cell
-                    return [this, &cell, address]() {
-                        auto cell2 = static_cast<Ordinal>(memory_[address + 3].ordinalBytes[0]) << 24;
+                    return [this, &cell, alignedAddress]() {
+                        auto cell2 = static_cast<Ordinal>(memory_[alignedAddress+1].ordinalBytes[0]) << 24;
                         auto lowerPart = cell.raw >> 8;
                         return cell2 | lowerPart;
                     }();
                 case 0b10: // lower is in this cell, upper is in the next cell
-                    return [this, &cell, address]() {
-                        auto upperPart = static_cast<Ordinal>(memory_[address + 2].ordinalShorts[0]) << 16; // instant alignment
+                    return [this, &cell, alignedAddress]() {
+                        auto upperPart = static_cast<Ordinal>(memory_[alignedAddress+ 1].ordinalShorts[0]) << 16; // instant alignment
                         auto lowerPart = static_cast<Ordinal>(cell.ordinalShorts[1]);
                         return upperPart | lowerPart;
                     }();
                 case 0b11: // requires reading a second word... gross
-                    return [this, &cell, address]() {
-                        auto cell2 = (memory_[address + 1].raw) << 8; // instant alignment
+                    return [this, &cell, alignedAddress]() {
+                        auto cell2 = (memory_[alignedAddress+ 1].raw) << 8; // instant alignment
                         auto lowerPart = static_cast<Ordinal>(cell.ordinalBytes[0b11]);
                         return cell2 | lowerPart;
                     }();
