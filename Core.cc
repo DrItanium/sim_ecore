@@ -827,11 +827,15 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 /// @todo implement
                 // wait for any uncompleted instructions to finish
-                auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+                auto spPos = getStackPointer().getOrdinal();
+                auto temp = (spPos + c_) & ~c_; // round to next boundary
                 auto fp = getFramePointer().getOrdinal();
                 getRIP().setOrdinal(ip_.getOrdinal());
                 /// @todo implement support for caching register frames
-                saveRegisterFrame(locals, getFramePointer().getOrdinal());
+                // okay we have to properly mask out the frame pointer address like we do for ret
+                auto fpAddr = getFramePointer().getOrdinal();
+                auto targetAddress = fpAddr & (~c_);
+                saveRegisterFrame(locals, targetAddress);
                 ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
                 /// @todo expand pfp and fp to accurately model how this works
                 getPFP().setOrdinal(fp);
@@ -1264,7 +1268,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto restoreStandardFrame = [this]() {
                     getFramePointer().setOrdinal(getPFP().getOrdinal());
                     /// @todo implement local register frame stack
-                    restoreRegisterFrame(locals, getFramePointer().getOrdinal());
+                    // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
+                    // we have to use the "c_" parameter for this
+                    auto actualAddress = getFramePointer().getOrdinal() & (~c_);
+                    restoreRegisterFrame(locals, actualAddress);
                     advanceIPBy = 0;
                     ip_.setOrdinal(getRIP().getOrdinal());
                 };
