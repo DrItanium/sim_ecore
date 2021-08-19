@@ -761,6 +761,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 /// @todo expand this instruction to dump saved register sets to stack in the right places
                 // currently this does nothing because I haven't implemented the register frame stack yet
+                //saveRegisterFrame(locals, getFramePointer().getOrdinal());
             }();
             break;
         case Opcode::fmark:
