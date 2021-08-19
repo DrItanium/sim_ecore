@@ -31,14 +31,20 @@ union Register {
 public:
     constexpr explicit Register(Ordinal value = 0) noexcept : ord_(value) { }
     constexpr bool getMostSignificantBit() const noexcept { return ord_ & 0x8000'0000; }
-    constexpr auto getOrdinal() const noexcept { return ord_; }
+    constexpr auto getOrdinal() const noexcept {
+        return ord_;
+    }
     constexpr auto getInteger() const noexcept { return integer_; }
     constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
     constexpr auto getShortInteger(int which = 0) const noexcept { return sints_[which&0b01]; }
     constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
     constexpr auto getByteInteger(int which = 0) const noexcept { return bints_[which&0b11]; }
-    void setOrdinal(Ordinal value) noexcept { ord_ = value; }
-    void setInteger(Integer value) noexcept { integer_ = value; }
+    void setOrdinal(Ordinal value) noexcept {
+        ord_ = value;
+    }
+    void setInteger(Integer value) noexcept {
+        integer_ = value;
+    }
     void setShortOrdinal(ShortOrdinal value) noexcept { setOrdinal(value); }
     void setShortInteger(ShortInteger value) noexcept { setInteger(value); }
     void setByteOrdinal(ByteOrdinal value) noexcept { setOrdinal(value); }

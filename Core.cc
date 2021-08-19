@@ -213,12 +213,12 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
         case MEMFormatMode::MEMA_AbsoluteOffset:
             return instruction.getOffset();
         case MEMFormatMode::MEMA_RegisterIndirectWithOffset:
-            return instruction.getOffset() + getRegister(instruction.getABase()).getOrdinal();
+            return instruction.getOffset() + getSourceRegister(instruction.getABase()).getOrdinal();
         case MEMFormatMode::MEMB_RegisterIndirect:
             return getRegister(instruction.getABase()).getOrdinal();
         case MEMFormatMode::MEMB_RegisterIndirectWithIndex:
-            return getRegister(instruction.getABase()).getOrdinal() +
-                   (getRegister(instruction.getIndex()).getOrdinal() << instruction.getScale());
+            return getSourceRegister(instruction.getABase()).getOrdinal() +
+                   (getSourceRegister(instruction.getIndex()).getOrdinal() << instruction.getScale());
         case MEMFormatMode::MEMB_IPWithDisplacement:
             return static_cast<Ordinal>(ip_.getInteger() + instruction.getDisplacement() + 8);
         case MEMFormatMode::MEMB_AbsoluteDisplacement:
@@ -563,7 +563,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::ld:
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setOrdinal(load(computeMemoryAddress(instruction)));
+                auto address = computeMemoryAddress(instruction);
+                auto result = load(address);
+                dest.setOrdinal(result);
             }();
             break;
         case Opcode::ldl:
@@ -858,7 +860,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
                 auto fp = getFramePointer().getOrdinal();
                 auto memAddr = computeMemoryAddress(instruction);
-                getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy); // we need to save the result correctly
+                auto rip = ip_.getOrdinal() + advanceIPBy;
+                getRIP().setOrdinal(rip); // we need to save the result correctly
                 /// @todo implement support for caching register frames
                 auto targetAddress = fp & (~c_);
                 saveRegisterFrame(locals, targetAddress);
