@@ -220,3 +220,7 @@ void
 SBCore::installBlockToMemory(Address base, Ordinal curr) noexcept  {
     installToMemory(base, curr);
 }
+
+SBCore::SBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {
+
+}

@@ -45,7 +45,7 @@ public:
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
     static constexpr Address IACBaseAddress = 0x0000'0010;
     static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell32);
-    SBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {}
+    SBCore();
     ~SBCore() override = default;
     void clearMemory() noexcept;
     /**
