@@ -9,7 +9,7 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 add_library(sim3core
-        OpcodesRaw.h Core.h Core.cc Types.h Instruction.h Register.h Register.cc SimplifiedSxCore.cc SimplifiedSxCore.h sim3sx.cc SBCore.h)
+        OpcodesRaw.h Core.h Core.cc Types.h Instruction.h Register.h Register.cc SimplifiedSxCore.cc SimplifiedSxCore.h sim3sx.cc SBCore.h SBCore.cc)
 add_executable(sim3_zct
         main.cc)
 add_executable(sim3_sx
