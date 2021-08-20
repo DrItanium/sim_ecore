@@ -31,16 +31,39 @@ SBCore::storeShort(Address destination, ShortOrdinal value) {
     if (inIOSpace(destination)) {
         switch (destination & 0x00FF'FFFF) {
             case 0: // console flush
-                std::cout.flush();
-                break;
+            std::cout.flush();
+            break;
             case 6: // console io
-                std::cout.put(value);
+            std::cout.put(value);
+            break;
+            default:
+                break;
+        }
+    } else if (inRAMArea(destination)) {
+        auto& cell = memory_[destination >> 2];
+        auto offset = destination & 0b11;
+        switch (offset) {
+            case 0b00:
+                cell.ordinalShorts[0] = value;
+                break;
+            case 0b10:
+                cell.ordinalShorts[1] = value;
+                break;
+            case 0b01: // unaligned store
+                cell.ordinalBytes[1] = static_cast<ByteOrdinal>(value);
+                cell.ordinalBytes[2] = static_cast<ByteOrdinal>(value >> 8);
+                break;
+            case 0b11: // access the next element
+                [&cell, &cell2 = memory_[((destination >> 2) + 1)], value]() {
+                    cell.ordinalBytes[3] = static_cast<ByteOrdinal>(value);
+                    cell2.ordinalBytes[0] = static_cast<ByteOrdinal>(value >> 8);
+                }();
                 break;
             default:
                 break;
         }
     } else {
-        Core::storeShort(destination, value);
+        // do nothing
     }
 }
 ByteOrdinal
