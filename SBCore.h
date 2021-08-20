@@ -32,8 +32,8 @@
 #include "Core.h"
 #include "SimplifiedSxCore.h"
 
-union MemoryCell {
-    constexpr MemoryCell(Ordinal value = 0) noexcept : raw(value) { }
+union MemoryCell32 {
+    constexpr MemoryCell32(Ordinal value = 0) noexcept : raw(value) { }
 
     Ordinal raw;
 #define X(type, name) type name [ sizeof(raw) / sizeof(type)]
@@ -43,7 +43,7 @@ union MemoryCell {
     X(ByteInteger, integerBytes);
 #undef X
 };
-static_assert(sizeof(MemoryCell) == sizeof(Ordinal), "MemoryCell must be the same size as a long ordinal");
+static_assert(sizeof(MemoryCell32) == sizeof(Ordinal), "MemoryCell32 must be the same size as a long ordinal");
 /**
  * @brief A theoretical i960Sx derived core with 64 megabytes of built in ram.
  * Everything runs from ram in this implementation
@@ -56,8 +56,8 @@ public:
     static constexpr Address ConsoleRegisterOffset = 0x00E0'0000;
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
     static constexpr Address IACBaseAddress = 0x0000'0010;
-    static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell);
-    SBCore() : Parent(), memory_(std::make_unique<MemoryCell[]>(MemorySize)) {}
+    static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell32);
+    SBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {}
     ~SBCore() override = default;
     void clearMemory() noexcept {
         for (size_t i = 0; i < MemorySize; ++i) {
@@ -105,6 +105,6 @@ private:
     }
 private:
     // allocate a 128 megabyte memory storage buffer
-    std::unique_ptr<MemoryCell[]> memory_;
+    std::unique_ptr<MemoryCell32[]> memory_;
 };
 #endif //SIM3_SBCORE_H

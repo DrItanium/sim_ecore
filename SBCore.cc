@@ -140,7 +140,7 @@ SBCore::store(Address address, Ordinal value) {
         auto alignedAddress = address >> 2;
         auto offset = address & 0b11;
         auto& cell = memory_[alignedAddress];
-        MemoryCell temp(value);
+        MemoryCell32 temp(value);
         switch (offset) {
             case 0b00: // ah... aligned :D
                 cell.raw = value;

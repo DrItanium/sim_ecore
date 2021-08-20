@@ -32,7 +32,7 @@ public:
     static constexpr Address HaltRegisterOffset = 0x00FF'FFFC;
     static constexpr Address ConsoleRegisterOffset = 0x00E0'0000;
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
-    static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell);
+    static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell32);
     ~ZCT_Core() override = default;
 protected:
     Ordinal load(Address address) override {
@@ -90,7 +90,7 @@ private:
     }
 private:
     // allocate a 128 megabyte memory storage buffer
-    std::unique_ptr<MemoryCell[]> memory_;
+    std::unique_ptr<MemoryCell32[]> memory_;
 };
 void standardHaltState() {
     ZCT_Core core;
