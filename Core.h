@@ -265,6 +265,16 @@ private:
     void cmpo(Ordinal src1, Ordinal src2) noexcept;
     void syncf() noexcept;
     void cycle() noexcept;
+    struct TreatAsOrdinal final { };
+    struct TreatAsInteger final { };
+    void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
+        auto& reg = getRegister(index);
+        reg.setOrdinal(value);
+    }
+    void setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
+        auto& reg = getRegister(index);
+        reg.setInteger(value);
+    }
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;

@@ -542,10 +542,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             // MEM Format
         case Opcode::ldob:
             [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
                 auto address = computeMemoryAddress(instruction);
                 auto result = loadByte(address);
-                dest.setOrdinal(result);
+                setDestination(instruction.getSrcDest(false), result, TreatAsOrdinal{});
             }();
             break;
         case Opcode::bx:
@@ -557,18 +556,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::balx:
             [this, &instruction]() {
-                auto& g14 = getRegister(instruction.getSrcDest(false));
                 auto address = computeMemoryAddress(instruction);
-                g14.setOrdinal(ip_.getOrdinal() + advanceIPBy);
+                setDestination(instruction.getSrcDest(false), ip_.getOrdinal() + advanceIPBy, TreatAsOrdinal{});
                 ip_.setOrdinal(address);
                 advanceIPBy = 0;
             }();
             break;
         case Opcode::ldos:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setOrdinal(loadShort(computeMemoryAddress(instruction)));
-            }();
+            setDestination(instruction.getSrcDest(false), loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal{});
             break;
         case Opcode::lda:
             [this, &instruction]() {
@@ -614,8 +609,12 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::addo:
             [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setOrdinal(getSourceRegister(instruction.getSrc2()).getOrdinal() +
-                                                                      getSourceRegister(instruction.getSrc1()).getOrdinal());
+                auto src1 = getSourceRegister(instruction.getSrc1()).getOrdinal();
+                auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                auto destIndex = instruction.getSrcDest(false);
+                auto& dest = getRegister(destIndex);
+                auto result = src2 + src1;
+                dest.setOrdinal(result);
             }();
             break;
         case Opcode::subi:
