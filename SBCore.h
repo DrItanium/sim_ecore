@@ -128,8 +128,14 @@ protected:
     ByteOrdinal loadByte(Address destination) override {
         if (inIOSpace(destination)) {
             return 0;
+        } else if (inRAMArea(destination)) {
+            auto& cell = memory_[destination >> 2];
+            auto offset = destination & 0b11;
+            return cell.ordinalBytes[offset];
+        } else if (inIACSpace(destination)) {
+            return 0;
         } else {
-            return Core::loadByte(destination);
+            return 0;
         }
     }
     Ordinal load(Address address) override {
