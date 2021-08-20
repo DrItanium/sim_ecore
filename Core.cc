@@ -703,11 +703,12 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::remo:
             [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                auto src1 = getSourceRegister(instruction.getSrc1()).getOrdinal();
+                auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{});
+                auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
                 // taken from the i960Sx manual
-                dest.setOrdinal(src2 - ((src2 / src1) * src1));
+                //auto result = src2 - ((src2 / src1) * src1);
+                auto result = src2 % src1;
+                setDestination(instruction.getSrcDest(false), result, TreatAsOrdinal{});
             }();
             break;
         case Opcode::rotate:

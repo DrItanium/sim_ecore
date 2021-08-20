@@ -17,7 +17,11 @@ SBCore::loadShort(Address destination) {
 // always available for writing
                 return 1;
             case 6:
-                return std::cin.get();
+                return []() {
+                    auto result = std::cin.get();
+                    std::cerr << "(result 0x"  << std::hex << result << ")" << std::endl;
+                    return static_cast<ShortOrdinal>(result);
+                }();
             default:
                 break;
         }
