@@ -47,33 +47,20 @@ public:
     static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell32);
     SBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {}
     ~SBCore() override = default;
-    void clearMemory() noexcept {
-        for (size_t i = 0; i < MemorySize; ++i) {
-            memory_[i].raw = 0;
-        }
-    }
+    void clearMemory() noexcept;
     /**
      * @brief Install an ordinal to a given memory address
      * @param loc
      * @param value
      */
-    void installToMemory(Address loc, Ordinal value) {
-        auto alignedAddress = ((64_MB -1) & loc) >> 2;
-        memory_[alignedAddress].raw = value;
-    }
-    void installToMemory(Address loc, ByteOrdinal value) {
-        auto alignedAddress = ((64_MB - 1) & loc) >> 2;
-        auto offset = loc & 0b11;
-        memory_[alignedAddress].ordinalBytes[offset] = value;
-    }
+    void installToMemory(Address loc, Ordinal value);
+    void installToMemory(Address loc, ByteOrdinal value);
     template<typename ... Rest>
     void installBlockToMemory(Address base, Ordinal curr, Rest&& ... values) noexcept {
         installToMemory(base, curr);
         installBlockToMemory(base + 4, values...);
     }
-    void installBlockToMemory(Address base, Ordinal curr) noexcept  {
-        installToMemory(base, curr);
-    }
+    void installBlockToMemory(Address base, Ordinal curr) noexcept;
 protected:
     ShortOrdinal loadShort(Address destination) override;
     void storeShort(Address destination, ShortOrdinal value) override;

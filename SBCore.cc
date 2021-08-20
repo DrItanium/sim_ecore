@@ -43,19 +43,19 @@ SBCore::storeShort(Address destination, ShortOrdinal value) {
         auto offset = destination & 0b11;
         switch (offset) {
             case 0b00:
-                cell.ordinalShorts[0] = value;
+                cell.setShortOrdinal(value, 0);
                 break;
             case 0b10:
-                cell.ordinalShorts[1] = value;
+                cell.setShortOrdinal(value, 1);
                 break;
             case 0b01: // unaligned store
-                cell.ordinalBytes[1] = static_cast<ByteOrdinal>(value);
-                cell.ordinalBytes[2] = static_cast<ByteOrdinal>(value >> 8);
+                cell.setByteOrdinal(value, 1);
+                cell.setByteOrdinal(value >> 8, 2);
                 break;
             case 0b11: // access the next element
                 [&cell, &cell2 = memory_[((destination >> 2) + 1)], value]() {
-                    cell.ordinalBytes[3] = static_cast<ByteOrdinal>(value);
-                    cell2.ordinalBytes[0] = static_cast<ByteOrdinal>(value >> 8);
+                    cell.setByteOrdinal(value, 3);
+                    cell2.setByteOrdinal(value >> 8, 0);
                 }();
                 break;
             default:
@@ -72,7 +72,7 @@ SBCore::loadByte(Address destination) {
     } else if (inRAMArea(destination)) {
         auto& cell = memory_[destination >> 2];
         auto offset = destination & 0b11;
-        return cell.ordinalBytes[offset];
+        return cell.getByteOrdinal(offset);
     } else if (inIACSpace(destination)) {
         return 0;
     } else {
@@ -89,26 +89,26 @@ SBCore::load(Address address) {
         auto& cell = memory_[alignedAddress];
         switch (offset) {
             case 0b00: // ah... aligned :D
-                result = cell.raw;
+                result = cell.getOrdinalValue();
                 break;
             case 0b01: // upper 24 bits of current cell + lowest 8 bits of next cell
                 result = [this, &cell, alignedAddress]() {
-                    auto cell2 = static_cast<Ordinal>(memory_[alignedAddress+1].ordinalBytes[0]) << 24;
-                    auto lowerPart = cell.raw >> 8;
+                    auto cell2 = static_cast<Ordinal>(memory_[alignedAddress+1].getByteOrdinal(0));
+                    auto lowerPart = cell.getOrdinalValue() >> 8;
                     return cell2 | lowerPart;
                 }();
                 break;
             case 0b10: // lower is in this cell, upper is in the next cell
                 result = [this, &cell, alignedAddress]() {
-                    auto upperPart = static_cast<Ordinal>(memory_[alignedAddress+ 1].ordinalShorts[0]) << 16; // instant alignment
-                    auto lowerPart = static_cast<Ordinal>(cell.ordinalShorts[1]);
+                    auto upperPart = static_cast<Ordinal>(memory_[alignedAddress+ 1].getShortOrdinal(0)) << 16; // instant alignment
+                    auto lowerPart = static_cast<Ordinal>(cell.getShortOrdinal(1));
                     return upperPart | lowerPart;
                 }();
                 break;
             case 0b11: // requires reading a second word... gross
                 result = [this, &cell, alignedAddress]() {
-                    auto cell2 = (memory_[alignedAddress+ 1].raw) << 8; // instant alignment
-                    auto lowerPart = static_cast<Ordinal>(cell.ordinalBytes[0b11]);
+                    auto cell2 = (memory_[alignedAddress+ 1].getOrdinalValue()) << 8; // instant alignment
+                    auto lowerPart = static_cast<Ordinal>(cell.getByteOrdinal(0b11));
                     return cell2 | lowerPart;
                 }();
                 break;
@@ -143,34 +143,34 @@ SBCore::store(Address address, Ordinal value) {
         MemoryCell32 temp(value);
         switch (offset) {
             case 0b00: // ah... aligned :D
-                cell.raw = value;
+                cell.setOrdinalValue(value);
                 break;
             case 0b01: // upper 24 bits of current cell + lowest 8 bits of next cell
                 [this, &cell, alignedAddress, &temp]() {
 // we have to store the lower 24 bits into memory
                     auto& cell2 = memory_[alignedAddress + 1];
-                    cell.ordinalBytes[1] = temp.ordinalBytes[0];
-                    cell.ordinalBytes[2] = temp.ordinalBytes[1];
-                    cell.ordinalBytes[3] = temp.ordinalBytes[2];
-                    cell2.ordinalBytes[0] = temp.ordinalBytes[3];
+                    cell.setByteOrdinal(temp.getByteOrdinal(0), 1);
+                    cell.setByteOrdinal(temp.getByteOrdinal(1), 2);
+                    cell.setByteOrdinal(temp.getByteOrdinal(2), 3);
+                    cell2.setByteOrdinal(temp.getByteOrdinal(3), 0);
                 }();
                 break;
             case 0b10: // lower is in this cell, upper is in the next cell
                 [this, &cell, alignedAddress, &temp]() {
                     auto& cell2 = memory_[alignedAddress + 1];
-                    cell.ordinalBytes[2] = temp.ordinalBytes[0];
-                    cell.ordinalBytes[3] = temp.ordinalBytes[1];
-                    cell2.ordinalBytes[0] = temp.ordinalBytes[2];
-                    cell2.ordinalBytes[1] = temp.ordinalBytes[3];
+                    cell.setByteOrdinal(temp.getByteOrdinal(0), 2);
+                    cell.setByteOrdinal(temp.getByteOrdinal(1), 3);
+                    cell2.setByteOrdinal(temp.getByteOrdinal(2), 0);
+                    cell2.setByteOrdinal(temp.getByteOrdinal(3), 1);
                 }();
                 break;
             case 0b11: // lower 24-bits next word, upper 8 bits, this word
                 [this, &cell, alignedAddress, &temp]() {
                     auto& cell2 = memory_[alignedAddress + 1];
-                    cell.ordinalBytes[3] = temp.ordinalBytes[0];
-                    cell2.ordinalBytes[0] = temp.ordinalBytes[1];
-                    cell2.ordinalBytes[1] = temp.ordinalBytes[2];
-                    cell2.ordinalBytes[2] = temp.ordinalBytes[3];
+                    cell.setByteOrdinal(temp.getByteOrdinal(0), 3);
+                    cell2.setByteOrdinal(temp.getByteOrdinal(1), 0);
+                    cell2.setByteOrdinal(temp.getByteOrdinal(2), 1);
+                    cell2.setByteOrdinal(temp.getByteOrdinal(3), 2);
                 }();
                 break;
             default:
@@ -197,4 +197,26 @@ void
 SBCore::generateFault(FaultType ) {
     std::cout << "FAULT GENERATED AT 0x" << std::hex << ip_.getOrdinal() << "! HALTING!" << std::endl;
     haltExecution();
+}
+
+void
+SBCore::clearMemory() noexcept {
+    for (size_t i = 0; i < MemorySize; ++i) {
+        memory_[i].clear();
+    }
+}
+void
+SBCore::installToMemory(Address loc, Ordinal value) {
+    auto alignedAddress = ((64_MB -1) & loc) >> 2;
+    memory_[alignedAddress].setOrdinalValue(value);
+}
+void
+SBCore::installToMemory(Address loc, ByteOrdinal value) {
+    auto alignedAddress = ((64_MB - 1) & loc) >> 2;
+    auto offset = loc & 0b11;
+    memory_[alignedAddress].setByteOrdinal(value, offset);
+}
+void
+SBCore::installBlockToMemory(Address base, Ordinal curr) noexcept  {
+    installToMemory(base, curr);
 }
