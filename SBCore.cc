@@ -12,7 +12,7 @@ SBCore::loadShort(Address destination) {
                 std::cout.flush();
                 break;
             case 2: // console available
-                return static_cast<ShortOrdinal>(std::cin.peek() != decltype(std::cin)::traits_type::eof() ? 1 : 0);
+                return 1;
             case 4: // console available for write
 // always available for writing
                 return 1;
