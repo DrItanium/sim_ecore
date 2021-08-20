@@ -246,10 +246,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #undef X
     };
     auto cmpobx = [this, &instruction](uint8_t mask) noexcept {
-        auto s1k = instruction.getSrc1();
-        auto& sr1 = getSourceRegister(s1k);
-        auto src1 = sr1.getOrdinal();
-        auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
+        auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
+        auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{});
         cmpo(src1, src2);
         if ((mask & ac_.getConditionCode()) != 0) {
             // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
@@ -262,8 +260,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         }
     };
     auto cmpibx = [this, &instruction](uint8_t mask) noexcept {
-        auto src1 = getSourceRegister(instruction.getSrc1()).getInteger();
-        auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
+        auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
+        auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
         cmpi(src1, src2);
         if ((mask & ac_.getConditionCode()) != 0) {
             // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
@@ -292,7 +290,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             ipRelativeBranch(instruction.getDisplacement()) ;
             break;
         case Opcode::bal:
-            getRegister(RegisterIndex::Global14).setOrdinal(ip_.getOrdinal() + 4);
+            setDestination(RegisterIndex::Global14, ip_.getOrdinal() + 4, TreatAsOrdinal{});
             ipRelativeBranch(instruction.getDisplacement()) ;
             break;
         case Opcode::bno:
