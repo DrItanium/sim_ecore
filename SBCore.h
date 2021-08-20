@@ -32,18 +32,6 @@
 #include "Core.h"
 #include "SimplifiedSxCore.h"
 
-union MemoryCell32 {
-    constexpr MemoryCell32(Ordinal value = 0) noexcept : raw(value) { }
-
-    Ordinal raw;
-#define X(type, name) type name [ sizeof(raw) / sizeof(type)]
-    X(ShortOrdinal, ordinalShorts);
-    X(ShortInteger, integerShorts);
-    X(ByteOrdinal, ordinalBytes);
-    X(ByteInteger, integerBytes);
-#undef X
-};
-static_assert(sizeof(MemoryCell32) == sizeof(Ordinal), "MemoryCell32 must be the same size as a long ordinal");
 /**
  * @brief A theoretical i960Sx derived core with 64 megabytes of built in ram.
  * Everything runs from ram in this implementation
