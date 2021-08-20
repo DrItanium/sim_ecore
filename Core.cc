@@ -789,7 +789,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::emul:
             [this, &instruction]() {
                 auto src2 = static_cast<LongOrdinal>(getSourceRegister(instruction.getSrc2()).getOrdinal());
-                auto src1 = static_cast<LongOrdinal>(getSourceRegister(instruction.getSrc2()).getOrdinal());
+                auto src1 = static_cast<LongOrdinal>(getSourceRegister(instruction.getSrc1()).getOrdinal());
                 auto& dest = getDoubleRegister(instruction.getSrcDest(false));
                 // taken from the manual
                 dest.setLongOrdinal(src2 * src1);
