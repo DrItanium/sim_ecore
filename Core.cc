@@ -238,7 +238,7 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
 }
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
-    //std::cout << "IP: 0x" << std::hex << ip_.getOrdinal() << std::endl;
+    //std::cerr << "IP: 0x" << std::hex << ip_.getOrdinal() << std::endl;
     static constexpr Ordinal bitPositions[32] {
 #define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
             X(0), X(4), X(8), X(12),
@@ -402,7 +402,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 const auto& srcReg = getSourceRegister(srcIndex);
                 auto src = srcReg.getOrdinal();
                 auto bitpos = bitPositions[masked];
-                std::cout << "bbc: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
+                //std::cout << "bbc: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
                 if ((bitpos & src) == 0) {
                     // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
                     ac_.setConditionCode(0b000);
@@ -426,7 +426,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 const auto& srcReg = getSourceRegister(srcIndex);
                 auto src = srcReg.getOrdinal();
                 auto bitpos = bitPositions[masked];
-                std::cout << "bbs: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
+                //std::cout << "bbs: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
                 if ((bitpos & src) != 0) {
                     ac_.setConditionCode(0b010);
                     // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
@@ -607,8 +607,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             // REG format
         case Opcode::addi:
             [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setInteger(getSourceRegister(instruction.getSrc2()).getInteger() +
-                                                                      getSourceRegister(instruction.getSrc1()).getInteger());
+                auto src1 = getSourceRegister(instruction.getSrc1()).getInteger();
+                auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
+                getRegister(instruction.getSrcDest(false)).setInteger(src2 + src1);
             }( );
             break;
         case Opcode::addo:
@@ -859,11 +860,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto spPos = getStackPointer().getOrdinal();
                 auto temp = (spPos + c_) & ~c_; // round to next boundary
                 auto fp = getFramePointer().getOrdinal();
-                getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
+                auto rip = ip_.getOrdinal() + advanceIPBy;
+                getRIP().setOrdinal(rip);
                 /// @todo implement support for caching register frames
                 // okay we have to properly mask out the frame pointer address like we do for ret
                 auto targetAddress = fp & (~c_);
                 saveRegisterFrame(locals, targetAddress);
+                clearLocalRegisters();
                 ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
                 /// @todo expand pfp and fp to accurately model how this works
                 getPFP().setOrdinal(fp);
@@ -883,6 +886,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 /// @todo implement support for caching register frames
                 auto targetAddress = fp & (~c_);
                 saveRegisterFrame(locals, targetAddress);
+                clearLocalRegisters();
                 ip_.setOrdinal(memAddr);
                 getPFP().setOrdinal(fp);
                 getFramePointer().setOrdinal(temp);
@@ -894,12 +898,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto len = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                if (len < 32) {
-                    auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                    dest.setOrdinal(src << len);
-                } else {
-                    dest.setOrdinal(0);
-                }
+                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                dest.setOrdinal(src << len);
             }();
             break;
         case Opcode::shro:
@@ -1269,7 +1269,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     auto type = tempPE & 0b11;
                     auto procedureAddress = tempPE & ~0b11;
                     // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
-                    getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal());
+                    getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal() + advanceIPBy);
                     ip_.setOrdinal(procedureAddress);
                     Ordinal temp = 0;
                     Ordinal tempRRR = 0;
@@ -1285,6 +1285,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     auto frameAddress = getFramePointer().getOrdinal() & (~c_); // make sure the lowest n bits are ignored
                     /// @todo implement support for caching register frames
                     saveRegisterFrame(locals, frameAddress);
+                    clearLocalRegisters();
                     /// @todo expand pfp and fp to accurately model how this works
                     PreviousFramePointer pfp(getPFP());
                     pfp.setAddress(getFramePointer().getOrdinal());
@@ -1402,4 +1403,11 @@ Core::getFaultTableBase() {
 Ordinal
 Core::getInterruptStackPointer() {
    return load(getPRCBPtrBase() + 20);
+}
+
+void
+Core::clearLocalRegisters() noexcept {
+    for (auto& reg : locals.gprs) {
+        reg.setOrdinal(0);
+    }
 }

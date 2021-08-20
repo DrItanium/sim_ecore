@@ -29,6 +29,7 @@
 #include "Types.h"
 #include "Instruction.h"
 #include "Register.h"
+#include <iostream>
 
 enum class FaultType : Ordinal {
     Trace = 0x0001'0000,
@@ -129,6 +130,7 @@ protected:
     virtual void generateFault(FaultType fault);
     virtual void storeLong(Address destination, LongOrdinal value) {
         DoubleRegister wrapper(value);
+        std::cerr << "(storeLong 0x" << std::hex << destination << " 0x" << value << ")" << std::endl;
         store(destination + 0, wrapper.getOrdinal(0));
         store(destination + 4, wrapper.getOrdinal(1));
     }
@@ -264,6 +266,8 @@ private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
     Ordinal computeMemoryAddress(const Instruction& instruction) noexcept;
+protected:
+    void clearLocalRegisters() noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

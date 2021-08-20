@@ -134,7 +134,7 @@ protected:
     }
     Ordinal load(Address address) override {
         // get target thing
-        //std::cout << "LOAD: 0x" << std::hex << address << " yielded 0x" << std::hex;
+        //std::cerr << "LOAD: 0x" << std::hex << address << " yielded 0x" << std::hex;
         auto result = 0u;
         if (inRAMArea(address)) {
             auto alignedAddress = address >> 2;
@@ -184,12 +184,12 @@ protected:
                     break;
             }
         }
-        //std::cout << result << "!" << std::endl;
+        //std::cerr << result << "!" << std::endl;
         return result;
     }
 
     void store(Address address, Ordinal value) override {
-        //std::cout << "STORE 0x" << std::hex << value << " to 0x" << std::hex << address << std::endl;
+        //std::cerr << "STORE 0x" << std::hex << value << " to 0x" << std::hex << address << std::endl;
         if (inRAMArea(address)) {
             auto alignedAddress = address >> 2;
             auto offset = address & 0b11;
@@ -200,23 +200,31 @@ protected:
                     cell.raw = value;
                     break;
                 case 0b01: // upper 24 bits of current cell + lowest 8 bits of next cell
-                    memory_[address + 3].ordinalBytes[0] = temp.ordinalBytes[3];
-                    cell.ordinalBytes[3] = temp.ordinalBytes[2];
-                    cell.ordinalBytes[2] = temp.ordinalBytes[1];
-                    cell.ordinalBytes[1] = temp.ordinalBytes[0];
-                    // we have to store the lower 24 bits into memory
+                    [this, &cell, alignedAddress, &temp]() {
+                        // we have to store the lower 24 bits into memory
+                        auto& cell2 = memory_[alignedAddress + 1];
+                        cell.ordinalBytes[1] = temp.ordinalBytes[0];
+                        cell.ordinalBytes[2] = temp.ordinalBytes[1];
+                        cell.ordinalBytes[3] = temp.ordinalBytes[2];
+                        cell2.ordinalBytes[0] = temp.ordinalBytes[3];
+                    }();
                     break;
                 case 0b10: // lower is in this cell, upper is in the next cell
-                    cell.ordinalShorts[1] = temp.ordinalShorts[0];
-                    memory_[address + 3].ordinalShorts[0] = temp.ordinalShorts[1];
+                    [this, &cell, alignedAddress, &temp]() {
+                        auto& cell2 = memory_[alignedAddress + 1];
+                        cell.ordinalBytes[2] = temp.ordinalBytes[0];
+                        cell.ordinalBytes[3] = temp.ordinalBytes[1];
+                        cell2.ordinalBytes[0] = temp.ordinalBytes[2];
+                        cell2.ordinalBytes[1] = temp.ordinalBytes[3];
+                    }();
                     break;
                 case 0b11: // lower 24-bits next word, upper 8 bits, this word
-                    [this, &cell, address, &temp]() {
-                        auto& cell2 = memory_[address + 1];
-                        cell2.ordinalBytes[2] = temp.ordinalBytes[3];
-                        cell2.ordinalBytes[1] = temp.ordinalBytes[2];
-                        cell2.ordinalBytes[0] = temp.ordinalBytes[1];
+                    [this, &cell, alignedAddress, &temp]() {
+                        auto& cell2 = memory_[alignedAddress + 1];
                         cell.ordinalBytes[3] = temp.ordinalBytes[0];
+                        cell2.ordinalBytes[0] = temp.ordinalBytes[1];
+                        cell2.ordinalBytes[1] = temp.ordinalBytes[2];
+                        cell2.ordinalBytes[2] = temp.ordinalBytes[3];
                     }();
                     break;
                 default:

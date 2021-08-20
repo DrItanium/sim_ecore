@@ -24,6 +24,7 @@
 
 void
 SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
+    clearLocalRegisters();
     systemAddressTableBase_ = sat;
     prcbBase_ = pcb;
     // skip the check words
