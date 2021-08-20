@@ -278,6 +278,7 @@ private:
     Ordinal computeMemoryAddress(const Instruction& instruction) noexcept;
 protected:
     void clearLocalRegisters() noexcept;
+private:
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

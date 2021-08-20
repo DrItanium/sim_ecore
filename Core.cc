@@ -579,7 +579,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::ldl:
             [this, &instruction]() {
                 auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                dest.setLongOrdinal(loadLong(computeMemoryAddress(instruction)));
+                auto address = computeMemoryAddress(instruction);
+                auto result = loadLong(address);
+                dest.setLongOrdinal(result);
             }();
             break;
         case Opcode::ldt:
@@ -1104,37 +1106,43 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stos:
             [this, &instruction]() {
                 auto src = getSourceRegister(instruction.getSrcDest(true)).getShortOrdinal();
-                storeShort(computeMemoryAddress(instruction), src);
+                auto addr = computeMemoryAddress(instruction);
+                storeShort(addr, src);
             }();
             break;
         case Opcode::stl:
             [this, &instruction]() {
                 auto src = getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal();
-                storeLong(computeMemoryAddress(instruction), src);
+                auto address = computeMemoryAddress(instruction);
+                storeLong(address, src);
             }();
             break;
         case Opcode::stt:
             [this, &instruction]() {
                 auto& src = getTripleRegister(instruction.getSrcDest(true));
-                store(computeMemoryAddress(instruction), src);
+                auto address = computeMemoryAddress(instruction);
+                store(address, src);
             }();
             break;
         case Opcode::stq:
             [this, &instruction]() {
                 auto& src = getQuadRegister(instruction.getSrcDest(true));
-                store(computeMemoryAddress(instruction), src);
+                auto addr = computeMemoryAddress(instruction);
+                store(addr, src);
             }();
             break;
         case Opcode::stib:
             [this, &instruction]() {
-                auto src = getSourceRegister(instruction.getSrcDest(true)).getInteger();
-                storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(src));
+                auto src = static_cast<ByteInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger());
+                auto address = computeMemoryAddress(instruction);
+                storeByteInteger(address, src);
             }();
             break;
         case Opcode::stis:
             [this, &instruction]() {
-                auto src = getSourceRegister(instruction.getSrcDest(true)).getInteger();
-                storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(src));
+                auto src = static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger());
+                auto address = computeMemoryAddress(instruction);
+                storeShortInteger(address, src);
             }();
             break;
         case Opcode::shri:
@@ -1155,11 +1163,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                  * }
                  *
                  */
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = getSourceRegister(instruction.getSrc2()).getInteger();
-                auto len = getSourceRegister(instruction.getSrc1()).getInteger();
+                auto src = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
+                auto len = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
                 /// @todo perhaps implement the extra logic if necessary
-                dest.setInteger(src >> len);
+                setDestination(instruction.getSrcDest(false), src >> len, TreatAsInteger{});
             }();
             break;
         case Opcode::shrdi:
