@@ -271,6 +271,7 @@ private:
     void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
     Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;
     Ordinal getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const;
+    void cmpobx(const Instruction& instruction, uint8_t mask) noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;

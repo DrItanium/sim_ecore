@@ -53,6 +53,10 @@ public:
     void setShortInteger(ShortInteger value, int which) noexcept { sints_[which&0b01] = value; }
     void setByteOrdinal(ByteOrdinal value, int which) noexcept { bords_[which&0b11] = value; }
     void setByteInteger(ByteInteger value, int which) noexcept { bints_[which&0b11] = value; }
+    void increment(Integer advance) noexcept { integer_ += advance; }
+    void increment(Ordinal advance) noexcept { ord_ += advance; }
+    void decrement(Integer advance) noexcept { integer_ -= advance; }
+    void decrement(Ordinal advance) noexcept { ord_ -= advance; }
 #ifdef NUMERICS_ARCHTIECTURE
     constexpr auto getReal() const noexcept { return real_; }
 void setReal(Real value) noexcept { real_ = value; }

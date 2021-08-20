@@ -237,6 +237,21 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
     }
 }
 void
+Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
+    auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
+    auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{});
+    cmpo(src1, src2);
+    if ((mask & ac_.getConditionCode()) != 0) {
+        // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+        // in the future (the HX uses those two bits as "S2" so that will be a fun future change...).
+        // I do not know why the Sx manual shows adding four while the hx manual does not
+        // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
+        advanceIPBy = 0;
+        auto destination = ip_.getInteger() + instruction.getDisplacement();
+        ip_.setInteger(destination);
+    }
+};
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     //std::cerr << "IP: 0x" << std::hex << ip_.getOrdinal() << std::endl;
     static constexpr Ordinal bitPositions[32] {
@@ -244,20 +259,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             X(0), X(4), X(8), X(12),
             X(16), X(20), X(24), X(28)
 #undef X
-    };
-    auto cmpobx = [this, &instruction](uint8_t mask) noexcept {
-        auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
-        auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{});
-        cmpo(src1, src2);
-        if ((mask & ac_.getConditionCode()) != 0) {
-            // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
-            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...).
-            // I do not know why the Sx manual shows adding four while the hx manual does not
-            // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
-            advanceIPBy = 0;
-            auto destination = ip_.getInteger() + instruction.getDisplacement();
-            ip_.setInteger(destination);
-        }
     };
     auto cmpibx = [this, &instruction](uint8_t mask) noexcept {
         auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
@@ -438,16 +439,12 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::cmpo:
-            [this, &instruction]() {
-                cmpo(getSourceRegister(instruction.getSrc1()).getOrdinal(),
-                     getSourceRegister(instruction.getSrc2()).getOrdinal());
-            }();
+            cmpo(getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
+                 getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}));
             break;
         case Opcode::cmpi:
-            [this, &instruction]() {
-                cmpi(getSourceRegister(instruction.getSrc1()).getInteger(),
-                     getSourceRegister(instruction.getSrc2()).getInteger());
-            }();
+            cmpi(getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{}),
+                 getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{}));
             break;
         case Opcode::cmpdeco:
             [this, &instruction]() {
@@ -478,22 +475,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::cmpobg:
-            cmpobx(0b001);
+            cmpobx(instruction, 0b001);
             break;
         case Opcode::cmpobe:
-            cmpobx(0b010);
+            cmpobx(instruction, 0b010);
             break;
         case Opcode::cmpobge:
-            cmpobx(0b011);
+            cmpobx(instruction, 0b011);
             break;
         case Opcode::cmpobl:
-            cmpobx(0b100);
+            cmpobx(instruction, 0b100);
             break;
         case Opcode::cmpobne:
-            cmpobx(0b101);
+            cmpobx(instruction, 0b101);
             break;
         case Opcode::cmpoble:
-            cmpobx(0b110);
+            cmpobx(instruction, 0b110);
             break;
         case Opcode::cmpibno:
             cmpibx(0b000);
