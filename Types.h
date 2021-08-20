@@ -217,25 +217,38 @@ constexpr auto operator "" _MB(unsigned long long value) noexcept {
 }
 
 union MemoryCell32 {
+    template<typename T>
+    static constexpr size_t NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);
+    template<typename T>
+    static constexpr size_t NumThingsPerOrdinalMask = NumThingsPerOrdinal<T> - 1;
+    static constexpr size_t NumShortOrdinalsPerOrdinal = NumThingsPerOrdinal<ShortOrdinal >;
+    static constexpr size_t NumShortIntegersPerOrdinal = NumThingsPerOrdinal<ShortInteger>;
+    static constexpr size_t NumByteOrdinalsPerOrdinal = NumThingsPerOrdinal<ByteOrdinal >;
+    static constexpr size_t NumByteIntegersPerOrdinal = NumThingsPerOrdinal<ByteInteger>;
+    static constexpr size_t NumShortOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ShortOrdinal >;
+    static constexpr size_t NumShortIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ShortInteger>;
+    static constexpr size_t NumByteOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ByteOrdinal >;
+    static constexpr size_t NumByteIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ByteInteger>;
+public:
     constexpr explicit MemoryCell32(Ordinal value = 0) noexcept : raw(value) { }
+    constexpr MemoryCell32(ShortOrdinal lower, ShortOrdinal upper) noexcept : ordinalShorts{lower, upper} { }
+    constexpr MemoryCell32(ByteOrdinal lowest, ByteOrdinal lower, ByteOrdinal higher, ByteOrdinal highest)  noexcept : ordinalBytes{lowest, lower, higher, highest} { }
     constexpr Ordinal getOrdinalValue() const noexcept { return raw; }
     Ordinal setOrdinalValue(Ordinal value) noexcept { raw = value; }
-    constexpr ShortOrdinal getShortOrdinal(size_t which) const noexcept { return ordinalShorts[which & 0b1]; }
-    void setShortOrdinal(ShortOrdinal value, size_t which) noexcept { ordinalShorts[which & 0b1] = value; }
-    void setShortInteger(ShortInteger value, size_t which) noexcept { integerShorts[which & 0b1] = value; }
-    constexpr ShortInteger getShortInteger(size_t which) const noexcept {return integerShorts[which & 0b1]; }
-    constexpr ByteOrdinal getByteOrdinal(size_t which) const noexcept {return ordinalBytes[which & 0b11]; }
-    constexpr ByteInteger getByteInteger(size_t which) const noexcept {return integerBytes[which & 0b11]; }
-    void setByteOrdinal(ByteOrdinal value, size_t which) noexcept { ordinalBytes[which & 0b11] = value; }
-    void setByteInteger(ByteInteger value, size_t which) noexcept { integerBytes[which & 0b11] = value; }
+    constexpr ShortOrdinal getShortOrdinal(size_t which) const noexcept { return ordinalShorts[which & NumShortOrdinalsPerOrdinalMask]; }
+    constexpr ShortInteger getShortInteger(size_t which) const noexcept {return integerShorts[which & NumShortIntegersPerOrdinalMask]; }
+    void setShortOrdinal(ShortOrdinal value, size_t which) noexcept { ordinalShorts[which & NumShortOrdinalsPerOrdinalMask] = value; }
+    void setShortInteger(ShortInteger value, size_t which) noexcept { integerShorts[which & NumShortIntegersPerOrdinalMask] = value; }
+    constexpr ByteOrdinal getByteOrdinal(size_t which) const noexcept {return ordinalBytes[which & NumByteOrdinalsPerOrdinalMask]; }
+    constexpr ByteInteger getByteInteger(size_t which) const noexcept {return integerBytes[which & NumByteIntegersPerOrdinalMask]; }
+    void setByteOrdinal(ByteOrdinal value, size_t which) noexcept { ordinalBytes[which & NumByteOrdinalsPerOrdinalMask] = value; }
+    void setByteInteger(ByteInteger value, size_t which) noexcept { integerBytes[which & NumByteIntegersPerOrdinalMask] = value; }
 private:
     Ordinal raw;
-#define X(type, name) type name [ sizeof(raw) / sizeof(type)]
-    X(ShortOrdinal, ordinalShorts);
-    X(ShortInteger, integerShorts);
-    X(ByteOrdinal, ordinalBytes);
-    X(ByteInteger, integerBytes);
-#undef X
+    ShortOrdinal ordinalShorts[NumShortOrdinalsPerOrdinal];
+    ShortInteger integerShorts[NumShortIntegersPerOrdinal];
+    ByteOrdinal ordinalBytes[NumByteOrdinalsPerOrdinal];
+    ByteInteger integerBytes[NumByteIntegersPerOrdinal];
 };
 static_assert(sizeof(MemoryCell32) == sizeof(Ordinal), "MemoryCell32 must be the same size as a long ordinal");
 #endif //SIM3_TYPES_H
