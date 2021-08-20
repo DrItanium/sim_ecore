@@ -1410,3 +1410,23 @@ Core::clearLocalRegisters() noexcept {
         reg.setOrdinal(0);
     }
 }
+
+void
+Core::setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
+    auto& reg = getRegister(index);
+    reg.setOrdinal(value);
+}
+void
+Core::setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
+    auto& reg = getRegister(index);
+    reg.setInteger(value);
+}
+Integer
+Core::getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const {
+    return getSourceRegister(index).getInteger();
+}
+Ordinal
+Core::getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const {
+    return getSourceRegister(index).getOrdinal();
+
+}

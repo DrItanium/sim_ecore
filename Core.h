@@ -267,14 +267,10 @@ private:
     void cycle() noexcept;
     struct TreatAsOrdinal final { };
     struct TreatAsInteger final { };
-    void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
-        auto& reg = getRegister(index);
-        reg.setOrdinal(value);
-    }
-    void setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
-        auto& reg = getRegister(index);
-        reg.setInteger(value);
-    }
+    void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
+    void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
+    Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;
+    Ordinal getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
