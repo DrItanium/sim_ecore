@@ -291,7 +291,9 @@ public:
     constexpr auto getLongOrdinal() const noexcept { return lord_; }
     constexpr auto getLongInteger() const noexcept { return lint_; }
     constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which & 0b01]; }
-    void setLongOrdinal(LongOrdinal value) noexcept { lord_ = value; }
+    void setLongOrdinal(LongOrdinal value) noexcept {
+        lord_ = value;
+    }
     void setLongInteger(LongInteger value) noexcept { lint_ = value; }
     void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b01] = value; }
 
