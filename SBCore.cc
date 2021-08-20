@@ -14,14 +14,9 @@ SBCore::loadShort(Address destination) {
             case 2: // console available
                 return 1;
             case 4: // console available for write
-// always available for writing
                 return 1;
             case 6:
-                return []() {
-                    auto result = std::cin.get();
-                    std::cerr << "(result 0x"  << std::hex << result << ")" << std::endl;
-                    return static_cast<ShortOrdinal>(result);
-                }();
+                return static_cast<ShortOrdinal>(std::cin.get());
             default:
                 break;
         }
@@ -87,7 +82,6 @@ SBCore::loadByte(Address destination) {
 Ordinal
 SBCore::load(Address address) {
 // get target thing
-//std::cerr << "LOAD: 0x" << std::hex << address << " yielded 0x" << std::hex;
     auto result = 0u;
     if (inRAMArea(address)) {
         auto alignedAddress = address >> 2;
@@ -137,13 +131,11 @@ SBCore::load(Address address) {
                 break;
         }
     }
-//std::cerr << result << "!" << std::endl;
     return result;
 }
 
 void
 SBCore::store(Address address, Ordinal value) {
-//std::cerr << "STORE 0x" << std::hex << value << " to 0x" << std::hex << address << std::endl;
     if (inRAMArea(address)) {
         auto alignedAddress = address >> 2;
         auto offset = address & 0b11;

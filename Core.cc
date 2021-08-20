@@ -253,7 +253,6 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
-    //std::cerr << "IP: 0x" << std::hex << ip_.getOrdinal() << std::endl;
     static constexpr Ordinal bitPositions[32] {
 #define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
             X(0), X(4), X(8), X(12),
@@ -401,7 +400,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 const auto& srcReg = getSourceRegister(srcIndex);
                 auto src = srcReg.getOrdinal();
                 auto bitpos = bitPositions[masked];
-                //std::cout << "bbc: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
                 if ((bitpos & src) == 0) {
                     // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
                     ac_.setConditionCode(0b000);
@@ -425,7 +423,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 const auto& srcReg = getSourceRegister(srcIndex);
                 auto src = srcReg.getOrdinal();
                 auto bitpos = bitPositions[masked];
-                //std::cout << "bbs: bitpos & src <=> (0x" << std::hex << bitpos << ", 0x" << std::hex << src << ") => 0x" << std::hex << (bitpos & src) << std::endl;
                 if ((bitpos & src) != 0) {
                     ac_.setConditionCode(0b010);
                     // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement

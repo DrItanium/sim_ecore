@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
                 ++currentAddress;
             }
             std::cout << "Image installation complete" << std::endl;
+            inputFile.close();
             // now that we have that setup run the core
             theCore.run();
             return 0;
