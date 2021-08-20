@@ -130,7 +130,7 @@ protected:
     virtual void generateFault(FaultType fault);
     virtual void storeLong(Address destination, LongOrdinal value) {
         DoubleRegister wrapper(value);
-        std::cerr << "(storeLong 0x" << std::hex << destination << " 0x" << value << ")" << std::endl;
+        //std::cerr << "(storeLong 0x" << std::hex << destination << " 0x" << value << ")" << std::endl;
         store(destination + 0, wrapper.getOrdinal(0));
         store(destination + 4, wrapper.getOrdinal(1));
     }
@@ -168,7 +168,10 @@ protected:
     virtual LongOrdinal loadLong(Address destination) {
         auto lower = load(destination + 0);
         auto upper = load(destination + 4);
-        return DoubleRegister(lower, upper).getLongOrdinal();
+        //std::cerr << "(loadLong 0x" << std::hex << destination << ") => 0x" << std::hex << upper << std::hex << lower << std::endl;
+        auto outcome = DoubleRegister(lower, upper).getLongOrdinal();
+        //std::cerr << "\t combined: 0x" << std::hex << outcome << std::endl;
+        return outcome;
     }
     virtual void load(Address destination, TripleRegister& reg) noexcept {
         reg.setOrdinal(load(destination + 0), 0);
