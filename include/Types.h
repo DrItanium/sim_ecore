@@ -215,17 +215,17 @@ constexpr Ordinal getLiteralOrdinal(RegisterIndex index) noexcept {
     }
 }
 
-constexpr auto operator "" _KB(unsigned long long value) noexcept {
+constexpr unsigned long long int operator "" _KB(unsigned long long value) noexcept {
     return value * 1024;
 }
-constexpr auto operator "" _MB(unsigned long long value) noexcept {
+constexpr unsigned long long int operator "" _MB(unsigned long long value) noexcept {
     return value * 1024 * 1024;
 }
 
-constexpr auto operator "" _KHz(unsigned long long value) noexcept {
+constexpr unsigned long long int operator "" _KHz(unsigned long long value) noexcept {
     return value * 1000;
 }
-constexpr auto operator "" _MHz(unsigned long long value) noexcept {
+constexpr unsigned long long int operator "" _MHz(unsigned long long value) noexcept {
     return value * 1000 * 1000;
 }
 template <typename T>
