@@ -28,8 +28,8 @@
 #define SIM3_SBCORE_H
 #ifdef DESKTOP_BUILD
 #include "DesktopSBCore.h"
-#elif defined(ARDUINO)
-#include "SBCoreArduino.h"
+#elif defined(ARDUINO_AVR_ATmega1284)
+#include "SBCore1284p.h"
 #else
 #error "NO VALID SBCORE IMPLEMENTATION FOR GIVEN TARGET"
 #endif
