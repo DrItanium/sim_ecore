@@ -249,35 +249,34 @@ using TreatAsExtendedReal = TreatAs<ExtendedReal>;
 #endif
 union MemoryCell32 {
     template<typename T>
-    static constexpr Ordinal NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);
+    static constexpr uint8_t NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);
     template<typename T>
-    static constexpr Ordinal NumThingsPerOrdinalMask = NumThingsPerOrdinal<T> - 1;
-    static constexpr Ordinal NumShortOrdinalsPerOrdinal = NumThingsPerOrdinal<ShortOrdinal >;
-    static constexpr Ordinal NumShortIntegersPerOrdinal = NumThingsPerOrdinal<ShortInteger>;
-    static constexpr Ordinal NumByteOrdinalsPerOrdinal = NumThingsPerOrdinal<ByteOrdinal >;
-    static constexpr Ordinal NumByteIntegersPerOrdinal = NumThingsPerOrdinal<ByteInteger>;
-    static constexpr Ordinal NumShortOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ShortOrdinal >;
-    static constexpr Ordinal NumShortIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ShortInteger>;
-    static constexpr Ordinal NumByteOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ByteOrdinal >;
-    static constexpr Ordinal NumByteIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ByteInteger>;
+    static constexpr uint8_t NumThingsPerOrdinalMask = NumThingsPerOrdinal<T> - 1;
+    static constexpr uint8_t NumShortOrdinalsPerOrdinal = NumThingsPerOrdinal<ShortOrdinal >;
+    static constexpr uint8_t NumShortIntegersPerOrdinal = NumThingsPerOrdinal<ShortInteger>;
+    static constexpr uint8_t NumByteOrdinalsPerOrdinal = NumThingsPerOrdinal<ByteOrdinal >;
+    static constexpr uint8_t NumByteIntegersPerOrdinal = NumThingsPerOrdinal<ByteInteger>;
+    static constexpr uint8_t NumShortOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ShortOrdinal >;
+    static constexpr uint8_t NumShortIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ShortInteger>;
+    static constexpr uint8_t NumByteOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ByteOrdinal >;
+    static constexpr uint8_t NumByteIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ByteInteger>;
 public:
     constexpr explicit MemoryCell32(Ordinal value = 0) noexcept : raw(value) { }
     constexpr MemoryCell32(ShortOrdinal lower, ShortOrdinal upper) noexcept : ordinalShorts{lower, upper} { }
     constexpr MemoryCell32(ByteOrdinal lowest, ByteOrdinal lower, ByteOrdinal higher, ByteOrdinal highest)  noexcept : ordinalBytes{lowest, lower, higher, highest} { }
     constexpr Ordinal getOrdinalValue() const noexcept { return raw; }
     void setOrdinalValue(Ordinal value) noexcept { raw = value; }
-    constexpr ShortOrdinal getShortOrdinal(Ordinal which) const noexcept { return ordinalShorts[which & NumShortOrdinalsPerOrdinalMask]; }
-    constexpr ShortInteger getShortInteger(Ordinal which) const noexcept {return integerShorts[which & NumShortIntegersPerOrdinalMask]; }
-    void setShortOrdinal(ShortOrdinal value, Ordinal which) noexcept { ordinalShorts[which & NumShortOrdinalsPerOrdinalMask] = value; }
-    void setShortInteger(ShortInteger value, Ordinal which) noexcept { integerShorts[which & NumShortIntegersPerOrdinalMask] = value; }
-    constexpr ByteOrdinal getByteOrdinal(Ordinal which) const noexcept {return ordinalBytes[which & NumByteOrdinalsPerOrdinalMask]; }
-    constexpr ByteInteger getByteInteger(Ordinal which) const noexcept {return integerBytes[which & NumByteIntegersPerOrdinalMask]; }
-    void setByteOrdinal(ByteOrdinal value, Ordinal which) noexcept { ordinalBytes[which & NumByteOrdinalsPerOrdinalMask] = value; }
-    void setByteInteger(ByteInteger value, Ordinal which) noexcept { integerBytes[which & NumByteIntegersPerOrdinalMask] = value; }
+    constexpr ShortOrdinal getShortOrdinal(uint8_t which) const noexcept { return ordinalShorts[which & NumShortOrdinalsPerOrdinalMask]; }
+    constexpr ShortInteger getShortInteger(uint8_t which) const noexcept {return integerShorts[which & NumShortIntegersPerOrdinalMask]; }
+    void setShortOrdinal(ShortOrdinal value, uint8_t which) noexcept { ordinalShorts[which & NumShortOrdinalsPerOrdinalMask] = value; }
+    void setShortInteger(ShortInteger value, uint8_t which) noexcept { integerShorts[which & NumShortIntegersPerOrdinalMask] = value; }
+    constexpr ByteOrdinal getByteOrdinal(uint8_t which) const noexcept {return ordinalBytes[which & NumByteOrdinalsPerOrdinalMask]; }
+    constexpr ByteInteger getByteInteger(uint8_t which) const noexcept {return integerBytes[which & NumByteIntegersPerOrdinalMask]; }
+    void setByteOrdinal(ByteOrdinal value, uint8_t which) noexcept { ordinalBytes[which & NumByteOrdinalsPerOrdinalMask] = value; }
+    void setByteInteger(ByteInteger value, uint8_t which) noexcept { integerBytes[which & NumByteIntegersPerOrdinalMask] = value; }
     void clear() noexcept {
         raw = 0;
     }
-private:
     Ordinal raw;
     ShortOrdinal ordinalShorts[NumShortOrdinalsPerOrdinal];
     ShortInteger integerShorts[NumShortIntegersPerOrdinal];
