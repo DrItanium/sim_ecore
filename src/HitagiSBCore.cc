@@ -265,13 +265,18 @@ HitagiSBCore::begin() {
         Serial.println(F("SETTING UP THE PSRAM CHIPS"));
         setupPSRAMChips();
         Address size = theFile.size();
-        static constexpr auto PSRAMCopyBufferSize = 1_KB;
-        byte psramCopyBuffer[PSRAMCopyBufferSize] = { 0 };
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
         for (Address addr = 0; addr < size; addr += PSRAMCopyBufferSize) {
-            auto numRead = theFile.readBytes(psramCopyBuffer, PSRAMCopyBufferSize) ;
+            auto numRead = theFile.read(psramCopyBuffer, PSRAMCopyBufferSize) ;
+            // introduce some delay in between options to make sure that the SD Card has time to
+            // recover.
+            if (numRead < 0) {
+                SD.errorHalt();
+            }
             (void) psramBlockWrite(addr, psramCopyBuffer, numRead);
             Serial.print(F("."));
+            // wait for the block device to be ready again
+            while (theFile.isBusy());
         }
         Serial.println(F("TRANSFER COMPLETE!!!"));
         theFile.close();
@@ -312,27 +317,28 @@ HitagiSBCore::setPSRAMId(byte id) noexcept {
         chipId_ = temp;
     }
 }
-
+template<HitagiChipsetPinout pin = HitagiChipsetPinout::PSRAM_EN_>
+void
+singleOperation(byte opcode, Core::Address address, byte* buf, size_t count) {
+    SPI.beginTransaction(SPISettings(5'000'000, MSBFIRST, SPI_MODE0));
+    MemoryCell32 translated(address);
+    digitalWrite<pin, LOW>();
+    SPI.transfer(opcode);
+    SPI.transfer(translated.getByteOrdinal(2));
+    SPI.transfer(translated.getByteOrdinal(1));
+    SPI.transfer(translated.getByteOrdinal(0));
+    SPI.transfer(buf, count);
+    digitalWrite<pin, HIGH>();
+    SPI.endTransaction();
+}
 size_t
 HitagiSBCore::psramBlockWrite(Address address, byte *buf, size_t count) {
-    auto singleOperation = [](Address address, byte* buf, size_t count) {
-        SPI.beginTransaction(SPISettings(8_MHz, MSBFIRST, SPI_MODE0));
-        MemoryCell32 translated(address);
-        digitalWrite(i960Pinout::PSRAM_EN_, LOW);
-        SPI.transfer(0x02);
-        SPI.transfer(translated.getByteOrdinal(2));
-        SPI.transfer(translated.getByteOrdinal(1));
-        SPI.transfer(translated.getByteOrdinal(0));
-        SPI.transfer(buf, count);
-        digitalWrite(i960Pinout::PSRAM_EN_, HIGH);
-        SPI.endTransaction();
-    };
     Address26 curr(address);
     Address26 end(address + count);
     if (curr.getIndex() == end.getIndex()) {
         // okay they are part of the same chip so we can safely just do a single operation
         setPSRAMId(curr.getIndex());
-        singleOperation(address, buf, count);
+        singleOperation(0x02, address, buf, count);
     } else {
         // okay we are going to span multiple addresses
         // we need to compute how much will go into each area.
@@ -347,36 +353,23 @@ HitagiSBCore::psramBlockWrite(Address address, byte *buf, size_t count) {
         auto numBytesToSecondChip = end.getOffset();
         auto numBytesToFirstChip = count - numBytesToSecondChip;
         setPSRAMId(curr.getIndex());
-        singleOperation(address, buf, numBytesToFirstChip);
+        singleOperation(0x02, address, buf, numBytesToFirstChip);
         setPSRAMId(end.getIndex());
         // jump ahead to the left overs and retrieve them
         // start at the beginning of the new chip with the slop
-        singleOperation(0, buf + numBytesToFirstChip, numBytesToSecondChip);
+        singleOperation(0x02, 0, buf + numBytesToFirstChip, numBytesToSecondChip);
     }
     return count;
 }
 size_t
 HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
     SPI.beginTransaction(psramSettings);
-    auto singleOperation = [](Address address, byte* buf, size_t count) {
-        MemoryCell32 translated(address);
-        auto ob2 = translated.getByteOrdinal(2);
-        auto ob1 = translated.getByteOrdinal(1);
-        auto ob0 = translated.getByteOrdinal(0);
-        digitalWrite<i960Pinout::PSRAM_EN_, LOW>();
-        SPI.transfer(0x03);
-        SPI.transfer(ob2);
-        SPI.transfer(ob1);
-        SPI.transfer(ob0);
-        SPI.transfer(buf, count);
-        digitalWrite<i960Pinout::PSRAM_EN_, HIGH>();
-    };
     Address26 curr(address);
     Address26 end(address + count);
     if (curr.getIndex() == end.getIndex()) {
         // okay they are part of the same chip so we can safely just do a single operation
         setPSRAMId(curr.getIndex());
-        singleOperation(address, buf, count);
+        singleOperation(0x03, address, buf, count);
     } else {
         // okay we are going to span multiple addresses
         // we need to compute how much will go into each area.
@@ -391,11 +384,11 @@ HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
         auto numBytesToSecondChip = end.getOffset();
         auto numBytesToFirstChip = count - numBytesToSecondChip;
         setPSRAMId(curr.getIndex());
-        singleOperation(address, buf, numBytesToFirstChip);
+        singleOperation(0x03, address, buf, numBytesToFirstChip);
         setPSRAMId(end.getIndex());
         // jump ahead to the left overs and retrieve them
         // start at the beginning of the new chip with the slop
-        singleOperation(0, buf + numBytesToFirstChip, numBytesToSecondChip);
+        singleOperation(0x03, 0, buf + numBytesToFirstChip, numBytesToSecondChip);
     }
     SPI.endTransaction();
     return count;
