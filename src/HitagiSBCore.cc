@@ -147,10 +147,10 @@ HitagiSBCore::begin() {
         setupPSRAMChips();
         Address size = theFile.size();
         static constexpr auto CacheSize = 512;
-        byte storage[CacheSize] = { 0 };
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
+        byte storage[CacheSize] = { 0 };
         for (Address addr = 0; addr < size; addr += CacheSize) {
-            auto numRead = theFile.read(storage, CacheSize) ;
+            auto numRead = theFile.readBytes(storage, CacheSize) ;
             (void) psramBlockWrite(addr, storage, numRead);
         }
         Serial.println(F("TRANSFER COMPLETE!!!"));
@@ -258,7 +258,7 @@ HitagiSBCore::psramBlockWrite(Address address, byte *buf, size_t count) {
     };
     Address26 curr(address);
     Address26 end(address + count);
-    if (curr.getIndex() == end.getAddress()) {
+    if (curr.getIndex() == end.getIndex()) {
         // okay they are part of the same chip so we can safely just do a single operation
         setPSRAMId(curr.getIndex());
         singleOperation(buf, count);
