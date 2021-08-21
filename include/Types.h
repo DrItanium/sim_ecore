@@ -222,7 +222,7 @@ constexpr auto operator "" _MB(unsigned long long value) noexcept {
     return value * 1024 * 1024;
 }
 template <typename T>
-struct TreatAs {
+struct TreatAs final {
     using UnderlyingType = T;
 };
 using TreatAsOrdinal = TreatAs<Ordinal>;
@@ -233,6 +233,13 @@ using TreatAsShortOrdinal = TreatAs<ShortOrdinal>;
 using TreatAsShortInteger = TreatAs<ShortInteger>;
 using TreatAsByteOrdinal = TreatAs<ByteOrdinal>;
 using TreatAsByteInteger = TreatAs<ByteInteger>;
+struct TreatAsTripleOrdinal final { };
+struct TreatAsQuadOrdinal final { };
+#ifdef NUMERICS_ARCHITECTURE
+using TreatAsReal = TreatAs<Real>;
+using TreatAsLongReal = TreatAs<LongReal>;
+using TreatAsExtendedReal = TreatAs<ExtendedReal>;
+#endif
 union MemoryCell32 {
     template<typename T>
     static constexpr Ordinal NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);

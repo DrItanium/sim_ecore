@@ -49,7 +49,7 @@ protected:
     void store(Address address, Ordinal value) override;
     void generateFault(FaultType ) override;
 protected:
-    virtual ShortOrdinal loadIAC()
+    virtual
 private:
     static constexpr bool inIOSpace(Address target) noexcept {
         return target >= 0xFE00'0000 && !inIACSpace(target);
