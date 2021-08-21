@@ -22,6 +22,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Core.h"
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
 void
 Core::syncf() noexcept {
     if (ac_.getNoImpreciseFaults()) {
@@ -304,6 +307,13 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
+#ifdef ARDUINO
+    Serial.print(F("IP: 0x"));
+    Serial.print(ip_.getOrdinal(), HEX);
+    Serial.print(F(" => 0x"));
+    Serial.print(instruction.getHalf(1), HEX);
+    Serial.println(instruction.getHalf(0), HEX);
+#endif
     static constexpr Ordinal bitPositions[32] {
 #define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
 #define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
