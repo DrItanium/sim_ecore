@@ -157,9 +157,28 @@ HitagiSBCore::begin() {
         theFile.close();
     }
     /// @todo implement support for other features as well
+}
+SPISettings fullSpeed(10_MHz, MSBFIRST, SPI_MODE0);
+SPISettings psramSettings(5_MHz, MSBFIRST, SPI_MODE0);
+void
+HitagiSBCore::setupPSRAMChips() noexcept {
+    delayMicroseconds(200); // give the psram enough time to come up regardless of when this called
+    SPI.beginTransaction(psramSettings);
+    for (int i = 0; i < 8; ++i) {
+        setPSRAMId(i);
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        SPI.transfer(0x66);
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+        asm volatile ("nop");
+        asm volatile ("nop");
+        asm volatile ("nop");
+        asm volatile ("nop");
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        SPI.transfer(0x99);
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
 
-
-
+    }
+    SPI.endTransaction();
 
 }
 
