@@ -25,6 +25,9 @@
 //
 
 #ifdef ARDUINO_AVR_ATmega1284
+#include <Arduino.h>
+#include <SD.h>
+#include <SPI.h>
 #include "Types.h"
 #include "HitagiSBCore.h"
 
@@ -102,8 +105,62 @@ enum class HitagiChipsetPinout : int {
     BLAST_ = PORT_A6,
     FAIL960 = PORT_A7,
 };
+namespace {
+    inline void pinMode(HitagiChipsetPinout pin, decltype(OUTPUT) direction) noexcept {
+        ::pinMode(static_cast<int>(pin), direction);
+    }
+    inline void digitalWrite(HitagiChipsetPinout pin, decltype(HIGH) value) noexcept {
+        ::digitalWrite(static_cast<int>(pin), value);
+    }
+    inline auto digitalRead(HitagiChipsetPinout pin) noexcept {
+        return ::digitalRead(static_cast<int>(pin));
+    }
+
+}
 void
 HitagiSBCore::begin() {
+    // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
+    Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR"));
+    Serial.println(F("PUTTING THE CONNECTED i960 INTO RESET PERMANENTLY!"));
+    pinMode(HitagiChipsetPinout::RESET960_, OUTPUT);
+    digitalWrite(HitagiChipsetPinout::RESET960_, LOW);
+    pinMode(HitagiChipsetPinout::PSRAM_EN_, OUTPUT);
+    digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+    pinMode(HitagiChipsetPinout::SPI_OFFSET0, OUTPUT);
+    pinMode(HitagiChipsetPinout::SPI_OFFSET1, OUTPUT);
+    pinMode(HitagiChipsetPinout::SPI_OFFSET2, OUTPUT);
+    digitalWrite(HitagiChipsetPinout::SPI_OFFSET0, LOW);
+    digitalWrite(HitagiChipsetPinout::SPI_OFFSET1, LOW);
+    digitalWrite(HitagiChipsetPinout::SPI_OFFSET2, LOW);
+    SPI.begin();
+    while (!SD.begin(static_cast<int>(HitagiChipsetPinout::SD_EN_))) {
+        Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
+        delay(1000);
+    }
+    Serial.println(F("SD CARD UP!"));
+    if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
+            Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?")) ;
+            while (true) { delay(1000); }
+    } else {
+        Serial.println(F("OPENED BOOT.SYS!"));
+        Serial.println(F("SETTING UP THE PSRAM CHIPS"));
+        setupPSRAMChips();
+        Address size = theFile.size();
+        static constexpr auto CacheSize = 512;
+        byte storage[CacheSize] = { 0 };
+        Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
+        for (Address addr = 0; addr < size; addr += CacheSize) {
+            auto numRead = theFile.read(storage, CacheSize) ;
+            (void) psramBlockWrite(addr, storage, numRead);
+        }
+        Serial.println(F("TRANSFER COMPLETE!!!"));
+        theFile.close();
+    }
+    /// @todo implement support for other features as well
+
+
+
+
 }
 
 ByteOrdinal

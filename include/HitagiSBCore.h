@@ -63,6 +63,14 @@ protected:
     void doRAMStore(Address address, Ordinal value) override;
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
+private:
+    void setPSRAMId(byte id) noexcept;
+    void setupPSRAMChips() noexcept;
+    void psramWrite(Address address, Ordinal value) noexcept;
+    Ordinal psramRead(Address address) noexcept;
+    size_t psramBlockWrite(Address address, byte* buf, size_t count);
+private:
+    byte chipId = 0xFF;
 };
 
 using SBCore = HitagiSBCore;
