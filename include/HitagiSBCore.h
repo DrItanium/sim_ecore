@@ -81,7 +81,7 @@ private:
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
     // are going to allocate a 4k buffer
-    static constexpr auto PSRAMCopyBufferSize = 1_KB;
+    static constexpr auto PSRAMCopyBufferSize = 8_KB;
     union {
         byte psramCopyBuffer[PSRAMCopyBufferSize] = { 0 };
         CacheLine lines_[256];

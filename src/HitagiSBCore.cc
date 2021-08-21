@@ -367,8 +367,8 @@ HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
 }
 size_t
 HitagiSBCore::psramBlockWrite(Address address, byte *buf, size_t count) {
-    MemoryCell32 translated(address);
-    auto singleOperation = [&translated](byte* buf, size_t count) {
+    auto singleOperation = [address](byte* buf, size_t count) {
+        MemoryCell32 translated(address);
         SPI.beginTransaction(psramSettings);
         digitalWrite<i960Pinout::PSRAM_EN_, LOW>();
         SPI.transfer(0x02);
