@@ -288,16 +288,16 @@ HitagiSBCore::setupPSRAMChips() noexcept {
     SPI.beginTransaction(psramSettings);
     for (int i = 0; i < 8; ++i) {
         setPSRAMId(i);
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        digitalWrite<i960Pinout::PSRAM_EN_, LOW>();
         SPI.transfer(0x66);
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+        digitalWrite<i960Pinout::PSRAM_EN_, HIGH>();
         asm volatile ("nop");
         asm volatile ("nop");
         asm volatile ("nop");
         asm volatile ("nop");
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        digitalWrite<i960Pinout::PSRAM_EN_, LOW>();
         SPI.transfer(0x99);
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+        digitalWrite<i960Pinout::PSRAM_EN_, HIGH>();
 
     }
     SPI.endTransaction();
@@ -306,9 +306,9 @@ void
 HitagiSBCore::setPSRAMId(byte id) noexcept {
     if (id != chipId_) {
         chipId_ = id;
-        digitalWrite(HitagiChipsetPinout::SPI_OFFSET0, id & 0b001 ? HIGH : LOW);
-        digitalWrite(HitagiChipsetPinout::SPI_OFFSET1, id & 0b010 ? HIGH : LOW);
-        digitalWrite(HitagiChipsetPinout::SPI_OFFSET2, id & 0b100 ? HIGH : LOW);
+        digitalWrite<HitagiChipsetPinout::SPI_OFFSET0>(id & 0b001 ? HIGH : LOW);
+        digitalWrite<HitagiChipsetPinout::SPI_OFFSET1>(id & 0b010 ? HIGH : LOW);
+        digitalWrite<HitagiChipsetPinout::SPI_OFFSET2>(id & 0b100 ? HIGH : LOW);
     }
 }
     union Address26 {
@@ -328,13 +328,13 @@ HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
     MemoryCell32 translated(address);
     auto singleOperation = [&translated](byte* buf, size_t count) {
         SPI.beginTransaction(psramSettings);
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        digitalWrite<i960Pinout::PSRAM_EN_, LOW>();
         SPI.transfer(0x03);
         SPI.transfer(translated.getByteOrdinal(2));
         SPI.transfer(translated.getByteOrdinal(1));
         SPI.transfer(translated.getByteOrdinal(0));
         SPI.transfer(buf, count);
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+        digitalWrite<i960Pinout::PSRAM_EN_, HIGH>();
         SPI.endTransaction();
     };
     Address26 curr(address);
@@ -369,13 +369,13 @@ HitagiSBCore::psramBlockWrite(Address address, byte *buf, size_t count) {
     MemoryCell32 translated(address);
     auto singleOperation = [&translated](byte* buf, size_t count) {
         SPI.beginTransaction(psramSettings);
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        digitalWrite<i960Pinout::PSRAM_EN_, LOW>();
         SPI.transfer(0x02);
         SPI.transfer(translated.getByteOrdinal(2));
         SPI.transfer(translated.getByteOrdinal(1));
         SPI.transfer(translated.getByteOrdinal(0));
         SPI.transfer(buf, count);
-        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+        digitalWrite<i960Pinout::PSRAM_EN_, HIGH>();
         SPI.endTransaction();
     };
     Address26 curr(address);
