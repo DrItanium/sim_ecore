@@ -24,25 +24,48 @@
 // Created by jwscoggins on 8/21/21.
 //
 
-#ifndef SIM3_SBCORE1284P_H
-#define SIM3_SBCORE1284P_H
+#ifndef SIM3_HITAGISBCORE_H
+#define SIM3_HITAGISBCORE_H
 #ifdef ARDUINO_AVR_ATmega1284
+#include "Types.h"
 #include "SBCoreArduino.h"
 
 /**
  * @brief A version of the SBCore for an ATMega1284p originally designed to act as the chipset for an actual i960Sx processor;
  * This is meant to be a drop in replacement for that hardware so it will hold the i960Sx in reset and not use the CLKO pin either
  */
-class SBCore1284p : public SBCoreArduino {
+class HitagiSBCore : public SBCoreArduino {
+public:
+    static constexpr Address RamSize = 64_MB;
+    static constexpr Address RamStart = 0x0000'0000;
+    static constexpr Address RamMask = RamSize - 1;
 public:
     using Parent = SBCoreArduino;
     using Parent::Parent;
-    ~SBCore1284p() override = default;
+    ~HitagiSBCore() override;
     void begin() override;
-
+protected:
+    ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal ordinal) override;
+    ShortOrdinal ioSpaceLoad(Address address, TreatAsShortOrdinal ordinal) override;
+    Ordinal ioSpaceLoad(Address address, TreatAsOrdinal ordinal) override;
+    void ioSpaceStore(Address address, ByteOrdinal value) override;
+    void ioSpaceStore(Address address, ShortOrdinal value) override;
+    void ioSpaceStore(Address address, Ordinal value) override;
+    ByteOrdinal doIACLoad(Address address, TreatAsByteOrdinal ordinal) override;
+    ShortOrdinal doIACLoad(Address address, TreatAsShortOrdinal ordinal) override;
+    Ordinal doIACLoad(Address address, TreatAsOrdinal ordinal) override;
+    void doIACStore(Address address, ByteOrdinal value) override;
+    void doIACStore(Address address, ShortOrdinal value) override;
+    void doIACStore(Address address, Ordinal value) override;
+    Ordinal doRAMLoad(Address address, TreatAsOrdinal ordinal) override;
+    void doRAMStore(Address address, ByteOrdinal value) override;
+    void doRAMStore(Address address, ShortOrdinal value) override;
+    void doRAMStore(Address address, Ordinal value) override;
+    bool inRAMArea(Address target) noexcept override;
+    Address toRAMOffset(Address target) noexcept override;
 };
 
-using SBCore = SBCore1284p;
+using SBCore = HitagiSBCore;
 #endif
-#endif //SIM3_SBCORE1284P_H
+#endif //SIM3_HITAGISBCORE_H
 
