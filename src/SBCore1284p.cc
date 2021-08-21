@@ -24,25 +24,7 @@
 // Created by jwscoggins on 8/21/21.
 //
 
-#ifndef SIM3_SBCORE1284P_H
-#define SIM3_SBCORE1284P_H
 #ifdef ARDUINO_AVR_ATmega1284
-#include "SBCoreArduino.h"
+#include "SBCore1284p.h"
 
-/**
- * @brief A version of the SBCore for an ATMega1284p originally designed to act as the chipset for an actual i960Sx processor;
- * This is meant to be a drop in replacement for that hardware so it will hold the i960Sx in reset and not use the CLKO pin either
- */
-class SBCore1284p : public SBCoreArduino {
-public:
-    using Parent = SBCoreArduino;
-    using Parent::Parent;
-    ~SBCore1284p() override = default;
-    void begin() override;
-
-};
-
-using SBCore = SBCore1284p;
 #endif
-#endif //SIM3_SBCORE1284P_H
-
