@@ -99,6 +99,7 @@ namespace {
         READY_ = PORT_B0,
         AS_ = PORT_B2,
         PSRAM_EN_ = PORT_B3,
+        CACHE_EN_ = PORT_D3,
         DEN_ = PORT_D2,
         RESET960_ = PORT_D5,
         Int0_ = PORT_D6,
@@ -243,6 +244,8 @@ HitagiSBCore::begin() {
     Serial.println(F("PUTTING THE CONNECTED i960 INTO RESET PERMANENTLY!"));
     pinMode(HitagiChipsetPinout::RESET960_, OUTPUT);
     digitalWrite(HitagiChipsetPinout::RESET960_, LOW);
+    pinMode(HitagiChipsetPinout::CACHE_EN_, OUTPUT);
+    digitalWrite(HitagiChipsetPinout::CACHE_EN_, HIGH);
     pinMode(HitagiChipsetPinout::PSRAM_EN_, OUTPUT);
     digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
     pinMode(HitagiChipsetPinout::SPI_OFFSET0, OUTPUT);
@@ -282,9 +285,11 @@ HitagiSBCore::begin() {
         theFile.close();
     }
     /// @todo implement support for other features as well
+    Serial.println(F("INVALIDATING CACHE AFTER BEING USED FOR IMAGE INSTALLATION!"));
     for (auto& a : lines_) {
         a.clear();
     }
+    Serial.println(F("IMAGE INSTALLED AND READY TO BOOT!"));
 }
 
 void
