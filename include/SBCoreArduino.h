@@ -12,5 +12,6 @@ class SBCoreArduino : public SimplifiedSxCore {
 
 };
 
+using SBCore = SBCoreArduino;
 #endif
 #endif //SIM3_SBCOREARDUINO_H

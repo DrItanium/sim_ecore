@@ -83,5 +83,6 @@ private:
     // allocate a 128 megabyte memory storage buffer
     std::unique_ptr<MemoryCell32[]> memory_;
 };
+using SBCore = DesktopSBCore;
 #endif
 #endif //SIM3_DESKTOPSBCORE_H
