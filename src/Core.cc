@@ -22,7 +22,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Core.h"
-#include <iostream>
 void
 Core::syncf() noexcept {
     if (ac_.getNoImpreciseFaults()) {

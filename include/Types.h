@@ -26,7 +26,13 @@
 
 #ifndef SIM3_TYPES_H
 #define SIM3_TYPES_H
+#ifdef DESKTOP_BUILD
 #include <cstdint>
+#endif
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
+
 using LongOrdinal = uint64_t;
 using Ordinal = uint32_t;
 using LongInteger = int64_t;

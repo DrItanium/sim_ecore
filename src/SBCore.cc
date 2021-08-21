@@ -1,6 +1,7 @@
 //
 // Created by jwscoggins on 8/20/21.
 //
+#ifdef DESKTOP_BUILD
 #include "SBCore.h"
 #include <iostream>
 
@@ -224,3 +225,4 @@ SBCore::installBlockToMemory(Address base, Ordinal curr) noexcept  {
 SBCore::SBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {
 
 }
+#endif

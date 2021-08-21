@@ -26,6 +26,7 @@
 
 #ifndef SIM3_SBCORE_H
 #define SIM3_SBCORE_H
+#ifdef DESKTOP_BUILD
 #include <memory>
 #include <fstream>
 #include <iomanip>
@@ -82,4 +83,5 @@ private:
     // allocate a 128 megabyte memory storage buffer
     std::unique_ptr<MemoryCell32[]> memory_;
 };
+#endif
 #endif //SIM3_SBCORE_H

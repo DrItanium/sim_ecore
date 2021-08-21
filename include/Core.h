@@ -29,7 +29,6 @@
 #include "Types.h"
 #include "Instruction.h"
 #include "Register.h"
-#include <iostream>
 
 enum class FaultType : Ordinal {
     Trace = 0x0001'0000,
