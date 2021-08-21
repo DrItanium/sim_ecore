@@ -29,6 +29,9 @@
 #ifdef ARDUINO
 #include <Arduino.h>
 #include <SPI.h>
+#ifdef ARDUINO_GRAND_CENTRAL_M4
+#include <SdFat.h>
+#endif
 #include "Types.h"
 #include "SBCoreArduino.h"
 
@@ -91,6 +94,8 @@ private:
         };
     };
     Decomposition chipId_;
+#else
+    File memoryImage_;
 #endif
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we

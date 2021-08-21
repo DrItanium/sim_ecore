@@ -257,6 +257,32 @@ HitagiSBCore::begin() {
         Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
         while (true) { delay(1000); }
     } else {
+        Serial.println(F("TRUNCATING \"live.bin\""));
+        SD.truncate("live.bin", 0);
+        memoryImage_ = SD.open("live.bin", FILE_WRITE);
+        if (!memoryImage_) {
+            Serial.println(F("UNABLE TO OPEN \"live.bin\" FOR RW! HALTING!"));
+            while(true) { delay(1000); }
+        }
+        Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
+        // now we copy from the pristine image over to the new one in blocks
+        memoryImage_.seek(0);
+        Core::Address size = theFile.size();
+        constexpr auto CacheSize = 4_KB;
+        byte storage[CacheSize] = { 0 };
+        Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
+        for (Core::Address i = 0; i < size; i += CacheSize) {
+            auto numRead = theFile.read(storage, CacheSize);
+            while (SD.card()->isBusy());
+            // wait until the sd card is ready again to transfer
+            (void)memoryImage_.write(storage, numRead);
+            // wait until we are ready to
+            while (SD.card()->isBusy());
+            Serial.print(F("."));
+        }
+        Serial.println(F("CONSTRUCTION COMPLETE!!!"));
+        // make a new copy of this file
+        theFile.close();
     }
 #elif defined(ARDUINO_AVR_ATmega1284)
     // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
