@@ -26,7 +26,7 @@
 
 #ifndef SIM3_HITAGISBCORE_H
 #define SIM3_HITAGISBCORE_H
-#ifdef ARDUINO_AVR_ATmega1284
+#ifdef ARDUINO
 #include <Arduino.h>
 #include <SPI.h>
 #include "Types.h"
@@ -73,6 +73,7 @@ protected:
     void doRAMStore(Address address, Ordinal value) override;
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
+#ifdef ARDUINO_AVR_ATmega1284
 private:
     void setPSRAMId(byte id) noexcept;
     void setupPSRAMChips() noexcept;
@@ -90,6 +91,7 @@ private:
         };
     };
     Decomposition chipId_;
+#endif
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
     // are going to allocate a 4k buffer

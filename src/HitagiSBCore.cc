@@ -24,15 +24,21 @@
 // Created by jwscoggins on 8/21/21.
 //
 
-#ifdef ARDUINO_AVR_ATmega1284
+#ifdef ARDUINO
 #include <Arduino.h>
 #include <Wire.h>
-#include <SdFat.h>
+
 #include <SPI.h>
 #include "Types.h"
 #include "HitagiSBCore.h"
-
+#ifdef ARDUINO_AVR_ATmega1284
+#include <SdFat.h>
 SdFat SD;
+#else
+#include <SD.h>
+#endif
+
+#ifdef ARDUINO_AVR_ATmega1284
 namespace {
     union Address26 {
         constexpr explicit Address26(Core::Address value = 0) : base(value) { }
@@ -237,14 +243,24 @@ X(id, 7)
     }
     SPISettings psramSettings(8_MHz, MSBFIRST, SPI_MODE0);
 }
-
+#endif
 void
 HitagiSBCore::begin() {
-#ifdef ARDUINO
-    Serial.println(__PRETTY_FUNCTION__);
-#endif
-    // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
+#ifdef ARDUINO_GRAND_CENTRAL_M4
+    SPI.begin();
+    while (!SD.begin()) {
+        Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
+        delay(1000);
+    }
+    Serial.println(F("SDCARD UP!"));
+    if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
+        Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
+        while (true) { delay(1000); }
+    } else {
+    }
+#elif defined(ARDUINO_AVR_ATmega1284)
+    // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
     pinMode(HitagiChipsetPinout::RESET960_, OUTPUT);
     digitalWrite(HitagiChipsetPinout::RESET960_, LOW);
     pinMode(HitagiChipsetPinout::CACHE_EN_, OUTPUT);
@@ -289,8 +305,10 @@ HitagiSBCore::begin() {
     }
     /// @todo implement support for other features as well
     Serial.println(F("INVALIDATING CACHE AFTER BEING USED FOR IMAGE INSTALLATION!"));
+#else
+#endif
 }
-
+#ifdef ARDUINO_AVR_ATmega1284
 void
 HitagiSBCore::setupPSRAMChips() noexcept {
     delayMicroseconds(200); // give the psram enough time to come up regardless of when this called
@@ -395,6 +413,7 @@ HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
     }
     return count;
 }
+#endif
 
 
 
@@ -495,21 +514,34 @@ HitagiSBCore::doIACStore(Address address, Ordinal value) {
 }
 Ordinal
 HitagiSBCore::doRAMLoad(Address address, TreatAsOrdinal) {
+#ifdef ARDUINO_AVR_ATmega1284
     Ordinal value = 0;
     (void)psramBlockRead(address, reinterpret_cast<byte*>(value), sizeof(value));
     return value;
+#elif defined(ARDUINO_GRAND_CENTRAL_M4)
+    return 0;
+#endif
 }
 void
 HitagiSBCore::doRAMStore(Address address, ByteOrdinal value) {
+#ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
+#elif defined(ARDUINO_GRAND_CENTRAL_M4)
+#endif
 }
 void
 HitagiSBCore::doRAMStore(Address address, ShortOrdinal value) {
+#ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
+#elif defined(ARDUINO_GRAND_CENTRAL_M4)
+#endif
 }
 void
 HitagiSBCore::doRAMStore(Address address, Ordinal value) {
+#ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
+#elif defined(ARDUINO_GRAND_CENTRAL_M4)
+#endif
 }
 bool
 HitagiSBCore::inRAMArea(Address target) noexcept{
@@ -521,9 +553,14 @@ HitagiSBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 HitagiSBCore::~HitagiSBCore() noexcept {}
+#ifdef ARDUINO_AVR_ATmega1284
 HitagiSBCore::HitagiSBCore() : Parent(), chipId_(0xff) {
 
 }
+#elif defined(ARDUINO_GRAND_CENTRAL_M4)
+HitagiSBCore::HitagiSBCore() : Parent() {}
+#else
+#endif
 void
 HitagiSBCore::CacheLine::clear() noexcept {
     valid_ = false;
@@ -533,5 +570,4 @@ HitagiSBCore::CacheLine::clear() noexcept {
         storage_[i] = 0;
     }
 }
-static_assert(F_CPU == 20_MHz);
 #endif
