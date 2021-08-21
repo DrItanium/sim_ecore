@@ -38,9 +38,8 @@ public:
     static constexpr Address ConsoleRegisterOffset = 0x00E0'0000;
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
     static constexpr Address IACBaseAddress = 0x0000'0010;
-    static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell32);
     SBCoreArduino();
-    ~SBCoreArduino() override = default;
+    ~SBCoreArduino() override;
     /**
      * @brief Install an ordinal to a given memory address
      * @param loc

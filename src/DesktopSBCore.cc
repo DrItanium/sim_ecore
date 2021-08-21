@@ -2,11 +2,11 @@
 // Created by jwscoggins on 8/20/21.
 //
 #ifdef DESKTOP_BUILD
-#include "SBCore.h"
+#include "DesktopSBCore.h"
 #include <iostream>
 
 ShortOrdinal
-SBCore::loadShort(Address destination) {
+DesktopSBCore::loadShort(Address destination) {
     if (inIOSpace(destination)) {
         switch (destination & 0x00FF'FFFF) {
             case 0: // console flush
@@ -27,7 +27,7 @@ SBCore::loadShort(Address destination) {
     }
 }
 void
-SBCore::storeShort(Address destination, ShortOrdinal value) {
+DesktopSBCore::storeShort(Address destination, ShortOrdinal value) {
     if (inIOSpace(destination)) {
         switch (destination & 0x00FF'FFFF) {
             case 0: // console flush
@@ -67,7 +67,7 @@ SBCore::storeShort(Address destination, ShortOrdinal value) {
     }
 }
 ByteOrdinal
-SBCore::loadByte(Address destination) {
+DesktopSBCore::loadByte(Address destination) {
     if (inIOSpace(destination)) {
         return 0;
     } else if (inRAMArea(destination)) {
@@ -81,7 +81,7 @@ SBCore::loadByte(Address destination) {
     }
 }
 Ordinal
-SBCore::load(Address address) {
+DesktopSBCore::load(Address address) {
 // get target thing
     auto result = 0u;
     if (inRAMArea(address)) {
@@ -136,7 +136,7 @@ SBCore::load(Address address) {
 }
 
 void
-SBCore::store(Address address, Ordinal value) {
+DesktopSBCore::store(Address address, Ordinal value) {
     if (inRAMArea(address)) {
         auto alignedAddress = address >> 2;
         auto offset = address & 0b11;
@@ -195,34 +195,34 @@ SBCore::store(Address address, Ordinal value) {
     }
 }
 void
-SBCore::generateFault(FaultType ) {
+DesktopSBCore::generateFault(FaultType ) {
     std::cout << "FAULT GENERATED AT 0x" << std::hex << ip_.getOrdinal() << "! HALTING!" << std::endl;
     haltExecution();
 }
 
 void
-SBCore::clearMemory() noexcept {
+DesktopSBCore::clearMemory() noexcept {
     for (size_t i = 0; i < MemorySize; ++i) {
         memory_[i].clear();
     }
 }
 void
-SBCore::installToMemory(Address loc, Ordinal value) {
+DesktopSBCore::installToMemory(Address loc, Ordinal value) {
     auto alignedAddress = ((64_MB -1) & loc) >> 2;
     memory_[alignedAddress].setOrdinalValue(value);
 }
 void
-SBCore::installToMemory(Address loc, ByteOrdinal value) {
+DesktopSBCore::installToMemory(Address loc, ByteOrdinal value) {
     auto alignedAddress = ((64_MB - 1) & loc) >> 2;
     auto offset = loc & 0b11;
     memory_[alignedAddress].setByteOrdinal(value, offset);
 }
 void
-SBCore::installBlockToMemory(Address base, Ordinal curr) noexcept  {
+DesktopSBCore::installBlockToMemory(Address base, Ordinal curr) noexcept  {
     installToMemory(base, curr);
 }
 
-SBCore::SBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {
+DesktopSBCore::DesktopSBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {
 
 }
 #endif

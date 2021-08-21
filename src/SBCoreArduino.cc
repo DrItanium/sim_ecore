@@ -23,4 +23,34 @@
 //
 // Created by jwscoggins on 8/21/21.
 //
+#ifdef ARDUINO
+#include "SBCoreArduino.h"
+SBCoreArduino::SBCoreArduino() : Parent() {
+
+
+}
+void
+SBCoreArduino::generateFault(FaultType ) {
+    //std::cout << "FAULT GENERATED AT 0x" << std::hex << ip_.getOrdinal() << "! HALTING!" << std::endl;
+    haltExecution();
+}
+
+void
+SBCoreArduino::installToMemory(Address loc, Ordinal value) {
+    auto alignedAddress = ((64_MB -1) & loc) >> 2;
+    //memory_[alignedAddress].setOrdinalValue(value);
+}
+void
+SBCoreArduino::installToMemory(Address loc, ByteOrdinal value) {
+    auto alignedAddress = ((64_MB - 1) & loc) >> 2;
+    auto offset = loc & 0b11;
+    //memory_[alignedAddress].setByteOrdinal(value, offset);
+}
+void
+SBCoreArduino::installBlockToMemory(Address base, Ordinal curr) noexcept  {
+    installToMemory(base, curr);
+}
+
+SBCoreArduino::~SBCoreArduino() { }
+#endif
 
