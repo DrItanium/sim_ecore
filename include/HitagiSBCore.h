@@ -39,9 +39,17 @@ public:
     static constexpr Address RamSize = 64_MB;
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
+    struct CacheLine {
+        constexpr CacheLine() noexcept : address_(0), dirty_(false), valid_(false), storage_{ 0 } { }
+        Address address_ = 0;
+        bool dirty_ = false;
+        bool valid_ = false;
+        byte storage_[32] = { 0 };
+        void clear() noexcept;
+    };
 public:
     using Parent = SBCoreArduino;
-    using Parent::Parent;
+    HitagiSBCore();
     ~HitagiSBCore() override;
     void begin() override;
 protected:
@@ -70,6 +78,14 @@ private:
     size_t psramBlockRead(Address address, byte* buf, size_t count);
 private:
     byte chipId_ = 0xFF;
+    // make space for the on chip request cache as well as the psram copy buffer
+    // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
+    // are going to allocate a 4k buffer
+    static constexpr auto PSRAMCopyBufferSize = 8_KB;
+    union {
+        byte psramCopyBuffer[PSRAMCopyBufferSize] = { 0 };
+        CacheLine lines_[256];
+    };
 };
 
 using SBCore = HitagiSBCore;

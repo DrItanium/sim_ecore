@@ -146,18 +146,21 @@ HitagiSBCore::begin() {
         Serial.println(F("SETTING UP THE PSRAM CHIPS"));
         setupPSRAMChips();
         Address size = theFile.size();
-        static constexpr auto CacheSize = 512;
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
-        byte storage[CacheSize] = { 0 };
-        for (Address addr = 0; addr < size; addr += CacheSize) {
-            auto numRead = theFile.readBytes(storage, CacheSize) ;
-            (void) psramBlockWrite(addr, storage, numRead);
+        for (Address addr = 0; addr < size; addr += PSRAMCopyBufferSize) {
+            auto numRead = theFile.readBytes(psramCopyBuffer, PSRAMCopyBufferSize) ;
+            (void) psramBlockWrite(addr, psramCopyBuffer, numRead);
+            Serial.print(F("."));
         }
         Serial.println(F("TRANSFER COMPLETE!!!"));
         theFile.close();
     }
     /// @todo implement support for other features as well
+    for (auto& a : lines_) {
+        a.clear();
+    }
 }
+
 SPISettings fullSpeed(10_MHz, MSBFIRST, SPI_MODE0);
 SPISettings psramSettings(5_MHz, MSBFIRST, SPI_MODE0);
 void
@@ -409,4 +412,16 @@ HitagiSBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 HitagiSBCore::~HitagiSBCore() noexcept {}
+HitagiSBCore::HitagiSBCore() : Parent() {
+
+}
+void
+HitagiSBCore::CacheLine::clear() noexcept {
+    valid_ = false;
+    valid_ = false;
+    address_ = 0;
+    for (int i = 0; i < 32; ++i) {
+        storage_[i] = 0;
+    }
+}
 #endif
