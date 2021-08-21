@@ -241,6 +241,8 @@ const char bootMsg0[] PROGMEM1 = "BRINING UP HITAGI SBCORE EMULATOR\nPUTTING THE
 const char bootMsg1[] PROGMEM1 = "NO SDCARD...WILL TRY AGAIN!\n";
 const char bootMsg2[] PROGMEM1 = "Could not open \"boot.sys\"! SD CARD may be corrupt?\n";
 const char sdUp [] PROGMEM1 = "SD CARD UP!\n";
+const char bootSysOpened[] PROGMEM1 = "OPENED BOOT.SYS!\n";
+const char psramChipSetupMsg[] PROGMEM1 = "SETTING UP THE PSRAM CHIPS\n";
 void
 printFar(uint_farptr_t tmp, size_t size) noexcept {
     for (size_t i = 0; i < size; ++i) {
@@ -253,10 +255,11 @@ printFar(uint_farptr_t tmp, size_t size) noexcept {
         Serial.write(c);
     }
 }
+#define doPrintFar(target) printFar(pgm_get_far_address(target), sizeof(target))
 void
 HitagiSBCore::begin() {
     // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
-    printFar(pgm_get_far_address(bootMsg0), sizeof(bootMsg0));
+    doPrintFar(bootMsg0);
     pinMode(HitagiChipsetPinout::RESET960_, OUTPUT);
     digitalWrite(HitagiChipsetPinout::RESET960_, LOW);
     pinMode(HitagiChipsetPinout::CACHE_EN_, OUTPUT);
@@ -271,16 +274,16 @@ HitagiSBCore::begin() {
     digitalWrite(HitagiChipsetPinout::SPI_OFFSET2, LOW);
     SPI.begin();
     while (!SD.begin(static_cast<int>(HitagiChipsetPinout::SD_EN_))) {
-        printFar(pgm_get_far_address(bootMsg1), sizeof(bootMsg1));
+        doPrintFar(bootMsg1);
         delay(1000);
     }
-    printFar(pgm_get_far_address(sdUp), sizeof(sdUp));
+    doPrintFar(sdUp);
     if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
-        printFar(pgm_get_far_address(bootMsg2), sizeof(bootMsg2));
+        doPrintFar(bootMsg2);
         while (true) { delay(1000); }
     } else {
-        Serial.println(F("OPENED BOOT.SYS!"));
-        Serial.println(F("SETTING UP THE PSRAM CHIPS"));
+        doPrintFar(bootSysOpened);
+        doPrintFar(psramChipSetupMsg);
         setupPSRAMChips();
         Address size = theFile.size();
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
