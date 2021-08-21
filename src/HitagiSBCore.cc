@@ -237,11 +237,26 @@ X(id, 7)
     }
     SPISettings psramSettings(8_MHz, MSBFIRST, SPI_MODE0);
 }
+const char bootMsg0[] PROGMEM1 = "BRINING UP HITAGI SBCORE EMULATOR\nPUTTING THE CONNECTED i960 INTO RESET PERMANENTLY!\n";
+const char bootMsg1[] PROGMEM1 = "NO SDCARD...WILL TRY AGAIN!\n";
+const char bootMsg2[] PROGMEM1 = "Could not open \"boot.sys\"! SD CARD may be corrupt?\n";
+const char sdUp [] PROGMEM1 = "SD CARD UP!\n";
+void
+printFar(uint_farptr_t tmp, size_t size) noexcept {
+    for (size_t i = 0; i < size; ++i) {
+        auto properAddr = tmp + i;
+        auto c = static_cast<char>(pgm_read_byte_far(properAddr));
+        if (!c) {
+            // if we hit a zero then leave
+            break;
+        }
+        Serial.write(c);
+    }
+}
 void
 HitagiSBCore::begin() {
     // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
-    Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR"));
-    Serial.println(F("PUTTING THE CONNECTED i960 INTO RESET PERMANENTLY!"));
+    printFar(pgm_get_far_address(bootMsg0), sizeof(bootMsg0));
     pinMode(HitagiChipsetPinout::RESET960_, OUTPUT);
     digitalWrite(HitagiChipsetPinout::RESET960_, LOW);
     pinMode(HitagiChipsetPinout::CACHE_EN_, OUTPUT);
@@ -256,13 +271,13 @@ HitagiSBCore::begin() {
     digitalWrite(HitagiChipsetPinout::SPI_OFFSET2, LOW);
     SPI.begin();
     while (!SD.begin(static_cast<int>(HitagiChipsetPinout::SD_EN_))) {
-        Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
+        printFar(pgm_get_far_address(bootMsg1), sizeof(bootMsg1));
         delay(1000);
     }
-    Serial.println(F("SD CARD UP!"));
+    printFar(pgm_get_far_address(sdUp), sizeof(sdUp));
     if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
-            Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?")) ;
-            while (true) { delay(1000); }
+        printFar(pgm_get_far_address(bootMsg2), sizeof(bootMsg2));
+        while (true) { delay(1000); }
     } else {
         Serial.println(F("OPENED BOOT.SYS!"));
         Serial.println(F("SETTING UP THE PSRAM CHIPS"));
