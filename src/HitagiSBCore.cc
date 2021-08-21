@@ -26,7 +26,7 @@
 
 #ifdef ARDUINO_AVR_ATmega1284
 #include <Arduino.h>
-#include <SD.h>
+#include <SdFat.h>
 #include <SPI.h>
 #include "Types.h"
 #include "HitagiSBCore.h"
@@ -39,6 +39,7 @@
 #define PIN_SERIAL_TX 9
 #endif // end !defined(PIN_SERIAL_TX)
 #endif // end defined(ARDUINO_AVR_ATmega1284)
+SdFat SD;
 enum class HitagiChipsetPinout : int {
     // this is described in digial pin order!
     // leave this one alone
@@ -254,7 +255,7 @@ HitagiSBCore::begin() {
     digitalWrite(HitagiChipsetPinout::SPI_OFFSET1, LOW);
     digitalWrite(HitagiChipsetPinout::SPI_OFFSET2, LOW);
     SPI.begin();
-    while (!SD.begin(static_cast<int>(HitagiChipsetPinout::SD_EN_))) {
+    while (!SD.begin(static_cast<int>(HitagiChipsetPinout::SD_EN_), 10_MHz)) {
         Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
     }
@@ -269,9 +270,7 @@ HitagiSBCore::begin() {
         Address size = theFile.size();
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
         for (Address addr = 0; addr < size; addr += PSRAMCopyBufferSize) {
-            SPI.beginTransaction(fullSpeed);
             auto numRead = theFile.readBytes(psramCopyBuffer, PSRAMCopyBufferSize) ;
-            SPI.endTransaction();
             (void) psramBlockWrite(addr, psramCopyBuffer, numRead);
             Serial.print(F("."));
         }
