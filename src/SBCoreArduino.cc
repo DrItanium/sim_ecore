@@ -20,19 +20,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-// The main for the arduino version of the simulator's main
+//
 // Created by jwscoggins on 8/21/21.
 //
-#ifdef ARDUINO
-#include "SBCore.h"
-#include <Arduino.h>
-SBCore theCore;
-void setup() {
-
-}
-void loop() {
-
-}
-#endif
 
