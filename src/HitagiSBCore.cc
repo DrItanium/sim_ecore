@@ -277,7 +277,6 @@ HitagiSBCore::begin() {
                 SD.errorHalt();
             }
             (void) psramBlockWrite(addr, psramCopyBuffer, numRead);
-            Serial.print(F("."));
             // wait for the block device to be ready again
             while (theFile.isBusy());
         }
@@ -368,7 +367,6 @@ HitagiSBCore::psramBlockWrite(Address address, byte *buf, size_t count) {
 }
 size_t
 HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
-    SPI.beginTransaction(psramSettings);
     Address26 curr(address);
     Address26 end(address + count);
     if (curr.getIndex() == end.getIndex()) {
@@ -395,7 +393,6 @@ HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
         // start at the beginning of the new chip with the slop
         singleOperation(0x03, 0, buf + numBytesToFirstChip, numBytesToSecondChip);
     }
-    SPI.endTransaction();
     return count;
 }
 
