@@ -29,6 +29,8 @@
 #include <Arduino.h>
 SBCore theCore;
 void setup() {
+    Serial.begin(115200);
+    while (!Serial);
     theCore.run();
 }
 void loop() {

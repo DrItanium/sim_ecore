@@ -27,28 +27,13 @@
 #include "SBCoreArduino.h"
 SBCoreArduino::SBCoreArduino() : Parent() {
 
-
 }
 void
 SBCoreArduino::generateFault(FaultType ) {
-    //std::cout << "FAULT GENERATED AT 0x" << std::hex << ip_.getOrdinal() << "! HALTING!" << std::endl;
+    Serial.print(F("FAULT GENERATED AT 0x"));
+    Serial.print(ip_.getOrdinal(), HEX);
+    Serial.println(F("! HALTING!!"));
     haltExecution();
-}
-
-void
-SBCoreArduino::installToMemory(Address loc, Ordinal value) {
-    auto alignedAddress = ((64_MB -1) & loc) >> 2;
-    //memory_[alignedAddress].setOrdinalValue(value);
-}
-void
-SBCoreArduino::installToMemory(Address loc, ByteOrdinal value) {
-    auto alignedAddress = ((64_MB - 1) & loc) >> 2;
-    auto offset = loc & 0b11;
-    //memory_[alignedAddress].setByteOrdinal(value, offset);
-}
-void
-SBCoreArduino::installBlockToMemory(Address base, Ordinal curr) noexcept  {
-    installToMemory(base, curr);
 }
 
 SBCoreArduino::~SBCoreArduino() { }
@@ -57,6 +42,7 @@ void
 SBCoreArduino::store(Address address, Ordinal value) {
 
 }
+
 Ordinal
 SBCoreArduino::load(Address address) {
     return 0;
@@ -75,6 +61,11 @@ SBCoreArduino::storeShort(Address address, ShortOrdinal value) {
 ShortOrdinal
 SBCoreArduino::loadShort(Address destination) {
     return 0;
+}
+
+void
+SBCoreArduino::begin() {
+    // by default do nothing
 }
 #endif
 

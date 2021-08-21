@@ -221,7 +221,18 @@ constexpr auto operator "" _KB(unsigned long long value) noexcept {
 constexpr auto operator "" _MB(unsigned long long value) noexcept {
     return value * 1024 * 1024;
 }
-
+template <typename T>
+struct TreatAs {
+    using UnderlyingType = T;
+};
+using TreatAsOrdinal = TreatAs<Ordinal>;
+using TreatAsInteger = TreatAs<Integer>;
+using TreatAsLongOrdinal = TreatAs<LongOrdinal>;
+using TreatAsLongInteger = TreatAs<LongInteger>;
+using TreatAsShortOrdinal = TreatAs<ShortOrdinal>;
+using TreatAsShortInteger = TreatAs<ShortInteger>;
+using TreatAsByteOrdinal = TreatAs<ByteOrdinal>;
+using TreatAsByteInteger = TreatAs<ByteInteger>;
 union MemoryCell32 {
     template<typename T>
     static constexpr Ordinal NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);

@@ -261,8 +261,6 @@ private:
     void cmpo(Ordinal src1, Ordinal src2) noexcept;
     void syncf() noexcept;
     void cycle() noexcept;
-    struct TreatAsOrdinal final { };
-    struct TreatAsInteger final { };
     void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
     void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
     Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;

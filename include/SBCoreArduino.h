@@ -40,19 +40,7 @@ public:
     static constexpr Address IACBaseAddress = 0x0000'0010;
     SBCoreArduino();
     ~SBCoreArduino() override;
-    /**
-     * @brief Install an ordinal to a given memory address
-     * @param loc
-     * @param value
-     */
-    void installToMemory(Address loc, Ordinal value);
-    void installToMemory(Address loc, ByteOrdinal value);
-    template<typename ... Rest>
-    void installBlockToMemory(Address base, Ordinal curr, Rest&& ... values) noexcept {
-        installToMemory(base, curr);
-        installBlockToMemory(base + 4, values...);
-    }
-    void installBlockToMemory(Address base, Ordinal curr) noexcept;
+    virtual void begin();
 protected:
     ShortOrdinal loadShort(Address destination) override;
     void storeShort(Address destination, ShortOrdinal value) override;
@@ -60,6 +48,8 @@ protected:
     Ordinal load(Address address) override;
     void store(Address address, Ordinal value) override;
     void generateFault(FaultType ) override;
+protected:
+    virtual ShortOrdinal loadIAC()
 private:
     static constexpr bool inIOSpace(Address target) noexcept {
         return target >= 0xFE00'0000 && !inIACSpace(target);
