@@ -24,6 +24,7 @@
 // Created by jwscoggins on 8/18/21.
 //
 #ifdef DESKTOP_BUILD
+#include <iostream>
 #include "SBCore.h"
 
 int main(int argc, char** argv) {
