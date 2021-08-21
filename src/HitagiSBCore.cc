@@ -265,6 +265,8 @@ HitagiSBCore::begin() {
         Serial.println(F("SETTING UP THE PSRAM CHIPS"));
         setupPSRAMChips();
         Address size = theFile.size();
+        static constexpr auto PSRAMCopyBufferSize = 1_KB;
+        byte psramCopyBuffer[PSRAMCopyBufferSize] = { 0 };
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
         for (Address addr = 0; addr < size; addr += PSRAMCopyBufferSize) {
             auto numRead = theFile.readBytes(psramCopyBuffer, PSRAMCopyBufferSize) ;
@@ -358,11 +360,14 @@ HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
     SPI.beginTransaction(psramSettings);
     auto singleOperation = [](Address address, byte* buf, size_t count) {
         MemoryCell32 translated(address);
+        auto ob2 = translated.getByteOrdinal(2);
+        auto ob1 = translated.getByteOrdinal(1);
+        auto ob0 = translated.getByteOrdinal(0);
         digitalWrite<i960Pinout::PSRAM_EN_, LOW>();
         SPI.transfer(0x03);
-        SPI.transfer(translated.ordinalBytes[2]);
-        SPI.transfer(translated.ordinalBytes[1]);
-        SPI.transfer(translated.ordinalBytes[0]);
+        SPI.transfer(ob2);
+        SPI.transfer(ob1);
+        SPI.transfer(ob0);
         SPI.transfer(buf, count);
         digitalWrite<i960Pinout::PSRAM_EN_, HIGH>();
     };
