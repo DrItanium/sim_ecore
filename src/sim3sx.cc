@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
 #elif defined(ARDUINO)
 #include <Arduino.h>
 #include "Types.h"
+#include "SBCoreArduino.h"
 
 void setup() {
 
