@@ -29,10 +29,10 @@
 #include <Arduino.h>
 SBCore theCore;
 void setup() {
-
+    theCore.run();
 }
 void loop() {
-
+    delay(1000);
 }
 
 #if __cplusplus >= 201402L

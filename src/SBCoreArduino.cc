@@ -52,5 +52,29 @@ SBCoreArduino::installBlockToMemory(Address base, Ordinal curr) noexcept  {
 }
 
 SBCoreArduino::~SBCoreArduino() { }
+
+void
+SBCoreArduino::store(Address address, Ordinal value) {
+
+}
+Ordinal
+SBCoreArduino::load(Address address) {
+    return 0;
+}
+
+ByteOrdinal
+SBCoreArduino::loadByte(Address destination) {
+    return 0;
+}
+
+void
+SBCoreArduino::storeShort(Address address, ShortOrdinal value) {
+
+}
+
+ShortOrdinal
+SBCoreArduino::loadShort(Address destination) {
+    return 0;
+}
 #endif
 
