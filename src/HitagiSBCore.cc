@@ -235,6 +235,8 @@ X(id, 7)
         return ::digitalRead(static_cast<int>(pin));
     }
 
+    SPISettings fullSpeed(10_MHz, MSBFIRST, SPI_MODE0);
+    SPISettings psramSettings(5_MHz, MSBFIRST, SPI_MODE0);
 }
 void
 HitagiSBCore::begin() {
@@ -267,7 +269,9 @@ HitagiSBCore::begin() {
         Address size = theFile.size();
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
         for (Address addr = 0; addr < size; addr += PSRAMCopyBufferSize) {
+            SPI.beginTransaction(fullSpeed);
             auto numRead = theFile.readBytes(psramCopyBuffer, PSRAMCopyBufferSize) ;
+            SPI.endTransaction();
             (void) psramBlockWrite(addr, psramCopyBuffer, numRead);
             Serial.print(F("."));
         }
@@ -280,8 +284,6 @@ HitagiSBCore::begin() {
     }
 }
 
-SPISettings fullSpeed(10_MHz, MSBFIRST, SPI_MODE0);
-SPISettings psramSettings(5_MHz, MSBFIRST, SPI_MODE0);
 void
 HitagiSBCore::setupPSRAMChips() noexcept {
     delayMicroseconds(200); // give the psram enough time to come up regardless of when this called
