@@ -24,8 +24,8 @@
 // Created by jwscoggins on 8/19/21.
 //
 
-#ifndef SIM3_SBCORE_H
-#define SIM3_SBCORE_H
+#ifndef SIM3_DESKTOPSBCORE_H
+#define SIM3_DESKTOPSBCORE_H
 #ifdef DESKTOP_BUILD
 #include <memory>
 #include <fstream>
@@ -37,7 +37,7 @@
  * @brief A theoretical i960Sx derived core with 64 megabytes of built in ram.
  * Everything runs from ram in this implementation
  */
-class SBCore : public SimplifiedSxCore {
+class DesktopSBCore : public SimplifiedSxCore {
 public:
     using Parent = SimplifiedSxCore;
     using Parent::Parent;
@@ -46,8 +46,8 @@ public:
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
     static constexpr Address IACBaseAddress = 0x0000'0010;
     static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell32);
-    SBCore();
-    ~SBCore() override = default;
+    DesktopSBCore();
+    ~DesktopSBCore() override = default;
     void clearMemory() noexcept;
     /**
      * @brief Install an ordinal to a given memory address
@@ -84,4 +84,4 @@ private:
     std::unique_ptr<MemoryCell32[]> memory_;
 };
 #endif
-#endif //SIM3_SBCORE_H
+#endif //SIM3_DESKTOPSBCORE_H
