@@ -105,7 +105,126 @@ enum class HitagiChipsetPinout : int {
     BLAST_ = PORT_A6,
     FAIL960 = PORT_A7,
 };
+using i960Pinout = HitagiChipsetPinout;
 namespace {
+    template<i960Pinout pin>
+    constexpr auto isValidPin960_v = static_cast<uint8_t>(pin) < static_cast<uint8_t>(i960Pinout::Count);
+    //static_assert(isValidPin<i960Pinout::CACHE_A0>, "The CACHE_A0 pin should be a valid pin!");
+    template<i960Pinout pin>
+    [[nodiscard]] inline volatile unsigned char& getAssociatedOutputPort() noexcept {
+        static_assert(isValidPin960_v<pin>, "INVALID PIN PROVIDED");
+        switch (pin) {
+#define X(id, number) case i960Pinout :: PORT_ ## id ## number
+#define Y(id) \
+X(id, 0): \
+X(id, 1): \
+X(id, 2): \
+X(id, 3): \
+X(id, 4): \
+X(id, 5): \
+X(id, 6): \
+X(id, 7)
+            Y(A): return PORTA;
+            Y(C): return PORTC;
+            Y(D): return PORTD;
+            Y(B): return PORTB;
+#undef Y
+#undef X
+
+            default:
+                return PORTA;
+        }
+    }
+
+    template<i960Pinout pin>
+    [[nodiscard]] inline volatile unsigned char& getAssociatedInputPort() noexcept {
+        static_assert(isValidPin960_v<pin>, "INVALID PIN PROVIDED");
+        switch (pin) {
+#define X(id, number) case i960Pinout :: PORT_ ## id ## number
+#define Y(id) \
+X(id, 0): \
+X(id, 1): \
+X(id, 2): \
+X(id, 3): \
+X(id, 4): \
+X(id, 5): \
+X(id, 6): \
+X(id, 7)
+            Y(A): return PINA;
+            Y(C): return PINC;
+            Y(D): return PIND;
+            Y(B): return PINB;
+#undef Y
+#undef X
+            default:
+                return PINA;
+        }
+    }
+    template<i960Pinout pin>
+    [[nodiscard]] constexpr decltype(auto) getPinMask() noexcept {
+        static_assert(isValidPin960_v<pin>, "INVALID PIN PROVIDED");
+        switch (pin) {
+#define X(id, number) case i960Pinout :: PORT_ ## id ## number : return _BV ( P ## id ## number )
+#define Y(id) \
+X(id, 0); \
+X(id, 1); \
+X(id, 2); \
+X(id, 3); \
+X(id, 4); \
+X(id, 5); \
+X(id, 6); \
+X(id, 7)
+            Y(A);
+            Y(C);
+            Y(D);
+            Y(B);
+#undef Y
+#undef X
+            default:
+                return 0xFF;
+        }
+    }
+
+    template<i960Pinout pin>
+    inline void pulse(decltype(HIGH) from = HIGH, decltype(LOW) to = LOW) noexcept {
+        // save registers and do the pulse
+        uint8_t theSREG = SREG;
+        cli();
+        auto& thePort = getAssociatedOutputPort<pin>();
+        thePort ^= getPinMask<pin>();
+        thePort ^= getPinMask<pin>();
+        SREG = theSREG;
+    }
+
+    template<i960Pinout pin, decltype(HIGH) value>
+    inline void digitalWrite() {
+        uint8_t theSREG = SREG;
+        cli();
+        auto& thePort = getAssociatedOutputPort<pin>();
+        if constexpr (value == LOW) {
+            thePort &= ~getPinMask<pin>();
+        } else {
+            thePort |= getPinMask<pin>();
+        }
+        SREG = theSREG;
+    }
+    template<i960Pinout pin>
+    inline void digitalWrite(decltype(HIGH) value) noexcept {
+        uint8_t theSREG = SREG;
+        cli();
+        auto& thePort = getAssociatedOutputPort<pin>();
+        if (value == LOW) {
+            thePort &= ~getPinMask<pin>();
+        } else {
+            thePort |= getPinMask<pin>();
+        }
+        SREG = theSREG;
+    }
+
+    template<i960Pinout pin>
+    inline auto digitalRead() noexcept {
+        return (getAssociatedInputPort<pin>() & getPinMask<pin>()) ? HIGH : LOW;
+    }
     inline void pinMode(HitagiChipsetPinout pin, decltype(OUTPUT) direction) noexcept {
         ::pinMode(static_cast<int>(pin), direction);
     }
