@@ -32,7 +32,9 @@ void setup() {
     Serial.begin(115200);
     while (!Serial);
     theCore.begin();
+    Serial.println(F("INVOKING RUN!"));
     theCore.run();
+    Serial.println(F("EMULATOR HALTED!"));
 }
 void loop() {
     delay(1000);

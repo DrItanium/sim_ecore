@@ -237,29 +237,11 @@ X(id, 7)
     }
     SPISettings psramSettings(8_MHz, MSBFIRST, SPI_MODE0);
 }
-const char bootMsg0[] PROGMEM1 = "BRINING UP HITAGI SBCORE EMULATOR\nPUTTING THE CONNECTED i960 INTO RESET PERMANENTLY!\n";
-const char bootMsg1[] PROGMEM1 = "NO SDCARD...WILL TRY AGAIN!\n";
-const char bootMsg2[] PROGMEM1 = "Could not open \"boot.sys\"! SD CARD may be corrupt?\n";
-const char sdUp [] PROGMEM1 = "SD CARD UP!\n";
-const char bootSysOpened[] PROGMEM1 = "OPENED BOOT.SYS!\n";
-const char psramChipSetupMsg[] PROGMEM1 = "SETTING UP THE PSRAM CHIPS\n";
-void
-printFar(uint_farptr_t tmp, size_t size) noexcept {
-    for (size_t i = 0; i < size; ++i) {
-        auto properAddr = tmp + i;
-        auto c = static_cast<char>(pgm_read_byte_far(properAddr));
-        if (!c) {
-            // if we hit a zero then leave
-            break;
-        }
-        Serial.write(c);
-    }
-}
-#define doPrintFar(target) printFar(pgm_get_far_address(target), sizeof(target))
+
 void
 HitagiSBCore::begin() {
     // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
-    doPrintFar(bootMsg0);
+    Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(HitagiChipsetPinout::RESET960_, OUTPUT);
     digitalWrite(HitagiChipsetPinout::RESET960_, LOW);
     pinMode(HitagiChipsetPinout::CACHE_EN_, OUTPUT);
@@ -274,16 +256,15 @@ HitagiSBCore::begin() {
     digitalWrite(HitagiChipsetPinout::SPI_OFFSET2, LOW);
     SPI.begin();
     while (!SD.begin(static_cast<int>(HitagiChipsetPinout::SD_EN_))) {
-        doPrintFar(bootMsg1);
+        Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
     }
-    doPrintFar(sdUp);
+    Serial.println(F("SDCARD UP!"));
     if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
-        doPrintFar(bootMsg2);
+        Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
         while (true) { delay(1000); }
     } else {
-        doPrintFar(bootSysOpened);
-        doPrintFar(psramChipSetupMsg);
+        Serial.println(F("Found boot image!"));
         setupPSRAMChips();
         Address size = theFile.size();
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
@@ -298,13 +279,13 @@ HitagiSBCore::begin() {
             // wait for the block device to be ready again
             while (theFile.isBusy());
         }
-        Serial.println(F("TRANSFER COMPLETE!!!"));
+        Serial.println(F("TRANSFER COMPLETE!\n"));
         theFile.close();
     }
     /// @todo implement support for other features as well
     Serial.println(F("INVALIDATING CACHE AFTER BEING USED FOR IMAGE INSTALLATION!"));
-    for (auto& a : lines_) {
-        a.clear();
+    for (int i = 0; i < 256; ++i) {
+        lines_[i].clear();
     }
     Serial.println(F("IMAGE INSTALLED AND READY TO BOOT!"));
 }
@@ -544,6 +525,7 @@ HitagiSBCore::HitagiSBCore() : Parent(), chipId_(0xff) {
 }
 void
 HitagiSBCore::CacheLine::clear() noexcept {
+    Serial.println(F("CLEARING CACHE LINE"));
     valid_ = false;
     valid_ = false;
     address_ = 0;
