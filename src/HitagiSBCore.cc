@@ -268,10 +268,11 @@ HitagiSBCore::begin() {
         Serial.println(F("SETTING UP THE PSRAM CHIPS"));
         setupPSRAMChips();
         Address size = theFile.size();
+        byte storage[1024] =  { 0 };
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
-        for (Address addr = 0; addr < size; addr += PSRAMCopyBufferSize) {
-            auto numRead = theFile.readBytes(psramCopyBuffer, PSRAMCopyBufferSize) ;
-            (void) psramBlockWrite(addr, psramCopyBuffer, numRead);
+        for (Address addr = 0; addr < size; addr += 1024) {
+            auto numRead = theFile.readBytes(storage, 1024) ;
+            (void) psramBlockWrite(addr, storage, numRead);
             Serial.print(F("."));
         }
         Serial.println(F("TRANSFER COMPLETE!!!"));
