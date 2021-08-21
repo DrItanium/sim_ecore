@@ -179,32 +179,160 @@ HitagiSBCore::setupPSRAMChips() noexcept {
 
     }
     SPI.endTransaction();
-
 }
+void
+HitagiSBCore::setPSRAMId(byte id) noexcept {
+    if (id != chipId_) {
+        chipId_ = id;
+        digitalWrite(HitagiChipsetPinout::SPI_OFFSET0, id & 0b001 ? HIGH : LOW);
+        digitalWrite(HitagiChipsetPinout::SPI_OFFSET1, id & 0b010 ? HIGH : LOW);
+        digitalWrite(HitagiChipsetPinout::SPI_OFFSET2, id & 0b100 ? HIGH : LOW);
+    }
+}
+    union Address26 {
+        constexpr explicit Address26(Core::Address value = 0) : base(value) { }
+        constexpr auto getAddress() const noexcept { return base; }
+        constexpr auto getOffset() const noexcept { return offset; }
+        constexpr auto getIndex() const noexcept { return index; }
+        Core::Address base : 26; // 1 megabyte always
+        struct {
+            Core::Address offset : 23;
+            Core::Address index : 3;
+        };
+    };
+
+size_t
+HitagiSBCore::psramBlockRead(Address address, byte *buf, size_t count) {
+    MemoryCell32 translated(address);
+    auto singleOperation = [&translated](byte* buf, size_t count) {
+        SPI.beginTransaction(psramSettings);
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        SPI.transfer(0x03);
+        SPI.transfer(translated.getByteOrdinal(2));
+        SPI.transfer(translated.getByteOrdinal(1));
+        SPI.transfer(translated.getByteOrdinal(0));
+        SPI.transfer(buf, count);
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+        SPI.endTransaction();
+    };
+    Address26 curr(address);
+    Address26 end(address + count);
+    if (curr.getIndex() == end.getAddress()) {
+        // okay they are part of the same chip so we can safely just do a single operation
+        setPSRAMId(curr.getIndex());
+        singleOperation(buf, count);
+    } else {
+        // okay we are going to span multiple addresses
+        // we need to compute how much will go into each area.
+        // This isn't as much of a problem because a size_t is 16-bits on the 1284p
+        // We will never have to span more than two psram chips which is very welcome.
+        // We can easily compute the number of bytes that are going to be transferred
+        // from the second chip and subtract that from the total count. That will be
+        // the number of bytes to be transferred from the first chip
+
+        // note that on any other target, this assumption would be wrong as size_t could be 4 or 8 bytes.
+        // In that case, we would need to do some full chip spanning
+        auto numBytesToSecondChip = end.getOffset();
+        auto numBytesToFirstChip = count - numBytesToSecondChip;
+        setPSRAMId(curr.getIndex());
+        singleOperation(buf, numBytesToFirstChip);
+        setPSRAMId(end.getIndex());
+        // jump ahead to the left overs and retrieve them
+        singleOperation(buf + numBytesToFirstChip, numBytesToSecondChip);
+    }
+    return count;
+}
+size_t
+HitagiSBCore::psramBlockWrite(Address address, byte *buf, size_t count) {
+    MemoryCell32 translated(address);
+    auto singleOperation = [&translated](byte* buf, size_t count) {
+        SPI.beginTransaction(psramSettings);
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, LOW);
+        SPI.transfer(0x02);
+        SPI.transfer(translated.getByteOrdinal(2));
+        SPI.transfer(translated.getByteOrdinal(1));
+        SPI.transfer(translated.getByteOrdinal(0));
+        SPI.transfer(buf, count);
+        digitalWrite(HitagiChipsetPinout::PSRAM_EN_, HIGH);
+        SPI.endTransaction();
+    };
+    Address26 curr(address);
+    Address26 end(address + count);
+    if (curr.getIndex() == end.getAddress()) {
+        // okay they are part of the same chip so we can safely just do a single operation
+        setPSRAMId(curr.getIndex());
+        singleOperation(buf, count);
+    } else {
+        // okay we are going to span multiple addresses
+        // we need to compute how much will go into each area.
+        // This isn't as much of a problem because a size_t is 16-bits on the 1284p
+        // We will never have to span more than two psram chips which is very welcome.
+        // We can easily compute the number of bytes that are going to be transferred
+        // into the second chip and subtract that from the total count. That will be
+        // the number of bytes to be transferred to the first chip
+
+        // note that on any other target, this assumption would be wrong as size_t could be 4 or 8 bytes.
+        // In that case, we would need to do some full chip spanning
+        auto numBytesToSecondChip = end.getOffset();
+        auto numBytesToFirstChip = count - numBytesToSecondChip;
+        setPSRAMId(curr.getIndex());
+        singleOperation(buf, numBytesToFirstChip);
+        setPSRAMId(end.getIndex());
+        // jump ahead to the left overs and commit them
+        singleOperation(buf + numBytesToFirstChip, numBytesToSecondChip);
+    }
+    return count;
+}
+
+
 
 ByteOrdinal
-HitagiSBCore::ioSpaceLoad(Address address, TreatAsByteOrdinal ordinal) {
-    return 0;
-}
-ShortOrdinal
-HitagiSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal ordinal) {
-    return 0;
-}
-Ordinal
-HitagiSBCore::ioSpaceLoad(Address address, TreatAsOrdinal ordinal) {
+HitagiSBCore::ioSpaceLoad(Address address, TreatAsByteOrdinal) {
     return 0;
 }
 void
 HitagiSBCore::ioSpaceStore(Address address, ByteOrdinal value) {
-
+    // nothing to do here right now
 }
+Ordinal
+HitagiSBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
+    // right now there is nothing to do here
+    return 0;
+}
+ShortOrdinal
+HitagiSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
+    switch (address) {
+        case 0:
+            Serial.flush();
+            break;
+        case 2:
+            return Serial.available();
+        case 4:
+            return Serial.availableForWrite();
+        case 6:
+            return Serial.read();
+        default:
+            break;
+    }
+    return 0;
+}
+
 void
 HitagiSBCore::ioSpaceStore(Address address, ShortOrdinal value) {
-
+    switch (address) {
+        case 0:
+            Serial.flush();
+            break;
+        case 6:
+            Serial.write(static_cast<char>(value));
+            break;
+        default:
+            break;
+    }
 }
 void
 HitagiSBCore::ioSpaceStore(Address address, Ordinal value) {
-
+    // nothing to do right now
 }
 ByteOrdinal
 HitagiSBCore::doIACLoad(Address address, TreatAsByteOrdinal ordinal) {
@@ -214,37 +342,62 @@ ShortOrdinal
 HitagiSBCore::doIACLoad(Address address, TreatAsShortOrdinal ordinal) {
     return 0;
 }
-Ordinal
-HitagiSBCore::doIACLoad(Address address, TreatAsOrdinal ordinal) {
-    return 0;
-}
 void
 HitagiSBCore::doIACStore(Address address, ByteOrdinal value) {
-
+    // do nothing
 }
 void
 HitagiSBCore::doIACStore(Address address, ShortOrdinal value) {
-
-}
-void
-HitagiSBCore::doIACStore(Address address, Ordinal value) {
-
+    // do nothing
 }
 Ordinal
-HitagiSBCore::doRAMLoad(Address address, TreatAsOrdinal ordinal) {
+HitagiSBCore::doIACLoad(Address address, TreatAsOrdinal) {
+    switch (address) {
+        case HaltRegisterOffset:
+            haltExecution();
+            break;
+        case ConsoleRegisterOffset:
+            return static_cast<Ordinal>(Serial.read());
+        case ConsoleFlushOffset:
+            Serial.flush();
+            break;
+        default:
+            break;
+    }
     return 0;
 }
 void
+HitagiSBCore::doIACStore(Address address, Ordinal value) {
+    switch (address) {
+        case HaltRegisterOffset:
+            haltExecution();
+            break;
+        case ConsoleRegisterOffset:
+            Serial.write(static_cast<char>(value));
+        case ConsoleFlushOffset:
+            Serial.flush();
+            break;
+        default:
+            break;
+    }
+}
+Ordinal
+HitagiSBCore::doRAMLoad(Address address, TreatAsOrdinal) {
+    Ordinal value = 0;
+    (void)psramBlockRead(address, reinterpret_cast<byte*>(value), sizeof(value));
+    return value;
+}
+void
 HitagiSBCore::doRAMStore(Address address, ByteOrdinal value) {
-
+    psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 }
 void
 HitagiSBCore::doRAMStore(Address address, ShortOrdinal value) {
-
+    psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 }
 void
 HitagiSBCore::doRAMStore(Address address, Ordinal value) {
-
+    psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 }
 bool
 HitagiSBCore::inRAMArea(Address target) noexcept{

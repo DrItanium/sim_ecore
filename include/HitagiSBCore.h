@@ -66,11 +66,10 @@ protected:
 private:
     void setPSRAMId(byte id) noexcept;
     void setupPSRAMChips() noexcept;
-    void psramWrite(Address address, Ordinal value) noexcept;
-    Ordinal psramRead(Address address) noexcept;
     size_t psramBlockWrite(Address address, byte* buf, size_t count);
+    size_t psramBlockRead(Address address, byte* buf, size_t count);
 private:
-    byte chipId = 0xFF;
+    byte chipId_ = 0xFF;
 };
 
 using SBCore = HitagiSBCore;
