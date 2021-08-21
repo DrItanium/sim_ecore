@@ -23,6 +23,7 @@
 //
 // Created by jwscoggins on 8/18/21.
 //
+#ifdef DESKTOP_BUILD
 #include "SBCore.h"
 
 int main(int argc, char** argv) {
@@ -53,3 +54,14 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+#elif defined(ARDUINO)
+#include <Arduino.h>
+#include "Types.h"
+
+void setup() {
+
+}
+void loop() {
+
+}
+#endif

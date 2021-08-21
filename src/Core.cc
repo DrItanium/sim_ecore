@@ -69,11 +69,19 @@ Core::getRegister(RegisterIndex targetIndex) {
         return locals.getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
+    } else
+#ifdef DESKTOP_BUILD
+        if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
         throw "Illegal register requested";
     }
+#else
+    {
+        static Register badRegister(-1);
+        return badRegister;
+    }
+#endif
 }
 
 DoubleRegister&
@@ -82,11 +90,19 @@ Core::getDoubleRegister(RegisterIndex targetIndex) {
         return locals.getDoubleRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getDoubleRegister(static_cast<int>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
+    } else
+#ifdef DESKTOP_BUILD
+    if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
         throw "Illegal register requested";
     }
+#else
+    {
+        static DoubleRegister badRegister(-1);
+        return badRegister;
+    }
+#endif
 }
 
 
@@ -96,11 +112,19 @@ Core::getTripleRegister(RegisterIndex targetIndex) {
         return locals.getTripleRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getTripleRegister(static_cast<int>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
+    } else
+#ifdef DESKTOP_BUILD
+    if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
         throw "Illegal register requested";
     }
+#else
+    {
+        static TripleRegister badRegister(-1);
+        return badRegister;
+    }
+#endif
 }
 
 QuadRegister&
@@ -109,11 +133,19 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
         return locals.getQuadRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getQuadRegister(static_cast<int>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
+    } else
+#ifdef DESKTOP_BUILD
+    if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
         throw "Illegal register requested";
     }
+#else
+    {
+        static QuadRegister badRegister(-1);
+        return badRegister;
+    }
+#endif
 }
 
 const Register&
@@ -125,7 +157,12 @@ Core::getRegister(RegisterIndex targetIndex) const {
     } else if (isLiteral(targetIndex)) {
         return OrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
+#ifdef DESKTOP_BUILD
         throw "Illegal register requested";
+#else
+        static Register badRegister(-1);
+        return badRegister;
+#endif
     }
 }
 
@@ -139,7 +176,12 @@ Core::getDoubleRegister(RegisterIndex targetIndex) const {
         /// @todo implement double register literal support, according to the docs it is allowed
         return LongOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
+#ifdef DESKTOP_BUILD
         throw "Illegal register requested";
+#else
+        static DoubleRegister badRegister(-1);
+        return badRegister;
+#endif
     }
 }
 
@@ -153,7 +195,12 @@ Core::getTripleRegister(RegisterIndex targetIndex) const {
         /// @todo implement double register literal support, according to the docs it is allowed
         return TripleOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
+#ifdef DESKTOP_BUILD
         throw "Illegal register requested";
+#else
+        static TripleRegister badRegister(-1);
+        return badRegister;
+#endif
     }
 }
 
@@ -167,7 +214,12 @@ Core::getQuadRegister(RegisterIndex targetIndex) const {
         /// @todo implement double register literal support, according to the docs it is allowed
         return QuadOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
+#ifdef DESKTOP_BUILD
         throw "Illegal register requested";
+#else
+        static QuadRegister badRegister(-1);
+        return badRegister;
+#endif
     }
 }
 
@@ -253,10 +305,12 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     static constexpr Ordinal bitPositions[32] {
-#define X(base) 1u << (base + 0), 1u << (base + 1), 1u << (base + 2), 1u << (base + 3)
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
             X(0), X(4), X(8), X(12),
             X(16), X(20), X(24), X(28)
 #undef X
+#undef Z
     };
     auto cmpibx = [this, &instruction](uint8_t mask) noexcept {
         auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
@@ -944,13 +998,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::scanbit:
             [this, &instruction]() {
                 constexpr Ordinal reverseBitPositions[32] {
-#define X(base) 1u << (base + 3), 1u << (base + 2), 1u << (base + 1), 1u << (base + 0)
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
                         X(28), X(24), X(20), X(16),
                         X(12), X(8), X(4), X(0),
 #undef X
+#undef Z
                 };
                 // perform a sanity check
-                static_assert(reverseBitPositions[0] == (1u << 31));
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
                 dest.setOrdinal(0xFFFF'FFFF);
@@ -969,13 +1024,17 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::spanbit:
             [this, &instruction]() {
                 constexpr Ordinal reverseBitPositions[32] {
-#define X(base) 1u << (base + 3), 1u << (base + 2), 1u << (base + 1), 1u << (base + 0)
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
                         X(28), X(24), X(20), X(16),
                         X(12), X(8), X(4), X(0),
 #undef X
+#undef Z
                 };
                 // perform a sanity check
+#ifdef DESKTOP_BUILD
                 static_assert(reverseBitPositions[0] == (1u << 31));
+#endif
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
                 dest.setOrdinal(0xFFFF'FFFF);
@@ -1169,7 +1228,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::shrdi:
             [this, &instruction]() {
                 static constexpr Integer bitPositions[32] {
-#define X(base) 1 << (base + 0), 1 << (base + 1), 1 << (base + 2), 1 << (base + 3)
+#define Z(base, offset) static_cast<Integer>(1) << static_cast<Integer>(base + offset)
+#define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
                         X(0), X(4), X(8), X(12),
                         X(16), X(20), X(24), X(28)
 #undef X

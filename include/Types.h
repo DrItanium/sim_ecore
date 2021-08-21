@@ -139,7 +139,7 @@ Literal1_0f = 0b010'10110,
 #endif
     Bad = 0b1111'1111,
     PFP = Local0,
-    SP = Local1,
+    SP960 = Local1,
     RIP = Local2,
     FP = Global15,
 };

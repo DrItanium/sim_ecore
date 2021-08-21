@@ -224,10 +224,10 @@ protected:
     QuadRegister& getQuadRegister(RegisterIndex targetIndex);
     const QuadRegister& getQuadRegister(RegisterIndex targetIndex) const;
     Register& getStackPointer() noexcept {
-        return getRegister(RegisterIndex::SP);
+        return getRegister(RegisterIndex::SP960);
     }
     const Register& getStackPointer() const noexcept {
-        return getRegister(RegisterIndex::SP);
+        return getRegister(RegisterIndex::SP960);
     }
     Register& getFramePointer() noexcept {
         return getRegister(RegisterIndex::FP);
