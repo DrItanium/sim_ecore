@@ -73,6 +73,7 @@ HitagiSBCore::begin() {
             (void) psramBlockWrite<false>(addr, psramCopyBuffer, numRead);
             Serial.print(F("."));
         }
+        SPI.endTransaction();
         Serial.println(F("TRANSFER COMPLETE!!!"));
         theFile.close();
     }
