@@ -93,7 +93,7 @@ SBCore::load(Address address) {
                 break;
             case 0b01: // upper 24 bits of current cell + lowest 8 bits of next cell
                 result = [this, &cell, alignedAddress]() {
-                    auto cell2 = static_cast<Ordinal>(memory_[alignedAddress+1].getByteOrdinal(0));
+                    auto cell2 = static_cast<Ordinal>(memory_[alignedAddress+1].getByteOrdinal(0)) << 24;
                     auto lowerPart = cell.getOrdinalValue() >> 8;
                     return cell2 | lowerPart;
                 }();
