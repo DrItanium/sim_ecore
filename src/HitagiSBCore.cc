@@ -26,16 +26,15 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#include <Wire.h>
 
 #include <SPI.h>
 #include "Types.h"
 #include "HitagiSBCore.h"
-#ifdef ARDUINO_AVR_ATmega1284
 #include <SdFat.h>
-SdFat SD;
+#ifdef ARDUINO_GRAND_CENTRAL_M4
+SdFat SD(&SDCARD_SPI);
 #else
-#include <SD.h>
+SdFat SD;
 #endif
 
 #ifdef ARDUINO_AVR_ATmega1284
@@ -249,7 +248,7 @@ HitagiSBCore::begin() {
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
 #ifdef ARDUINO_GRAND_CENTRAL_M4
     SPI.begin();
-    while (!SD.begin()) {
+    while (!SD.begin(SDCARD_SS_PIN)) {
         Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
     }
