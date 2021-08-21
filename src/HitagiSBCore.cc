@@ -240,6 +240,9 @@ X(id, 7)
 
 void
 HitagiSBCore::begin() {
+#ifdef ARDUINO
+    Serial.println(__PRETTY_FUNCTION__);
+#endif
     // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(HitagiChipsetPinout::RESET960_, OUTPUT);
@@ -268,6 +271,8 @@ HitagiSBCore::begin() {
         setupPSRAMChips();
         Address size = theFile.size();
         Serial.println(F("COPYING \"boot.sys\" to PSRAM"));
+        static constexpr auto PSRAMCopyBufferSize = 1_KB;
+        byte psramCopyBuffer[PSRAMCopyBufferSize] = { 0 };
         for (Address addr = 0; addr < size; addr += PSRAMCopyBufferSize) {
             auto numRead = theFile.read(psramCopyBuffer, PSRAMCopyBufferSize) ;
             // introduce some delay in between options to make sure that the SD Card has time to
@@ -284,9 +289,6 @@ HitagiSBCore::begin() {
     }
     /// @todo implement support for other features as well
     Serial.println(F("INVALIDATING CACHE AFTER BEING USED FOR IMAGE INSTALLATION!"));
-    for (int i = 0; i < 256; ++i) {
-        lines_[i].clear();
-    }
 }
 
 void
