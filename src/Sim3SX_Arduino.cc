@@ -31,6 +31,7 @@ SBCore theCore;
 void setup() {
     Serial.begin(115200);
     while (!Serial);
+    theCore.begin();
     theCore.run();
 }
 void loop() {

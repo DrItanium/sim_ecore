@@ -39,33 +39,86 @@ SBCoreArduino::generateFault(FaultType ) {
 SBCoreArduino::~SBCoreArduino() { }
 
 void
-SBCoreArduino::store(Address address, Ordinal value) {
-
+SBCoreArduino::store(Address destination, Ordinal value) {
+    if (inRAMArea(destination)) {
+        doRAMStore(toRAMOffset(destination), value);
+    } else if (inIOSpace(destination)) {
+        ioSpaceStore(toIOSpaceOffset(destination), value);
+    } else if (inIACSpace(destination)) {
+        doIACStore(toIACSpaceOffset(destination), value);
+    } else {
+        // do nothing
+    }
 }
 
 Ordinal
 SBCoreArduino::load(Address address) {
-    return 0;
+    if (inRAMArea(address)) {
+        return doRAMLoad(toRAMOffset(address), TreatAsOrdinal {});
+    } else if (inIOSpace(address)) {
+        return ioSpaceLoad(toIOSpaceOffset(address), TreatAsOrdinal{});
+    } else if (inIACSpace(address)) {
+        return doIACLoad(toIACSpaceOffset(address), TreatAsOrdinal{});
+    } else {
+        return 0;
+    }
 }
 
 ByteOrdinal
 SBCoreArduino::loadByte(Address destination) {
-    return 0;
+    if (inRAMArea(destination)) {
+        return doRAMLoad(toRAMOffset(destination), TreatAsByteOrdinal {});
+    } else if (inIOSpace(destination)) {
+        return ioSpaceLoad(toIOSpaceOffset(destination), TreatAsByteOrdinal{});
+    } else if (inIACSpace(destination)) {
+        return doIACLoad(toIACSpaceOffset(destination), TreatAsByteOrdinal{});
+    } else {
+        return 0;
+    }
 }
 
 void
-SBCoreArduino::storeShort(Address address, ShortOrdinal value) {
-
+SBCoreArduino::storeShort(Address destination, ShortOrdinal value) {
+    if (inRAMArea(destination)) {
+        doRAMStore(toRAMOffset(destination), value);
+    } else if (inIOSpace(destination)) {
+        ioSpaceStore(toIOSpaceOffset(destination), value);
+    } else if (inIACSpace(destination)) {
+        doIACStore(toIACSpaceOffset(destination), value);
+    } else {
+        // do nothing
+    }
 }
 
 ShortOrdinal
 SBCoreArduino::loadShort(Address destination) {
-    return 0;
+    if (inRAMArea(destination)) {
+        return doRAMLoad(toRAMOffset(destination), TreatAsShortOrdinal {});
+    } else if (inIOSpace(destination)) {
+        return ioSpaceLoad(toIOSpaceOffset(destination), TreatAsShortOrdinal{});
+    } else if (inIACSpace(destination)) {
+        return doIACLoad(toIACSpaceOffset(destination), TreatAsShortOrdinal{});
+    } else {
+        return 0;
+    }
 }
 
 void
 SBCoreArduino::begin() {
     // by default do nothing
+}
+
+void
+SBCoreArduino::storeByte(Address destination, ByteOrdinal value) {
+    if (inRAMArea(destination)) {
+        doRAMStore(toRAMOffset(destination), value);
+    } else if (inIOSpace(destination)) {
+        ioSpaceStore(toIOSpaceOffset(destination), value);
+    } else if (inIACSpace(destination)) {
+        doIACStore(toIACSpaceOffset(destination), value);
+    } else {
+        // do nothing
+    }
 }
 #endif
 
