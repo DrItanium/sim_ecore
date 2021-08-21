@@ -287,7 +287,6 @@ HitagiSBCore::begin() {
     for (int i = 0; i < 256; ++i) {
         lines_[i].clear();
     }
-    Serial.println(F("IMAGE INSTALLED AND READY TO BOOT!"));
 }
 
 void
@@ -525,7 +524,6 @@ HitagiSBCore::HitagiSBCore() : Parent(), chipId_(0xff) {
 }
 void
 HitagiSBCore::CacheLine::clear() noexcept {
-    Serial.println(F("CLEARING CACHE LINE"));
     valid_ = false;
     valid_ = false;
     address_ = 0;
