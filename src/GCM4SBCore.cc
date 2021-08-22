@@ -198,4 +198,15 @@ GCM4SBCore::~GCM4SBCore() noexcept {}
 GCM4SBCore::GCM4SBCore() : Parent(), memoryImage_(0,64_MB, 64_MB,"live.bin", FILE_WRITE) {}
 
 MemoryThing::~MemoryThing() {}
+GCM4SBCore::CacheLine&
+GCM4SBCore::getCacheLine(Address target) noexcept {
+    CacheAddress addr(target);
+    // okay we need to find out which cache line this current address targets
+    auto& targetLine = lines_[addr.getCacheIndex()];
+    if (!targetLine.matches(target)) {
+        // right now we only have one thing "mapped" to the file cache
+        targetLine.reset(target, memoryImage_);
+    }
+    return targetLine;
+}
 #endif

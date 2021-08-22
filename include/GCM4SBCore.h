@@ -46,6 +46,7 @@ public:
         static constexpr auto NumBytesPerCacheLine = 64;
         static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
         static constexpr auto Mask = NumBytesPerCacheLine - 1;
+        static constexpr auto NumBitsForCacheLineOffset = 6;
         constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
     public:
         TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
@@ -55,7 +56,6 @@ public:
         void set(Address targetAddress, ShortOrdinal value);
         void set(Address targetAddress, ByteOrdinal value);
         void clear() noexcept;
-    private:
         static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
         static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
         constexpr bool valid() const noexcept { return backingStorage_; }
@@ -100,12 +100,34 @@ protected:
     Address toRAMOffset(Address target) noexcept override;
 private:
     CacheLine& getCacheLine(Address target) noexcept;
-    const CacheLine& getCacheLine(Address target) const noexcept;
+private:
+    static constexpr auto TransferCacheSize = 64_KB;
+    static constexpr auto NumCacheLines = 1024;
+    static constexpr auto NumBitsForCacheLineIndex = 10;
+    /**
+     * @brief Readonly view of a cache address
+     */
+    union CacheAddress {
+        constexpr explicit CacheAddress(Address target) noexcept : value_(target) { }
+        constexpr auto getOriginalAddress() const noexcept { return value_; }
+        constexpr auto getTagAddress () const noexcept { return tag.address; }
+        constexpr auto getCacheIndex() const noexcept { return index; }
+        constexpr auto getOffset() const noexcept { return offset; }
+    private:
+        Address value_;
+        struct {
+            Address offset : CacheLine::NumBitsForCacheLineOffset;
+            Address index : NumBitsForCacheLineIndex;
+            Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
+        };
+        struct {
+            Address unused0 : CacheLine::NumBitsForCacheLineOffset;
+            Address address :  (32 - CacheLine::NumBitsForCacheLineOffset);
+        } tag;
+    };
 private:
     MemoryMappedFileThing memoryImage_;
     // we have so much space available, let's have some fun with this
-    static constexpr auto TransferCacheSize = 64_KB;
-    static constexpr auto NumCacheLines = 1024;
     union {
         byte transferCache[TransferCacheSize] = { 0 };
         CacheLine lines_[NumCacheLines];
