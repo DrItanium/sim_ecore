@@ -38,13 +38,7 @@ void
 Core::cycle() noexcept {
     advanceIPBy = 4;
     auto instruction = loadInstruction(ip_.getOrdinal());
-#ifdef ARDUINO
-    digitalWrite(LED_BUILTIN, HIGH);
-#endif
     executeInstruction(instruction);
-#ifdef ARDUINO
-    digitalWrite(LED_BUILTIN, LOW);
-#endif
     //executeInstruction(loadInstruction(ip_.getOrdinal()));
     if (advanceIPBy > 0)  {
         ip_.setOrdinal(ip_.getOrdinal() + advanceIPBy);
@@ -313,13 +307,6 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
-#ifdef ARDUINO
-    Serial.print(F("IP: 0x"));
-    Serial.print(ip_.getOrdinal(), HEX);
-    Serial.print(F(" => 0x"));
-    Serial.print(instruction.getHalf(1), HEX);
-    Serial.println(instruction.getHalf(0), HEX);
-#endif
     static constexpr Ordinal bitPositions[32] {
 #define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
 #define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
