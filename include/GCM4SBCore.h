@@ -54,6 +54,7 @@ public:
         void set(Address targetAddress, Ordinal value);
         void set(Address targetAddress, ShortOrdinal value);
         void set(Address targetAddress, ByteOrdinal value);
+        void clear() noexcept;
     private:
         static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
         static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
@@ -61,7 +62,6 @@ public:
         constexpr bool matches(Address other) const noexcept {
             return valid() && (toCacheLineAddress(other) == address_);
         }
-        void clear() noexcept;
         void reset(Address newAddress, MemoryThing& newThing);
     private:
         MemoryCell32 storage_[NumCellsPerCacheLine] = { 0 };
@@ -69,6 +69,7 @@ public:
         MemoryThing* backingStorage_ = nullptr;
         bool dirty_ = false;
     };
+
 public:
     static constexpr Address RamSize = 64_MB;
     static constexpr Address RamStart = 0x0000'0000;
@@ -101,7 +102,11 @@ private:
     MemoryMappedFileThing memoryImage_;
     // we have so much space available, let's have some fun with this
     static constexpr auto TransferCacheSize = 64_KB;
-    byte transferCache[TransferCacheSize] = { 0 };
+    static constexpr auto NumCacheLines = 1024;
+    union {
+        byte transferCache[TransferCacheSize] = { 0 };
+        CacheLine lines_[1024];
+    };
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
     // are going to allocate a 4k buffer
