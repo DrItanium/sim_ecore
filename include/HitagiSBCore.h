@@ -76,30 +76,10 @@ protected:
     void doRAMStore(Address address, Ordinal value) override;
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
-#ifdef ARDUINO_AVR_ATmega1284
 private:
-    void setPSRAMId(byte id) noexcept;
-    void setupPSRAMChips() noexcept;
-    size_t psramBlockRead(Address address, byte* buf, size_t count);
-    size_t psramBlockWrite(Address address, byte* buf, size_t count);
-private:
-    union Decomposition {
-        constexpr explicit Decomposition(byte value = 0) : index(value) { }
-        constexpr auto getIndex() const noexcept { return index; }
-        byte index;
-        struct {
-            bool s0 : 1;
-            bool s1 : 1;
-            bool s2 : 1;
-        };
-    };
-    Decomposition chipId_;
-#elif defined(ARDUINO_GRAND_CENTRAL_M4)
     File memoryImage_;
     static constexpr auto TransferCacheSize = 48_KB;
     byte transferCache[TransferCacheSize] = { 0 };
-#else
-#endif
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
     // are going to allocate a 4k buffer
