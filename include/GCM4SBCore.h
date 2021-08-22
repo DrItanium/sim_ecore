@@ -101,6 +101,8 @@ protected:
     void doIACStore(Address address, ShortOrdinal value) override;
     void doIACStore(Address address, Ordinal value) override;
     Ordinal doRAMLoad(Address address, TreatAsOrdinal ordinal) override;
+    ShortOrdinal doRAMLoad(Address address, TreatAsShortOrdinal ordinal) override;
+    ByteOrdinal doRAMLoad(Address address, TreatAsByteOrdinal ordinal) override;
     void doRAMStore(Address address, ByteOrdinal value) override;
     void doRAMStore(Address address, ShortOrdinal value) override;
     void doRAMStore(Address address, Ordinal value) override;

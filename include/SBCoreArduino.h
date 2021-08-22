@@ -66,8 +66,8 @@ protected:
     virtual void doIACStore(Address address, ShortOrdinal value) = 0;
     virtual void doIACStore(Address address, Ordinal value) = 0;
 
-    virtual ByteOrdinal doRAMLoad(Address address, TreatAsByteOrdinal);
-    virtual ShortOrdinal doRAMLoad(Address address, TreatAsShortOrdinal);
+    virtual ByteOrdinal doRAMLoad(Address address, TreatAsByteOrdinal) = 0;
+    virtual ShortOrdinal doRAMLoad(Address address, TreatAsShortOrdinal) = 0;
     virtual Ordinal doRAMLoad(Address address, TreatAsOrdinal) = 0;
     virtual void doRAMStore(Address address, ByteOrdinal value) = 0;
     virtual void doRAMStore(Address address, ShortOrdinal value) = 0;

@@ -121,16 +121,5 @@ SBCoreArduino::storeByte(Address destination, ByteOrdinal value) {
     }
 }
 
-ShortOrdinal
-SBCoreArduino::doRAMLoad(Address address, TreatAsShortOrdinal) {
-    // Alignment isn't as much a big deal here so make sure that we take the lower half of the ordinal we requested
-    return static_cast<ShortOrdinal>(doRAMLoad(address, TreatAsOrdinal{}));
-}
-ByteOrdinal
-SBCoreArduino::doRAMLoad(Address address, TreatAsByteOrdinal) {
-    // only return the lowest 8-bits of the given address, if we need more precision then we can override this method
-    return static_cast<ByteOrdinal>(doRAMLoad(address, TreatAsOrdinal{}));
-}
-
 #endif
 

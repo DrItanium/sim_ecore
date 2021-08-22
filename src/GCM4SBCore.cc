@@ -177,6 +177,14 @@ Ordinal
 GCM4SBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
     return getCacheLine(address).get(address, thingy);
 }
+ShortOrdinal
+GCM4SBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
+    return getCacheLine(address).get(address, thingy);
+}
+ByteOrdinal
+GCM4SBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
+    return getCacheLine(address).get(address, thingy);
+}
 void
 GCM4SBCore::doRAMStore(Address address, ByteOrdinal value) {
     getCacheLine(address).set(address, value);
