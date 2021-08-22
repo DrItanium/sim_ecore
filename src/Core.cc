@@ -38,7 +38,13 @@ void
 Core::cycle() noexcept {
     advanceIPBy = 4;
     auto instruction = loadInstruction(ip_.getOrdinal());
+#ifdef ARDUINO
+    digitalWrite(LED_BUILTIN, HIGH);
+#endif
     executeInstruction(instruction);
+#ifdef ARDUINO
+    digitalWrite(LED_BUILTIN, LOW);
+#endif
     //executeInstruction(loadInstruction(ip_.getOrdinal()));
     if (advanceIPBy > 0)  {
         ip_.setOrdinal(ip_.getOrdinal() + advanceIPBy);

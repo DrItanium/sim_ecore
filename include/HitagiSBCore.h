@@ -94,8 +94,11 @@ private:
         };
     };
     Decomposition chipId_;
-#else
+#elif defined(ARDUINO_GRAND_CENTRAL_M4)
     File memoryImage_;
+    static constexpr auto TransferCacheSize = 48_KB;
+    byte transferCache[TransferCacheSize] = { 0 };
+#else
 #endif
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we

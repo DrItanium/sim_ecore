@@ -247,6 +247,8 @@ void
 HitagiSBCore::begin() {
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
 #ifdef ARDUINO_GRAND_CENTRAL_M4
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
     SPI.begin();
     while (!SD.begin(SDCARD_SS_PIN)) {
         Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
@@ -257,8 +259,7 @@ HitagiSBCore::begin() {
         Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
         while (true) { delay(1000); }
     } else {
-        Serial.println(F("TRUNCATING \"live.bin\""));
-        SD.truncate("live.bin", 0);
+
         memoryImage_ = SD.open("live.bin", FILE_WRITE);
         if (!memoryImage_) {
             Serial.println(F("UNABLE TO OPEN \"live.bin\" FOR RW! HALTING!"));
@@ -266,23 +267,34 @@ HitagiSBCore::begin() {
         }
         Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
         // now we copy from the pristine image over to the new one in blocks
-        memoryImage_.seek(0);
+        memoryImage_.seekSet(0); // jump to address zero
         Core::Address size = theFile.size();
-        constexpr auto CacheSize = 16_KB;
-        byte storage[CacheSize] = { 0 };
+        constexpr auto CacheSize = TransferCacheSize;
         Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
         for (Core::Address i = 0; i < size; i += CacheSize) {
-            auto numRead = theFile.read(storage, CacheSize);
+            auto numRead = theFile.read(transferCache, CacheSize);
+            if (numRead < 0) {
+                SD.errorHalt();
+            }
             while (SD.card()->isBusy());
             // wait until the sd card is ready again to transfer
-            (void)memoryImage_.write(storage, numRead);
+            (void)memoryImage_.write(transferCache, numRead);
             // wait until we are ready to
             while (SD.card()->isBusy());
             Serial.print(F("."));
         }
         Serial.println(F("CONSTRUCTION COMPLETE!!!"));
+        memoryImage_.flush();
         // make a new copy of this file
         theFile.close();
+        memoryImage_.close();
+        while (SD.card()->isBusy());
+        memoryImage_ = SD.open("live.bin", FILE_WRITE);
+        if (!memoryImage_) {
+            Serial.println(F("UNABLE TO OPEN \"live.bin\" FOR RW! HALTING!"));
+            while(true) { delay(1000); }
+        }
+
     }
 #elif defined(ARDUINO_AVR_ATmega1284)
     // hold the i960 in reset for the rest of execution, we really don't care about anything else with respect to this processor now
@@ -543,8 +555,15 @@ HitagiSBCore::doRAMLoad(Address address, TreatAsOrdinal) {
 #ifdef ARDUINO_AVR_ATmega1284
     (void)psramBlockRead(address, reinterpret_cast<byte*>(value), sizeof(value));
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
-    memoryImage_.seek(address);
+    Serial.print(F("LOAD 0x"));
+    Serial.println(address, HEX);
+    Serial.print(F("SEEK 0x"));
+    Serial.println(memoryImage_.position(), HEX);
+    memoryImage_.seekSet(address);
+    Serial.println(F("SEEK COMPLETE!"));
     memoryImage_.read(reinterpret_cast<byte*>(value), sizeof(Ordinal));
+    Serial.print(F("GOT VALUE 0x"));
+    Serial.println(value, HEX);
 #endif
     return value;
 }
@@ -553,6 +572,10 @@ HitagiSBCore::doRAMStore(Address address, ByteOrdinal value) {
 #ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
+    Serial.print(F("STORE 0x"));
+    Serial.print(value, HEX);
+    Serial.print(F(" to 0x"));
+    Serial.println(address, HEX);
     memoryImage_.seek(address);
     memoryImage_.write(value);
 #endif
@@ -562,6 +585,10 @@ HitagiSBCore::doRAMStore(Address address, ShortOrdinal value) {
 #ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
+    Serial.print(F("STORE 0x"));
+    Serial.print(value, HEX);
+    Serial.print(F(" to 0x"));
+    Serial.println(address, HEX);
     memoryImage_.seek(address);
     memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 #endif
@@ -571,6 +598,10 @@ HitagiSBCore::doRAMStore(Address address, Ordinal value) {
 #ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
+    Serial.print(F("STORE 0x"));
+    Serial.print(value, HEX);
+    Serial.print(F(" to 0x"));
+    Serial.println(address, HEX);
     memoryImage_.seek(address);
     memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 #endif
