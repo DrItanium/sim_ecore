@@ -39,7 +39,7 @@ SBCoreArduino::generateFault(FaultType ) {
 SBCoreArduino::~SBCoreArduino() { }
 
 void
-SBCoreArduino::store(Address destination, Ordinal value) {
+SBCoreArduino::storeAligned(Address destination, Ordinal value) {
     if (inRAMArea(destination)) {
         doRAMStore(toRAMOffset(destination), value);
     } else if (inIOSpace(destination)) {
@@ -52,7 +52,7 @@ SBCoreArduino::store(Address destination, Ordinal value) {
 }
 
 Ordinal
-SBCoreArduino::load(Address address) {
+SBCoreArduino::loadAligned(Address address) {
     if (inRAMArea(address)) {
         return doRAMLoad(toRAMOffset(address), TreatAsOrdinal {});
     } else if (inIOSpace(address)) {
@@ -78,7 +78,7 @@ SBCoreArduino::loadByte(Address destination) {
 }
 
 void
-SBCoreArduino::storeShort(Address destination, ShortOrdinal value) {
+SBCoreArduino::storeShortAligned(Address destination, ShortOrdinal value) {
     if (inRAMArea(destination)) {
         doRAMStore(toRAMOffset(destination), value);
     } else if (inIOSpace(destination)) {
@@ -91,7 +91,7 @@ SBCoreArduino::storeShort(Address destination, ShortOrdinal value) {
 }
 
 ShortOrdinal
-SBCoreArduino::loadShort(Address destination) {
+SBCoreArduino::loadShortAligned(Address destination) {
     if (inRAMArea(destination)) {
         return doRAMLoad(toRAMOffset(destination), TreatAsShortOrdinal {});
     } else if (inIOSpace(destination)) {
