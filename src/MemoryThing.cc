@@ -43,3 +43,8 @@ MemoryThing::write(Address baseAddress, byte *buf, size_t amount) noexcept {
 
     return blockWrite(translateAddress(baseAddress), buf, amountToWrite);
 }
+
+void
+MemoryThing::begin() {
+    // do nothing
+}
