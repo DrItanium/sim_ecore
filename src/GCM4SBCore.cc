@@ -209,7 +209,6 @@ GCM4SBCore::toRAMOffset(Address target) noexcept{
 GCM4SBCore::~GCM4SBCore() noexcept {}
 GCM4SBCore::GCM4SBCore() : Parent(), memoryImage_(0,64_MB, 64_MB,"live.bin", FILE_WRITE) {}
 
-MemoryThing::~MemoryThing() {}
 GCM4SBCore::CacheLine&
 GCM4SBCore::getCacheLine(Address target) noexcept {
     CacheAddress addr(target);

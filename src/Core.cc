@@ -291,6 +291,13 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
     }
 }
 void
+Core::lda(const Instruction &inst) noexcept {
+    // compute the effective address (memory address) and store it in destination
+    auto& dest = getRegister(inst.getSrcDest(false));
+    auto addr = computeMemoryAddress(inst);
+    dest.setOrdinal(addr);
+}
+void
 Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
     auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
     auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{});
@@ -614,12 +621,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestination(instruction.getSrcDest(false), loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal{});
             break;
         case Opcode::lda:
-            [this, &instruction]() {
-                // compute the effective address (memory address) and store it in destination
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto addr = computeMemoryAddress(instruction);
-                dest.setOrdinal(addr);
-            }();
+            lda(instruction);
             break;
         case Opcode::ld:
             [this, &instruction]() {
@@ -966,21 +968,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::shlo:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto len = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal(src << len);
-            }();
+            shlo(instruction);
             break;
         case Opcode::shro:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto len = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                /// @todo implement "speed" optimization by only getting src if we need it
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal(src >> len);
-            }();
+            shro(instruction);
             break;
         case Opcode::shli:
             [this, &instruction]() {
@@ -1561,6 +1552,30 @@ Core::storeShort(Address destination, ShortOrdinal value) {
         // store the components into memory
         storeByte(destination + 0, value)  ;
         storeByte(destination + 1, value >> 8);
+    }
+}
+void
+Core::shro(const Instruction &inst) noexcept {
+    auto& dest = getRegister(inst.getSrcDest(false));
+    auto len = getSourceRegister(inst.getSrc1()).getOrdinal();
+    /// @todo implement "speed" optimization by only getting src if we need it
+    auto src = getSourceRegister(inst.getSrc2()).getOrdinal();
+    if (len < 32) {
+        dest.setOrdinal(src >> len);
+    } else {
+        dest.setOrdinal(0);
+    }
+}
+
+void
+Core::shlo(const Instruction &inst) noexcept {
+    auto& dest = getRegister(inst.getSrcDest(false));
+    auto len = getSourceRegister(inst.getSrc1()).getOrdinal();
+    auto src = getSourceRegister(inst.getSrc2()).getOrdinal();
+    if (len < 32) {
+        dest.setOrdinal(src << len);
+    } else {
+        dest.setOrdinal(0);
     }
 }
 
