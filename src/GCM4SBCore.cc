@@ -251,16 +251,7 @@ Ordinal
 GCM4SBCore::CacheLine::get(Address targetAddress, TreatAsOrdinal) const noexcept {
     // assume aligned
     CacheAddress addr(targetAddress);
-    Serial.print("Decomposed pair access: 0x");
-    Serial.print(addr.getOriginalAddress(), HEX);
-    Serial.print(" => {0x");
-    Serial.print(addr.getCellIndex(), HEX);
-    Serial.print(", 0x");
-    Serial.print(addr.getCellOffset(TreatAsByteOrdinal{}), HEX);
-    Serial.print("} => 0x");
-    auto result = storage_[addr.getCellIndex()].getOrdinalValue();
-    Serial.println(result, HEX);
-    return result;
+    return storage_[addr.getCellIndex()].getOrdinalValue();
 }
 
 ShortOrdinal
@@ -306,8 +297,6 @@ GCM4SBCore::CacheLine::reset(Address newAddress, MemoryThing &newThing) {
     valid_ = true;
     dirty_ = false;
     address_ = newAddr.getTagAddress();
-    Serial.print("NEW ADDRESS: 0x");
-    Serial.println(address_, HEX);
     backingStorage_ = &newThing;
     (void)backingStorage_->read(address_, reinterpret_cast<byte*>(storage_), sizeof(storage_));
     /// @todo check and see if we were able to read a full cache line from underlying storage
