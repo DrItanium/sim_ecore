@@ -268,7 +268,7 @@ HitagiSBCore::begin() {
         // now we copy from the pristine image over to the new one in blocks
         memoryImage_.seek(0);
         Core::Address size = theFile.size();
-        constexpr auto CacheSize = 4_KB;
+        constexpr auto CacheSize = 16_KB;
         byte storage[CacheSize] = { 0 };
         Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
         for (Core::Address i = 0; i < size; i += CacheSize) {
