@@ -63,11 +63,12 @@ public:
     }
     void installBlockToMemory(Address base, Ordinal curr) noexcept;
 protected:
-    ShortOrdinal loadShort(Address destination) override;
-    void storeShort(Address destination, ShortOrdinal value) override;
+    ShortOrdinal loadShortAligned(Address destination) override;
+    void storeShortAligned(Address destination, ShortOrdinal value) override;
     ByteOrdinal loadByte(Address destination) override;
-    Ordinal load(Address address) override;
-    void store(Address address, Ordinal value) override;
+    void storeByte(Address destination, ByteOrdinal value) override;
+    Ordinal loadAligned(Address address) override;
+    void storeAligned(Address address, Ordinal value) override;
     void generateFault(FaultType ) override;
 private:
     static constexpr bool inIOSpace(Address target) noexcept {
