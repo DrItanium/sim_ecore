@@ -539,19 +539,22 @@ HitagiSBCore::doIACStore(Address address, Ordinal value) {
 }
 Ordinal
 HitagiSBCore::doRAMLoad(Address address, TreatAsOrdinal) {
-#ifdef ARDUINO_AVR_ATmega1284
     Ordinal value = 0;
+#ifdef ARDUINO_AVR_ATmega1284
     (void)psramBlockRead(address, reinterpret_cast<byte*>(value), sizeof(value));
-    return value;
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
-    return 0;
+    memoryImage_.seek(address);
+    memoryImage_.read(reinterpret_cast<byte*>(value), sizeof(Ordinal));
 #endif
+    return value;
 }
 void
 HitagiSBCore::doRAMStore(Address address, ByteOrdinal value) {
 #ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
+    memoryImage_.seek(address);
+    memoryImage_.write(value);
 #endif
 }
 void
@@ -559,6 +562,8 @@ HitagiSBCore::doRAMStore(Address address, ShortOrdinal value) {
 #ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
+    memoryImage_.seek(address);
+    memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 #endif
 }
 void
@@ -566,6 +571,8 @@ HitagiSBCore::doRAMStore(Address address, Ordinal value) {
 #ifdef ARDUINO_AVR_ATmega1284
     psramBlockWrite(address, reinterpret_cast<byte*>(value), sizeof(value));
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
+    memoryImage_.seek(address);
+    memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 #endif
 }
 bool
