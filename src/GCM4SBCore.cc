@@ -29,12 +29,12 @@
 
 #include <SPI.h>
 #include "Types.h"
-#include "HitagiSBCore.h"
+#include "GCM4SBCore.h"
 #include <SdFat.h>
 SdFat SD(&SDCARD_SPI);
 
 void
-HitagiSBCore::begin() {
+GCM4SBCore::begin() {
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
@@ -90,20 +90,20 @@ HitagiSBCore::begin() {
 
 
 ByteOrdinal
-HitagiSBCore::ioSpaceLoad(Address address, TreatAsByteOrdinal) {
+GCM4SBCore::ioSpaceLoad(Address address, TreatAsByteOrdinal) {
     return 0;
 }
 void
-HitagiSBCore::ioSpaceStore(Address address, ByteOrdinal value) {
+GCM4SBCore::ioSpaceStore(Address address, ByteOrdinal value) {
     // nothing to do here right now
 }
 Ordinal
-HitagiSBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
+GCM4SBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
     // right now there is nothing to do here
     return 0;
 }
 ShortOrdinal
-HitagiSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
+GCM4SBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
     switch (address) {
         case 0:
             Serial.flush();
@@ -121,7 +121,7 @@ HitagiSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
 }
 
 void
-HitagiSBCore::ioSpaceStore(Address address, ShortOrdinal value) {
+GCM4SBCore::ioSpaceStore(Address address, ShortOrdinal value) {
     switch (address) {
         case 0:
             Serial.flush();
@@ -134,27 +134,27 @@ HitagiSBCore::ioSpaceStore(Address address, ShortOrdinal value) {
     }
 }
 void
-HitagiSBCore::ioSpaceStore(Address address, Ordinal value) {
+GCM4SBCore::ioSpaceStore(Address address, Ordinal value) {
     // nothing to do right now
 }
 ByteOrdinal
-HitagiSBCore::doIACLoad(Address address, TreatAsByteOrdinal ordinal) {
+GCM4SBCore::doIACLoad(Address address, TreatAsByteOrdinal ordinal) {
     return 0;
 }
 ShortOrdinal
-HitagiSBCore::doIACLoad(Address address, TreatAsShortOrdinal ordinal) {
+GCM4SBCore::doIACLoad(Address address, TreatAsShortOrdinal ordinal) {
     return 0;
 }
 void
-HitagiSBCore::doIACStore(Address address, ByteOrdinal value) {
+GCM4SBCore::doIACStore(Address address, ByteOrdinal value) {
     // do nothing
 }
 void
-HitagiSBCore::doIACStore(Address address, ShortOrdinal value) {
+GCM4SBCore::doIACStore(Address address, ShortOrdinal value) {
     // do nothing
 }
 Ordinal
-HitagiSBCore::doIACLoad(Address address, TreatAsOrdinal) {
+GCM4SBCore::doIACLoad(Address address, TreatAsOrdinal) {
     switch (address) {
         case HaltRegisterOffset:
             haltExecution();
@@ -170,7 +170,7 @@ HitagiSBCore::doIACLoad(Address address, TreatAsOrdinal) {
     return 0;
 }
 void
-HitagiSBCore::doIACStore(Address address, Ordinal value) {
+GCM4SBCore::doIACStore(Address address, Ordinal value) {
     switch (address) {
         case HaltRegisterOffset:
             haltExecution();
@@ -185,40 +185,40 @@ HitagiSBCore::doIACStore(Address address, Ordinal value) {
     }
 }
 Ordinal
-HitagiSBCore::doRAMLoad(Address address, TreatAsOrdinal) {
+GCM4SBCore::doRAMLoad(Address address, TreatAsOrdinal) {
     Ordinal value = 0;
     memoryImage_.seekSet(address);
     memoryImage_.read(reinterpret_cast<byte*>(value), sizeof(Ordinal));
     return value;
 }
 void
-HitagiSBCore::doRAMStore(Address address, ByteOrdinal value) {
+GCM4SBCore::doRAMStore(Address address, ByteOrdinal value) {
     memoryImage_.seek(address);
     memoryImage_.write(value);
 }
 void
-HitagiSBCore::doRAMStore(Address address, ShortOrdinal value) {
+GCM4SBCore::doRAMStore(Address address, ShortOrdinal value) {
     memoryImage_.seek(address);
     memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 }
 void
-HitagiSBCore::doRAMStore(Address address, Ordinal value) {
+GCM4SBCore::doRAMStore(Address address, Ordinal value) {
     memoryImage_.seek(address);
     memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 }
 bool
-HitagiSBCore::inRAMArea(Address target) noexcept{
+GCM4SBCore::inRAMArea(Address target) noexcept{
     // since the ram starts at address zero, there is no need to worry about shifting the offset
     return target >= RamStart && target < RamSize;
 }
 Core::Address
-HitagiSBCore::toRAMOffset(Address target) noexcept{
+GCM4SBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
-HitagiSBCore::~HitagiSBCore() noexcept {}
-HitagiSBCore::HitagiSBCore() : Parent() {}
+GCM4SBCore::~GCM4SBCore() noexcept {}
+GCM4SBCore::GCM4SBCore() : Parent() {}
 void
-HitagiSBCore::CacheLine::clear() noexcept {
+GCM4SBCore::CacheLine::clear() noexcept {
     valid_ = false;
     valid_ = false;
     address_ = 0;

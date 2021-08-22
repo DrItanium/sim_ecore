@@ -24,8 +24,8 @@
 // Created by jwscoggins on 8/21/21.
 //
 
-#ifndef SIM3_HITAGISBCORE_H
-#define SIM3_HITAGISBCORE_H
+#ifndef SIM3_GCM4SBCORE_H
+#define SIM3_GCM4SBCORE_H
 #ifdef ARDUINO
 #include <Arduino.h>
 #include <SPI.h>
@@ -39,7 +39,7 @@
  * @brief A version of the SBCore for an ATMega1284p originally designed to act as the chipset for an actual i960Sx processor;
  * This is meant to be a drop in replacement for that hardware so it will hold the i960Sx in reset and not use the CLKO pin either
  */
-class HitagiSBCore : public SBCoreArduino {
+class GCM4SBCore : public SBCoreArduino {
 public:
     static constexpr Address RamSize = 64_MB;
     static constexpr Address RamStart = 0x0000'0000;
@@ -54,8 +54,8 @@ public:
     };
 public:
     using Parent = SBCoreArduino;
-    HitagiSBCore();
-    ~HitagiSBCore() override;
+    GCM4SBCore();
+    ~GCM4SBCore() override;
     void begin() override;
 protected:
     ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal ordinal) override;
@@ -85,7 +85,7 @@ private:
     // are going to allocate a 4k buffer
 };
 
-using SBCore = HitagiSBCore;
+using SBCore = GCM4SBCore;
 #endif
-#endif //SIM3_HITAGISBCORE_H
+#endif //SIM3_GCM4SBCORE_H
 

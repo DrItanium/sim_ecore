@@ -29,7 +29,7 @@
 #ifdef DESKTOP_BUILD
 #include "DesktopSBCore.h"
 #elif defined(ARDUINO)
-#include "HitagiSBCore.h"
+#include "GCM4SBCore.h"
 #else
 #error "NO VALID SBCORE IMPLEMENTATION FOR GIVEN TARGET"
 #endif
