@@ -170,19 +170,20 @@ GCM4SBCore::doIACStore(Address address, Ordinal value) {
     }
 }
 Ordinal
-GCM4SBCore::doRAMLoad(Address address, TreatAsOrdinal) {
-    Ordinal value = 0;
-    memoryImage_.read(address, reinterpret_cast<byte*>(value), sizeof(Ordinal));
-    return value;
+GCM4SBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
+    return getCacheLine(address).get(address, thingy);
 }
 void
 GCM4SBCore::doRAMStore(Address address, ByteOrdinal value) {
+    getCacheLine(address).set(address, value);
 }
 void
 GCM4SBCore::doRAMStore(Address address, ShortOrdinal value) {
+    getCacheLine(address).set(address, value);
 }
 void
 GCM4SBCore::doRAMStore(Address address, Ordinal value) {
+    getCacheLine(address).set(address, value);
 }
 bool
 GCM4SBCore::inRAMArea(Address target) noexcept{

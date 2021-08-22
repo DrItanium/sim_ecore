@@ -99,6 +99,9 @@ protected:
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
 private:
+    CacheLine& getCacheLine(Address target) noexcept;
+    const CacheLine& getCacheLine(Address target) const noexcept;
+private:
     MemoryMappedFileThing memoryImage_;
     // we have so much space available, let's have some fun with this
     static constexpr auto TransferCacheSize = 64_KB;
