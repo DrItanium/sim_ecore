@@ -32,7 +32,6 @@
 #include <SdFat.h>
 #include "Types.h"
 #include "SBCoreArduino.h"
-#include "MemoryThing.h"
 #include "MemoryMappedFileThing.h"
 
 /**
@@ -49,14 +48,6 @@ public:
         static constexpr auto Mask = NumBytesPerCacheLine - 1;
         constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
     public:
-        static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
-        static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
-        constexpr auto valid() const noexcept { return backingStorage_; }
-        constexpr bool matches(Address other) const noexcept {
-            return valid() && (toCacheLineAddress(other) == address_);
-        }
-        void clear() noexcept;
-        void reset(Address newAddress, MemoryThing& newThing);
         TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
         TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal) const noexcept;
         TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal) const noexcept;
@@ -64,10 +55,19 @@ public:
         void set(Address targetAddress, ShortOrdinal value);
         void set(Address targetAddress, ByteOrdinal value);
     private:
-        Address address_ = 0;
-        bool dirty_ = false;
-        MemoryThing* backingStorage_ = nullptr;
+        static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
+        static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
+        constexpr bool valid() const noexcept { return backingStorage_; }
+        constexpr bool matches(Address other) const noexcept {
+            return valid() && (toCacheLineAddress(other) == address_);
+        }
+        void clear() noexcept;
+        void reset(Address newAddress, MemoryThing& newThing);
+    private:
         MemoryCell32 storage_[NumCellsPerCacheLine] = { 0 };
+        Address address_ = 0;
+        MemoryThing* backingStorage_ = nullptr;
+        bool dirty_ = false;
     };
 public:
     static constexpr Address RamSize = 64_MB;
@@ -98,12 +98,9 @@ protected:
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
 private:
-    File memoryImage_;
+    MemoryMappedFileThing memoryImage_;
     // we have so much space available, let's have some fun with this
     static constexpr auto TransferCacheSize = 64_KB;
-    union {
-
-    };
     byte transferCache[TransferCacheSize] = { 0 };
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we

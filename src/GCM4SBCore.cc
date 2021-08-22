@@ -1,4 +1,3 @@
-// sim3
 // Copyright (c) 2021, Joshua Scoggins
 // All rights reserved.
 //
@@ -48,15 +47,9 @@ GCM4SBCore::begin() {
         Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
         while (true) { delay(1000); }
     } else {
-
-        memoryImage_ = SD.open("live.bin", FILE_WRITE);
-        if (!memoryImage_) {
-            Serial.println(F("UNABLE TO OPEN \"live.bin\" FOR RW! HALTING!"));
-            while(true) { delay(1000); }
-        }
+        memoryImage_.begin();
         Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
         // now we copy from the pristine image over to the new one in blocks
-        memoryImage_.seekSet(0); // jump to address zero
         Address size = theFile.size();
         constexpr auto CacheSize = TransferCacheSize;
         Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
@@ -67,23 +60,15 @@ GCM4SBCore::begin() {
             }
             while (SD.card()->isBusy());
             // wait until the sd card is ready again to transfer
-            (void)memoryImage_.write(transferCache, numRead);
+            (void)memoryImage_.write(i, transferCache, numRead);
             // wait until we are ready to
             while (SD.card()->isBusy());
             Serial.print(F("."));
         }
         Serial.println(F("CONSTRUCTION COMPLETE!!!"));
-        memoryImage_.flush();
         // make a new copy of this file
         theFile.close();
-        memoryImage_.close();
         while (SD.card()->isBusy());
-        memoryImage_ = SD.open("live.bin", FILE_WRITE);
-        if (!memoryImage_) {
-            Serial.println(F("UNABLE TO OPEN \"live.bin\" FOR RW! HALTING!"));
-            while(true) { delay(1000); }
-        }
-
     }
 }
 
@@ -187,24 +172,17 @@ GCM4SBCore::doIACStore(Address address, Ordinal value) {
 Ordinal
 GCM4SBCore::doRAMLoad(Address address, TreatAsOrdinal) {
     Ordinal value = 0;
-    memoryImage_.seekSet(address);
-    memoryImage_.read(reinterpret_cast<byte*>(value), sizeof(Ordinal));
+    memoryImage_.read(address, reinterpret_cast<byte*>(value), sizeof(Ordinal));
     return value;
 }
 void
 GCM4SBCore::doRAMStore(Address address, ByteOrdinal value) {
-    memoryImage_.seek(address);
-    memoryImage_.write(value);
 }
 void
 GCM4SBCore::doRAMStore(Address address, ShortOrdinal value) {
-    memoryImage_.seek(address);
-    memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 }
 void
 GCM4SBCore::doRAMStore(Address address, Ordinal value) {
-    memoryImage_.seek(address);
-    memoryImage_.write(reinterpret_cast<byte*>(value), sizeof(value));
 }
 bool
 GCM4SBCore::inRAMArea(Address target) noexcept{
@@ -216,7 +194,7 @@ GCM4SBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 GCM4SBCore::~GCM4SBCore() noexcept {}
-GCM4SBCore::GCM4SBCore() : Parent() {}
+GCM4SBCore::GCM4SBCore() : Parent(), memoryImage_(0,64_MB, 64_MB,"live.bin", FILE_WRITE) {}
 
 MemoryThing::~MemoryThing() {}
 #endif
