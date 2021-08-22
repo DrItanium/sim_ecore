@@ -32,13 +32,8 @@
 #include <SdFat.h>
 #include "Types.h"
 #include "SBCoreArduino.h"
+#include "MemoryThing.h"
 
-class MemoryThing {
-public:
-    virtual ~MemoryThing();
-    virtual size_t write(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
-    virtual size_t read(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
-};
 /**
  * @brief A grand central m4 specific cache line
  */
