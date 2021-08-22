@@ -6,8 +6,9 @@
 #define SIM3_MEMORYTHING_H
 #ifdef ARDUINO
 #include <Arduino.h>
-#else
+#elif defined(DESKTOP_BUILD)
 #include <cstdint>
+#include <cstddef>
 #endif
 #include "Types.h"
 
@@ -31,12 +32,12 @@ public:
      * @return True, if the input address is in this things memory space
      */
     virtual bool respondsTo(Address input) const noexcept;
-    size_t write(Address baseAddress, byte* buf, size_t amount) noexcept;
-    size_t read(Address baseAddress, byte* buf, size_t amount) noexcept;
+    size_t write(Address baseAddress, uint8_t* buf, size_t amount) noexcept;
+    size_t read(Address baseAddress, uint8_t* buf, size_t amount) noexcept;
     virtual void begin();
 protected:
-    virtual size_t blockWrite(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
-    virtual size_t blockRead(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
+    virtual size_t blockWrite(Address baseAddress, uint8_t* buf, size_t amount) noexcept = 0;
+    virtual size_t blockRead(Address baseAddress, uint8_t* buf, size_t amount) noexcept = 0;
 private:
     Address base_;
     Address end_;

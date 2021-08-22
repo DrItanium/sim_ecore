@@ -4,7 +4,9 @@
 #include "MemoryThing.h"
 
 MemoryThing::MemoryThing(Address baseAddress, Address size) : base_(baseAddress), end_(baseAddress + size), size_(size) { }
+MemoryThing::~MemoryThing() {
 
+}
 bool
 MemoryThing::respondsTo(Address input) const noexcept {
     return input < getEndAddress() && input >= getStartAddress();
@@ -17,7 +19,7 @@ MemoryThing::translateAddress(Address input) const noexcept {
 
 
 size_t
-MemoryThing::read(Address baseAddress, byte *buf, size_t amount) noexcept {
+MemoryThing::read(Address baseAddress, uint8_t *buf, size_t amount) noexcept {
     // translate the absolute address to a relative one and also figure how much of this we can actually store
     auto bufEndAddress = (baseAddress + amount);
     auto amountToRead = amount;
@@ -31,7 +33,7 @@ MemoryThing::read(Address baseAddress, byte *buf, size_t amount) noexcept {
 }
 
 size_t
-MemoryThing::write(Address baseAddress, byte *buf, size_t amount) noexcept {
+MemoryThing::write(Address baseAddress, uint8_t *buf, size_t amount) noexcept {
     // translate the absolute address to a relative one and also figure how much of this we can actually write
     auto bufEndAddress = (baseAddress + amount);
     auto amountToWrite = amount;
