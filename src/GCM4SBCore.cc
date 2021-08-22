@@ -24,7 +24,7 @@
 // Created by jwscoggins on 8/21/21.
 //
 
-#ifdef ARDUINO
+#ifdef ARDUINO_GRAND_CENTRAL_M4
 #include <Arduino.h>
 
 #include <SPI.h>
@@ -57,10 +57,10 @@ GCM4SBCore::begin() {
         Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
         // now we copy from the pristine image over to the new one in blocks
         memoryImage_.seekSet(0); // jump to address zero
-        Core::Address size = theFile.size();
+        Address size = theFile.size();
         constexpr auto CacheSize = TransferCacheSize;
         Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
-        for (Core::Address i = 0; i < size; i += CacheSize) {
+        for (Address i = 0; i < size; i += CacheSize) {
             auto numRead = theFile.read(transferCache, CacheSize);
             if (numRead < 0) {
                 SD.errorHalt();
@@ -211,12 +211,13 @@ GCM4SBCore::inRAMArea(Address target) noexcept{
     // since the ram starts at address zero, there is no need to worry about shifting the offset
     return target >= RamStart && target < RamSize;
 }
-Core::Address
+Address
 GCM4SBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 GCM4SBCore::~GCM4SBCore() noexcept {}
 GCM4SBCore::GCM4SBCore() : Parent() {}
+#if 0
 void
 GCM4SBCore::CacheLine::clear() noexcept {
     valid_ = false;
@@ -226,4 +227,5 @@ GCM4SBCore::CacheLine::clear() noexcept {
         storage_[i] = 0;
     }
 }
+#endif
 #endif

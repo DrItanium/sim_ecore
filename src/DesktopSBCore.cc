@@ -49,7 +49,7 @@ DesktopSBCore::loadShortAligned(Address destination) {
         // compute the correct offset
         auto offset = (destination >> 1) & 0b1;
         auto index = destination >> 2;
-        return memory_[index].ordinalShorts[offset];
+        return memory_[index].getShortOrdinal(offset);
     }
 }
 void
@@ -69,7 +69,7 @@ DesktopSBCore::storeShortAligned(Address destination, ShortOrdinal value) {
         // implicitly aligned
         auto offset = (destination >> 1) & 0b1;
         auto index = destination >> 2;
-        memory_[index].ordinalShorts[offset] = value;
+        memory_[index].setShortOrdinal(value, offset);
     } else {
         // do nothing
     }

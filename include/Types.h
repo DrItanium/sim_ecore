@@ -42,6 +42,7 @@ using ShortInteger = int16_t;
 using ByteOrdinal = uint8_t;
 using ByteInteger = int8_t;
 
+using Address = Ordinal;
 using FullOpcode = uint16_t;
 #ifdef NUMERICS_ARCHITECTURE
 using Real = float;
@@ -50,6 +51,9 @@ using LongReal = double;
 using ExtendedReal = long double;
 #endif
 
+/**
+ * @brief List of opcodes translated from their 8/12-bit equivalents to a standard 12-bit opcode in all cases; Non-REG instructions are shifted left by four bits
+ */
 enum class Opcode : FullOpcode  {
     None = 0,
 #define X(value, name) name = value ,
@@ -58,6 +62,9 @@ enum class Opcode : FullOpcode  {
     Bad = 0xFFFF,
 };
 
+/**
+ * @brief A unique representation for each type of operand an instruction is capable of showing. Floating point instructions require two levels conversion.
+ */
 enum class RegisterIndex : uint8_t {
     Local0 = 0,
     Local1,
@@ -145,9 +152,19 @@ Literal1_0f = 0b010'10110,
 };
 static_assert(static_cast<uint8_t>(RegisterIndex::Literal0) == 0b1'00000, "Literal 0 needs to be 0b100000 to accurately reflect the i960 design");
 
+/**
+ * @brief Convert the given byte value into a literal; the value must be in the range [0,32) with this function only reading the bottom 5 bits
+ * @param value The 8-bit literal
+ * @return The lowest 5-bits of the literal converted to a RegisterIndex
+ */
 constexpr auto makeLiteral(uint8_t value) noexcept {
     return static_cast<RegisterIndex>(0b100000 | (value & 0b011111));
 }
+/**
+ * @brief Convert the given numeric index into a specific register index
+ * @param value The 8-bit literal
+ * @return The lowest 5-bits of the provided literal interpreted as a RegisterIndex
+ */
 constexpr auto makeRegister(uint8_t value) noexcept {
     return static_cast<RegisterIndex>(value & 0b11111);
 }
@@ -228,8 +245,15 @@ constexpr unsigned long long int operator "" _KHz(unsigned long long value) noex
 constexpr unsigned long long int operator "" _MHz(unsigned long long value) noexcept {
     return value * 1000 * 1000;
 }
+/**
+ * @brief A class meant to make tag dispatch easy
+ * @tparam T The type desired through tag dispatch
+ */
 template <typename T>
 struct TreatAs final {
+    /**
+     * @brief A way to identify the target type in template metaprogramming
+     */
     using UnderlyingType = T;
 };
 using TreatAsOrdinal = TreatAs<Ordinal>;
@@ -247,6 +271,9 @@ using TreatAsReal = TreatAs<Real>;
 using TreatAsLongReal = TreatAs<LongReal>;
 using TreatAsExtendedReal = TreatAs<ExtendedReal>;
 #endif
+/**
+ * @brief A 32-bit quantity that can be viewed in different ways, in most cases this is how most implementations will view their cache lines or memory storage
+ */
 union MemoryCell32 {
     template<typename T>
     static constexpr uint8_t NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);
@@ -277,6 +304,7 @@ public:
     void clear() noexcept {
         raw = 0;
     }
+private:
     Ordinal raw;
     ShortOrdinal ordinalShorts[NumShortOrdinalsPerOrdinal];
     ShortInteger integerShorts[NumShortIntegersPerOrdinal];

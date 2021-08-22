@@ -60,7 +60,6 @@ enum class FaultType : Ordinal {
 };
 class Core {
 public:
-    using Address = Ordinal;
     static constexpr Register OrdinalLiterals[32] {
 #define X(base) Register(base + 0), Register(base + 1), Register(base + 2), Register(base + 3)
             X(0),

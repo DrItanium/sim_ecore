@@ -26,32 +26,29 @@
 
 #ifndef SIM3_GCM4SBCORE_H
 #define SIM3_GCM4SBCORE_H
-#ifdef ARDUINO
+#ifdef ARDUINO_GRAND_CENTRAL_M4
 #include <Arduino.h>
 #include <SPI.h>
-#ifdef ARDUINO_GRAND_CENTRAL_M4
 #include <SdFat.h>
-#endif
 #include "Types.h"
 #include "SBCoreArduino.h"
 
+struct CacheLine {
+    constexpr CacheLine() noexcept : address_(0), dirty_(false), valid_(false), storage_{ 0 } { }
+    Address address_ = 0;
+    bool dirty_ = false;
+    bool valid_ = false;
+    byte storage_[32] = { 0 };
+    void clear() noexcept;
+};
 /**
- * @brief A version of the SBCore for an ATMega1284p originally designed to act as the chipset for an actual i960Sx processor;
- * This is meant to be a drop in replacement for that hardware so it will hold the i960Sx in reset and not use the CLKO pin either
+ * @brief a version of the ArduinoSBCore meant for the grand central m4
  */
 class GCM4SBCore : public SBCoreArduino {
 public:
     static constexpr Address RamSize = 64_MB;
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
-    struct CacheLine {
-        constexpr CacheLine() noexcept : address_(0), dirty_(false), valid_(false), storage_{ 0 } { }
-        Address address_ = 0;
-        bool dirty_ = false;
-        bool valid_ = false;
-        byte storage_[32] = { 0 };
-        void clear() noexcept;
-    };
 public:
     using Parent = SBCoreArduino;
     GCM4SBCore();
@@ -78,6 +75,7 @@ protected:
     Address toRAMOffset(Address target) noexcept override;
 private:
     File memoryImage_;
+    // we have so much space available, let's have some fun with this
     static constexpr auto TransferCacheSize = 48_KB;
     byte transferCache[TransferCacheSize] = { 0 };
     // make space for the on chip request cache as well as the psram copy buffer
