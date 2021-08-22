@@ -33,6 +33,7 @@
 #include "Types.h"
 #include "SBCoreArduino.h"
 #include "MemoryThing.h"
+#include "MemoryMappedFileThing.h"
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
@@ -99,7 +100,10 @@ protected:
 private:
     File memoryImage_;
     // we have so much space available, let's have some fun with this
-    static constexpr auto TransferCacheSize = 48_KB;
+    static constexpr auto TransferCacheSize = 64_KB;
+    union {
+
+    };
     byte transferCache[TransferCacheSize] = { 0 };
     // make space for the on chip request cache as well as the psram copy buffer
     // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
