@@ -75,6 +75,7 @@ SimplifiedSxCore::synchronizedStore(Core::Address destination, const QuadRegiste
         processIACMessage(msg);
         // there are special IAC messages we need to handle here
     } else {
+        // synchronized stores are always aligned but still go through the normal mechanisms
         store(destination, value);
     }
 }

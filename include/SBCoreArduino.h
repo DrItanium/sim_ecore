@@ -42,12 +42,12 @@ public:
     ~SBCoreArduino() override;
     virtual void begin();
 protected:
-    ShortOrdinal loadShort(Address destination) override;
-    void storeShort(Address destination, ShortOrdinal value) override;
+    ShortOrdinal loadShortAligned(Address destination) override;
+    void storeShortAligned(Address destination, ShortOrdinal value) override;
     ByteOrdinal loadByte(Address destination) override;
     void storeByte(Address destination, ByteOrdinal value) override;
-    Ordinal load(Address address) override;
-    void store(Address address, Ordinal value) override;
+    Ordinal loadAligned(Address address) override;
+    void storeAligned(Address address, Ordinal value) override;
     void generateFault(FaultType ) override;
 protected:
     virtual ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal) = 0;

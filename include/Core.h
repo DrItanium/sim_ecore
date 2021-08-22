@@ -186,33 +186,17 @@ protected:
     virtual void synchronizedStore(Address destination, const DoubleRegister& value) noexcept = 0;
     virtual void synchronizedStore(Address destination, const QuadRegister& value) noexcept = 0;
     virtual void synchronizedStore(Address destination, const Register& value) noexcept = 0;
-    virtual ByteOrdinal loadByte(Address destination) {
-        // force the unaligned access to be handled in load
-        auto result = static_cast<ByteOrdinal>(load (destination));
-        return result;
-    }
-    virtual ShortOrdinal loadShort(Address destination) {
-        // just like with
-        return static_cast<ShortOrdinal>(load(destination));
-    }
-    virtual void storeByte(Address destination, ByteOrdinal value) {
-        // terrible implementation but it will work
-        // load a full word, modify it and then commit it back
-        // This method is virtual so we can easily override this train wreck at any time
-        Register memory(load(destination));
-        memory.setByteOrdinal(value, 0);
-        store(destination, memory.getOrdinal());
-    }
-    virtual void storeShort(Address destination, ShortOrdinal value) {
-        // terrible implementation but it will work
-        // load a full word, modify it and then commit it back
-        // This method is virtual so we can easily override this train wreck at any time
-        Register memory(load(destination));
-        memory.setShortOrdinal(value, 0);
-        store(destination, memory.getOrdinal());
-    }
-    virtual Ordinal load(Address destination) = 0;
-    virtual void store(Address destination, Ordinal value) = 0;
+    virtual ByteOrdinal loadByte(Address destination) = 0;
+    virtual void storeByte(Address destination, ByteOrdinal value) = 0;
+    virtual ShortOrdinal loadShortAligned(Address destination) = 0;
+    virtual void storeShortAligned(Address destination, ShortOrdinal value) = 0;
+    virtual Ordinal loadAligned(Address destination) = 0;
+    virtual void storeAligned(Address destination, Ordinal value) = 0;
+    ShortOrdinal loadShort(Address destination) noexcept;
+    virtual void storeShort(Address destination, ShortOrdinal value);
+    virtual Ordinal load(Address destination);
+    virtual void store(Address destination, Ordinal value);
+
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
     const Register& getSourceRegister(RegisterIndex targetIndex) const { return getRegister(targetIndex); }
