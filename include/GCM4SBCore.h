@@ -47,6 +47,9 @@ public:
         static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
         static constexpr auto Mask = NumBytesPerCacheLine - 1;
         static constexpr auto NumBitsForCacheLineOffset = 6;
+        static constexpr auto NumBitsForCellIndex = 4;
+        static constexpr auto NumBitsForCellOffset = 2;
+        static_assert(NumBitsForCacheLineOffset == (NumBitsForCellIndex + NumBitsForCellOffset), "Cell offset + Cell index should equal the total offset in an address!");
         constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
     public:
         TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
@@ -112,7 +115,9 @@ private:
         constexpr auto getOriginalAddress() const noexcept { return value_; }
         constexpr auto getTagAddress () const noexcept { return tag.address; }
         constexpr auto getCacheIndex() const noexcept { return index; }
-        constexpr auto getOffset() const noexcept { return offset; }
+        constexpr auto getByteOffset() const noexcept { return offset; }
+        constexpr auto getCellIndex() const noexcept { return tag.cellIndex; }
+        constexpr auto getCellOffset() const noexcept { return tag.cellOffset; }
     private:
         Address value_;
         struct {
@@ -121,7 +126,8 @@ private:
             Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
         };
         struct {
-            Address unused0 : CacheLine::NumBitsForCacheLineOffset;
+            Address cellOffset : CacheLine::NumBitsForCellOffset;
+            Address cellIndex : CacheLine::NumBitsForCellIndex;
             Address address :  (32 - CacheLine::NumBitsForCacheLineOffset);
         } tag;
     };

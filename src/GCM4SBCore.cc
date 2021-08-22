@@ -209,4 +209,23 @@ GCM4SBCore::getCacheLine(Address target) noexcept {
     }
     return targetLine;
 }
+
+void
+GCM4SBCore::CacheLine::set(Address targetAddress, Ordinal value) {
+    CacheAddress addr(targetAddress);
+    dirty_ = true;
+}
+
+void
+GCM4SBCore::CacheLine::set(Address targetAddress, ShortOrdinal value) {
+    CacheAddress addr(targetAddress);
+    dirty_ = true;
+
+}
+
+void
+GCM4SBCore::CacheLine::set(Address targetAddress, ByteOrdinal value) {
+    CacheAddress addr(targetAddress);
+    dirty_ = true;
+}
 #endif
