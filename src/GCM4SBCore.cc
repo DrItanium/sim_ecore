@@ -69,6 +69,10 @@ GCM4SBCore::begin() {
         // make a new copy of this file
         theFile.close();
         while (SD.card()->isBusy());
+        // okay also clear out the cache lines since the transfer buffer is shared with the cache
+        for (auto& line : lines_) {
+            line.clear();
+        }
     }
 }
 
@@ -252,7 +256,42 @@ ByteOrdinal
 GCM4SBCore::CacheLine::get(Address targetAddress, TreatAsByteOrdinal thingy) const noexcept {
     CacheAddress addr(targetAddress);
     return storage_[addr.getCellIndex()].getByteOrdinal(addr.getCellOffset(thingy));
-
 }
+
+void
+GCM4SBCore::CacheLine::clear() noexcept {
+    // calling clear means that you just want to do a hard clear without any saving of what is currently in the cache
+    // We must do this after using part of the cacheline storage as a transfer buffer for setting up the live memory image
+    // there will be garbage in memory here that can be interpreted as "legal" cache lines
+    dirty_ = false;
+    backingStorage_ = nullptr;
+    address_ = 0;
+    for (auto& cell : storage_) {
+        cell.setOrdinalValue(0);
+    }
+}
+void
+GCM4SBCore::CacheLine::reset(Address newAddress, MemoryThing &newThing) {
+    // okay this is the most complex part of the implementation
+    // we need to do the following:
+    // 1. If the cache line is dirty (and also valid), then commit it back to its backing storage
+    // 2. compute the new base address using the new address
+    // 3. use the new backing storage to load a cache line's worth of data into storage from teh new backing storage
+    // 4. mark the line as clean and valid
+    if (dirty()) {
+        // okay so we have a valid dirty cache line, lets save it back to the underlying storage
+        (void)backingStorage_->write(address_, reinterpret_cast<byte*>(storage_), sizeof(storage_));
+        /// @todo check and see if we were able to write everything back to the underlying storage
+        // at this point we've written back to the old backing storage
+    }
+    CacheAddress newAddr(newAddress);
+    dirty_ = false;
+    address_ = newAddr.getTagAddress();
+    backingStorage_ = &newThing;
+    (void)backingStorage_->read(address_, reinterpret_cast<byte*>(storage_), sizeof(storage_));
+    /// @todo check and see if we were able to read a full cache line from underlying storage
+}
+
+
 
 #endif
