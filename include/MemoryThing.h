@@ -16,8 +16,6 @@ public:
     MemoryThing(Address baseAddress, Address size);
     MemoryThing() = default;
     virtual ~MemoryThing();
-    virtual size_t write(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
-    virtual size_t read(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
     constexpr auto getStartAddress() const noexcept { return base_; }
     constexpr auto getEndAddress() const noexcept { return end_; }
     constexpr auto size() const noexcept { return size_; }
@@ -33,6 +31,11 @@ public:
      * @return True, if the input address is in this things memory space
      */
     virtual bool respondsTo(Address input) const noexcept;
+    size_t write(Address baseAddress, byte* buf, size_t amount) noexcept;
+    size_t read(Address baseAddress, byte* buf, size_t amount) noexcept;
+protected:
+    virtual size_t blockWrite(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
+    virtual size_t blockRead(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
 private:
     Address base_;
     Address end_;
