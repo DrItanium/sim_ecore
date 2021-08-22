@@ -1556,7 +1556,7 @@ void
 Core::storeShort(Address destination, ShortOrdinal value) {
     if ((destination & 1) == 0) {
         // yay! aligned
-        storeAligned(destination, value);
+        storeShortAligned(destination, value);
     } else {
         // store the components into memory
         storeByte(destination + 0, value)  ;

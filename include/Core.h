@@ -194,8 +194,8 @@ protected:
     virtual void storeAligned(Address destination, Ordinal value) = 0;
     ShortOrdinal loadShort(Address destination) noexcept;
     virtual void storeShort(Address destination, ShortOrdinal value);
-    virtual Ordinal load(Address destination);
-    virtual void store(Address destination, Ordinal value);
+    Ordinal load(Address destination);
+    void store(Address destination, Ordinal value);
 
     Register& getRegister(RegisterIndex targetIndex);
     const Register& getRegister(RegisterIndex targetIndex) const;
