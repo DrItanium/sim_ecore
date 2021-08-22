@@ -35,38 +35,39 @@
 #include "MemoryThing.h"
 
 /**
- * @brief A grand central m4 specific cache line
- */
-struct CacheLine {
-    static constexpr auto NumBytesPerCacheLine = 64;
-    static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
-    static constexpr auto Mask = NumBytesPerCacheLine - 1;
-    constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
-public:
-    static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
-    static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
-    constexpr auto valid() const noexcept { return backingStorage_; }
-    constexpr bool matches(Address other) const noexcept {
-        return valid() && (toCacheLineAddress(other) == address_);
-    }
-    void clear() noexcept;
-    void reset(Address newAddress, MemoryThing& newThing);
-    TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
-    TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal) const noexcept;
-    TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal) const noexcept;
-    void set(Address targetAddress, Ordinal value);
-    void set(Address targetAddress, ShortOrdinal value);
-    void set(Address targetAddress, ByteOrdinal value);
-private:
-    Address address_ = 0;
-    bool dirty_ = false;
-    MemoryThing* backingStorage_ = nullptr;
-    MemoryCell32 storage_[NumCellsPerCacheLine] = { 0 };
-};
-/**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
  */
 class GCM4SBCore : public SBCoreArduino {
+public:
+    /**
+     * @brief A grand central m4 specific cache line
+     */
+    struct CacheLine {
+        static constexpr auto NumBytesPerCacheLine = 64;
+        static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
+        static constexpr auto Mask = NumBytesPerCacheLine - 1;
+        constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
+    public:
+        static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
+        static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
+        constexpr auto valid() const noexcept { return backingStorage_; }
+        constexpr bool matches(Address other) const noexcept {
+            return valid() && (toCacheLineAddress(other) == address_);
+        }
+        void clear() noexcept;
+        void reset(Address newAddress, MemoryThing& newThing);
+        TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
+        TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal) const noexcept;
+        TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal) const noexcept;
+        void set(Address targetAddress, Ordinal value);
+        void set(Address targetAddress, ShortOrdinal value);
+        void set(Address targetAddress, ByteOrdinal value);
+    private:
+        Address address_ = 0;
+        bool dirty_ = false;
+        MemoryThing* backingStorage_ = nullptr;
+        MemoryCell32 storage_[NumCellsPerCacheLine] = { 0 };
+    };
 public:
     static constexpr Address RamSize = 64_MB;
     static constexpr Address RamStart = 0x0000'0000;
