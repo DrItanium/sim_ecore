@@ -60,7 +60,7 @@ public:
         void set(Address targetAddress, ByteOrdinal value);
         static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
         static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
-        constexpr bool valid() const noexcept { return backingStorage_; }
+        constexpr bool valid() const noexcept { return valid_; }
         constexpr bool matches(Address other) const noexcept {
             return valid() && (toCacheLineAddress(other) == address_);
         }
@@ -68,7 +68,7 @@ public:
          * @brief Returns true if the cache line is valid and flagged as dirty
          * @return true if the cache line is valid and the dirty flag has been set
          */
-        constexpr bool dirty() const noexcept { return valid() && dirty_; }
+        constexpr bool dirty() const noexcept { return dirty_; }
         void reset(Address newAddress, MemoryThing& newThing);
         void clear() noexcept;
     private:
@@ -76,6 +76,7 @@ public:
         Address address_ = 0;
         MemoryThing* backingStorage_ = nullptr;
         bool dirty_ = false;
+        bool valid_ = false;
     };
 
 public:

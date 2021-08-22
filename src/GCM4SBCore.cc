@@ -251,6 +251,13 @@ Ordinal
 GCM4SBCore::CacheLine::get(Address targetAddress, TreatAsOrdinal) const noexcept {
     // assume aligned
     CacheAddress addr(targetAddress);
+    Serial.print("Decomposed pair access: 0x");
+    Serial.print(addr.getOriginalAddress(), HEX);
+    Serial.print(" => {0x");
+    Serial.print(addr.getCellIndex(), HEX);
+    Serial.print(", 0x");
+    Serial.print(addr.getCellOffset(TreatAsByteOrdinal{}), HEX);
+    Serial.println("}");
     return storage_[addr.getCellIndex()].getOrdinalValue();
 }
 
@@ -272,6 +279,7 @@ GCM4SBCore::CacheLine::clear() noexcept {
     // We must do this after using part of the cacheline storage as a transfer buffer for setting up the live memory image
     // there will be garbage in memory here that can be interpreted as "legal" cache lines
     dirty_ = false;
+    valid_ = false;
     backingStorage_ = nullptr;
     address_ = 0;
     for (auto& cell : storage_) {
@@ -286,13 +294,14 @@ GCM4SBCore::CacheLine::reset(Address newAddress, MemoryThing &newThing) {
     // 2. compute the new base address using the new address
     // 3. use the new backing storage to load a cache line's worth of data into storage from teh new backing storage
     // 4. mark the line as clean and valid
-    if (dirty()) {
+    if (valid() && dirty()) {
         // okay so we have a valid dirty cache line, lets save it back to the underlying storage
         (void)backingStorage_->write(address_, reinterpret_cast<byte*>(storage_), sizeof(storage_));
         /// @todo check and see if we were able to write everything back to the underlying storage
         // at this point we've written back to the old backing storage
     }
     CacheAddress newAddr(newAddress);
+    valid_ = true;
     dirty_ = false;
     address_ = newAddr.getTagAddress();
     backingStorage_ = &newThing;
