@@ -33,13 +33,40 @@
 #include "Types.h"
 #include "SBCoreArduino.h"
 
+class MemoryThing {
+public:
+    virtual ~MemoryThing();
+    virtual size_t write(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
+    virtual size_t read(Address baseAddress, byte* buf, size_t amount) noexcept = 0;
+};
+/**
+ * @brief A grand central m4 specific cache line
+ */
 struct CacheLine {
-    constexpr CacheLine() noexcept : address_(0), dirty_(false), valid_(false), storage_{ 0 } { }
+    static constexpr auto NumBytesPerCacheLine = 64;
+    static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
+    static constexpr auto Mask = NumBytesPerCacheLine - 1;
+    constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
+public:
+    static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
+    static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
+    constexpr auto valid() const noexcept { return backingStorage_; }
+    constexpr bool matches(Address other) const noexcept {
+        return valid() && (toCacheLineAddress(other) == address_);
+    }
+    void clear() noexcept;
+    void reset(Address newAddress, MemoryThing& newThing);
+    TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
+    TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal) const noexcept;
+    TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal) const noexcept;
+    void set(Address targetAddress, Ordinal value);
+    void set(Address targetAddress, ShortOrdinal value);
+    void set(Address targetAddress, ByteOrdinal value);
+private:
     Address address_ = 0;
     bool dirty_ = false;
-    bool valid_ = false;
-    byte storage_[32] = { 0 };
-    void clear() noexcept;
+    MemoryThing* backingStorage_ = nullptr;
+    MemoryCell32 storage_[NumCellsPerCacheLine] = { 0 };
 };
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4

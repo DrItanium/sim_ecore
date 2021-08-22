@@ -217,15 +217,6 @@ GCM4SBCore::toRAMOffset(Address target) noexcept{
 }
 GCM4SBCore::~GCM4SBCore() noexcept {}
 GCM4SBCore::GCM4SBCore() : Parent() {}
-#if 0
-void
-GCM4SBCore::CacheLine::clear() noexcept {
-    valid_ = false;
-    valid_ = false;
-    address_ = 0;
-    for (int i = 0; i < 32; ++i) {
-        storage_[i] = 0;
-    }
-}
-#endif
+
+MemoryThing::~MemoryThing() {}
 #endif

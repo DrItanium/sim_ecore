@@ -288,7 +288,7 @@ union MemoryCell32 {
     static constexpr uint8_t NumByteOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ByteOrdinal >;
     static constexpr uint8_t NumByteIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ByteInteger>;
 public:
-    constexpr explicit MemoryCell32(Ordinal value = 0) noexcept : raw(value) { }
+    constexpr MemoryCell32(Ordinal value = 0) noexcept : raw(value) { }
     constexpr MemoryCell32(ShortOrdinal lower, ShortOrdinal upper) noexcept : ordinalShorts{lower, upper} { }
     constexpr MemoryCell32(ByteOrdinal lowest, ByteOrdinal lower, ByteOrdinal higher, ByteOrdinal highest)  noexcept : ordinalBytes{lowest, lower, higher, highest} { }
     constexpr Ordinal getOrdinalValue() const noexcept { return raw; }
