@@ -17,7 +17,7 @@ public:
     MemoryThing() = default;
     virtual ~MemoryThing();
     constexpr auto getStartAddress() const noexcept { return base_; }
-    constexpr auto getEndAddress() const noexcept { return end_; }
+    virtual Address getEndAddress() const noexcept { return end_; }
     constexpr auto size() const noexcept { return size_; }
     /**
      * @brief Converts an absolute address to one relative to this memory thing
