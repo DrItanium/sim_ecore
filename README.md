@@ -35,6 +35,7 @@ There are two major targets:
 
 1. Desktop (normal application)
 2. Grand Central M4 / Arduino 
+3. ~~Atmega1284p~~ (Strange hanging on first instruction invocation, serial goes nuts and stops responding)
 
 The emulator is designed in such a way so that the actual emulation core is written in C++14/17 with a single dependency
 on cstdint to make cross platform trivial (C99 and later). Since it started as a way to exercise different testing scenarios
