@@ -7,5 +7,12 @@
 #ifdef ARDUINO
 #include <Arduino.h>
 #include "MemoryThing.h"
+
+class MemoryMappedFileThing : public MemoryThing {
+public:
+    using MemoryThing::MemoryThing;
+};
+#elif defined(DESKTOP_BUILD)
+/// @todo implement here
 #endif
 #endif //SIM3_MEMORYMAPPEDFILETHING_H
