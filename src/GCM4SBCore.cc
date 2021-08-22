@@ -257,8 +257,10 @@ GCM4SBCore::CacheLine::get(Address targetAddress, TreatAsOrdinal) const noexcept
     Serial.print(addr.getCellIndex(), HEX);
     Serial.print(", 0x");
     Serial.print(addr.getCellOffset(TreatAsByteOrdinal{}), HEX);
-    Serial.println("}");
-    return storage_[addr.getCellIndex()].getOrdinalValue();
+    Serial.print("} => 0x");
+    auto result = storage_[addr.getCellIndex()].getOrdinalValue();
+    Serial.println(result, HEX);
+    return result;
 }
 
 ShortOrdinal
