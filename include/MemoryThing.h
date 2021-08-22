@@ -21,13 +21,22 @@ public:
     constexpr auto getStartAddress() const noexcept { return base_; }
     constexpr auto getEndAddress() const noexcept { return end_; }
     constexpr auto size() const noexcept { return size_; }
+    /**
+     * @brief Converts an absolute address to one relative to this memory thing
+     * @param input The aboslute address
+     * @return The address relative to the start of this memory thing's mapping
+     */
     virtual Address translateAddress(Address input) const noexcept;
+    /**
+     * @brief Does the given address fall within the mapping of this memory thing
+     * @param input The address to check
+     * @return True, if the input address is in this things memory space
+     */
     virtual bool respondsTo(Address input) const noexcept;
 private:
     Address base_;
     Address end_;
     Address size_;
-    Address mask_;
 };
 
 #endif //SIM3_MEMORYTHING_H
