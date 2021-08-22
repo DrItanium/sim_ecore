@@ -212,20 +212,47 @@ GCM4SBCore::getCacheLine(Address target) noexcept {
 
 void
 GCM4SBCore::CacheLine::set(Address targetAddress, Ordinal value) {
+    // assume aligned
     CacheAddress addr(targetAddress);
     dirty_ = true;
+    storage_[addr.getCellIndex()].setOrdinalValue(value);
 }
 
 void
 GCM4SBCore::CacheLine::set(Address targetAddress, ShortOrdinal value) {
+    // assume aligned
     CacheAddress addr(targetAddress);
     dirty_ = true;
-
+    // just shift by one since we can safely assume it is aligned as that is the only way
+    // to call this method through the memory system gestalt
+    storage_[addr.getCellIndex()].setShortOrdinal(value, addr.getCellOffset(TreatAsShortOrdinal{}));
 }
 
 void
 GCM4SBCore::CacheLine::set(Address targetAddress, ByteOrdinal value) {
     CacheAddress addr(targetAddress);
     dirty_ = true;
+    storage_[addr.getCellIndex()].setByteOrdinal(value, addr.getCellOffset(TreatAsByteOrdinal{}));
 }
+
+Ordinal
+GCM4SBCore::CacheLine::get(Address targetAddress, TreatAsOrdinal) const noexcept {
+    // assume aligned
+    CacheAddress addr(targetAddress);
+    return storage_[addr.getCellIndex()].getOrdinalValue();
+}
+
+ShortOrdinal
+GCM4SBCore::CacheLine::get(Address targetAddress, TreatAsShortOrdinal thingy) const noexcept {
+    CacheAddress addr(targetAddress);
+    return storage_[addr.getCellIndex()].getShortOrdinal(addr.getCellOffset(thingy));
+}
+
+ByteOrdinal
+GCM4SBCore::CacheLine::get(Address targetAddress, TreatAsByteOrdinal thingy) const noexcept {
+    CacheAddress addr(targetAddress);
+    return storage_[addr.getCellIndex()].getByteOrdinal(addr.getCellOffset(thingy));
+
+}
+
 #endif

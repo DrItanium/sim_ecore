@@ -117,7 +117,8 @@ private:
         constexpr auto getCacheIndex() const noexcept { return index; }
         constexpr auto getByteOffset() const noexcept { return offset; }
         constexpr auto getCellIndex() const noexcept { return tag.cellIndex; }
-        constexpr auto getCellOffset() const noexcept { return tag.cellOffset; }
+        constexpr auto getCellOffset(TreatAsByteOrdinal) const noexcept { return tag.cellOffset; }
+        constexpr auto getCellOffset(TreatAsShortOrdinal) const noexcept { return tag.cellOffset >> 1; }
     private:
         Address value_;
         struct {
