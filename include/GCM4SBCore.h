@@ -121,24 +121,19 @@ private:
     union CacheAddress {
         constexpr explicit CacheAddress(Address target) noexcept : value_(target) { }
         constexpr auto getOriginalAddress() const noexcept { return value_; }
-        constexpr auto getTagAddress () const noexcept { return tag.address; }
+        constexpr auto getTagAddress () const noexcept { return value_ & ~(CacheLine::Mask); }
         constexpr auto getCacheIndex() const noexcept { return index; }
-        constexpr auto getByteOffset() const noexcept { return offset; }
-        constexpr auto getCellIndex() const noexcept { return tag.cellIndex; }
-        constexpr auto getCellOffset(TreatAsByteOrdinal) const noexcept { return tag.cellOffset; }
-        constexpr auto getCellOffset(TreatAsShortOrdinal) const noexcept { return tag.cellOffset >> 1; }
+        constexpr auto getCellIndex() const noexcept { return cellIndex; }
+        constexpr auto getCellOffset(TreatAsByteOrdinal) const noexcept { return cellOffset; }
+        constexpr auto getCellOffset(TreatAsShortOrdinal) const noexcept { return cellOffset >> 1; }
     private:
         Address value_;
         struct {
-            Address offset : CacheLine::NumBitsForCacheLineOffset;
+            Address cellOffset : CacheLine::NumBitsForCellOffset;
+            Address cellIndex : CacheLine::NumBitsForCellIndex;
             Address index : NumBitsForCacheLineIndex;
             Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
         };
-        struct {
-            Address cellOffset : CacheLine::NumBitsForCellOffset;
-            Address cellIndex : CacheLine::NumBitsForCellIndex;
-            Address address :  (32 - CacheLine::NumBitsForCacheLineOffset);
-        } tag;
     };
 private:
     MemoryMappedFileThing memoryImage_;

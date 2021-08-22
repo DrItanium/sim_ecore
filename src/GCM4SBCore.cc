@@ -306,6 +306,8 @@ GCM4SBCore::CacheLine::reset(Address newAddress, MemoryThing &newThing) {
     valid_ = true;
     dirty_ = false;
     address_ = newAddr.getTagAddress();
+    Serial.print("NEW ADDRESS: 0x");
+    Serial.println(address_, HEX);
     backingStorage_ = &newThing;
     (void)backingStorage_->read(address_, reinterpret_cast<byte*>(storage_), sizeof(storage_));
     /// @todo check and see if we were able to read a full cache line from underlying storage
