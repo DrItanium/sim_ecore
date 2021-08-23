@@ -69,10 +69,6 @@ public:
         RegisterFrame& getUnderlyingFrame() noexcept { return underlyingFrame; }
         const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
         constexpr auto isValid() const noexcept { return valid_; }
-        auto* getNext() const noexcept { return next_; }
-        auto* getPrevious() const noexcept { return prev_; }
-        void setNext(LocalRegisterPack& next) noexcept { next_ = &next; }
-        void setPrev(LocalRegisterPack& prev) noexcept { prev_ = &prev; }
         void invalidate() noexcept {
             valid_ = false;
             /// @todo disable this part of the code to improve performance at the cost of leaking state
@@ -82,8 +78,6 @@ public:
         }
     private:
         RegisterFrame underlyingFrame;
-        LocalRegisterPack* next_ = nullptr;
-        LocalRegisterPack* prev_ = nullptr;
         bool valid_ = false;
     };
 public:
@@ -288,12 +282,14 @@ private:
 protected:
     void clearLocalRegisters() noexcept;
 private:
+    static constexpr Ordinal NumRegisterFrames = 256;
+    RegisterFrame& getLocals() noexcept;
+    const RegisterFrame& getLocals() const noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
     ProcessControls pc_;
     TraceControls tc_;
-    LocalRegisterPack* currentFrame = nullptr;
     // use a circular queue to store the last n local registers "on-chip"
     RegisterFrame globals;
 #ifdef NUMERICS_ARCHITECTURE
@@ -302,6 +298,7 @@ protected:
     Ordinal advanceIPBy = 0;
     Ordinal salign_;
     Ordinal c_;
-    LocalRegisterPack frames[4];
+    Ordinal currentFrameIndex_ = 0;
+    LocalRegisterPack frames[NumRegisterFrames];
 };
 #endif //SIM3_CORE_H

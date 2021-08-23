@@ -69,7 +69,7 @@ Core::cmpo(Ordinal src1, Ordinal src2) noexcept {
 Register&
 Core::getRegister(RegisterIndex targetIndex) {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getRegister(static_cast<uint8_t>(targetIndex));
+        return getLocals().getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getRegister(static_cast<uint8_t>(targetIndex));
     } else
@@ -90,7 +90,7 @@ Core::getRegister(RegisterIndex targetIndex) {
 DoubleRegister&
 Core::getDoubleRegister(RegisterIndex targetIndex) {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getDoubleRegister(static_cast<int>(targetIndex));
+        return getLocals().getDoubleRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getDoubleRegister(static_cast<int>(targetIndex));
     } else
@@ -112,7 +112,7 @@ Core::getDoubleRegister(RegisterIndex targetIndex) {
 TripleRegister&
 Core::getTripleRegister(RegisterIndex targetIndex) {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getTripleRegister(static_cast<int>(targetIndex));
+        return getLocals().getTripleRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getTripleRegister(static_cast<int>(targetIndex));
     } else
@@ -133,7 +133,7 @@ Core::getTripleRegister(RegisterIndex targetIndex) {
 QuadRegister&
 Core::getQuadRegister(RegisterIndex targetIndex) {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getQuadRegister(static_cast<int>(targetIndex));
+        return getLocals().getQuadRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getQuadRegister(static_cast<int>(targetIndex));
     } else
@@ -154,7 +154,7 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
 const Register&
 Core::getRegister(RegisterIndex targetIndex) const {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getRegister(static_cast<uint8_t>(targetIndex));
+        return getLocals().getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isLiteral(targetIndex)) {
@@ -172,7 +172,7 @@ Core::getRegister(RegisterIndex targetIndex) const {
 const DoubleRegister&
 Core::getDoubleRegister(RegisterIndex targetIndex) const {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getDoubleRegister(static_cast<uint8_t>(targetIndex));
+        return getLocals().getDoubleRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getDoubleRegister(static_cast<uint8_t>(targetIndex));
     } else if (isLiteral(targetIndex)) {
@@ -191,7 +191,7 @@ Core::getDoubleRegister(RegisterIndex targetIndex) const {
 const TripleRegister&
 Core::getTripleRegister(RegisterIndex targetIndex) const {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getTripleRegister(static_cast<uint8_t>(targetIndex));
+        return getLocals().getTripleRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getTripleRegister(static_cast<uint8_t>(targetIndex));
     } else if (isLiteral(targetIndex)) {
@@ -210,7 +210,7 @@ Core::getTripleRegister(RegisterIndex targetIndex) const {
 const QuadRegister&
 Core::getQuadRegister(RegisterIndex targetIndex) const {
     if (isLocalRegister(targetIndex)) {
-        return currentFrame->getUnderlyingFrame().getQuadRegister(static_cast<uint8_t>(targetIndex));
+        return getLocals().getQuadRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getQuadRegister(static_cast<uint8_t>(targetIndex));
     } else if (isLiteral(targetIndex)) {
@@ -919,7 +919,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 /// @todo implement support for caching register frames
                 // okay we have to properly mask out the frame pointer address like we do for ret
                 auto targetAddress = fp & (~c_);
-                saveRegisterFrame(currentFrame->getUnderlyingFrame(), targetAddress);
+                saveRegisterFrame(getLocals(), targetAddress);
                 clearLocalRegisters();
                 ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
                 /// @todo expand pfp and fp to accurately model how this works
@@ -939,7 +939,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 getRIP().setOrdinal(rip); // we need to save the result correctly
                 /// @todo implement support for caching register frames
                 auto targetAddress = fp & (~c_);
-                saveRegisterFrame(currentFrame->getUnderlyingFrame(), targetAddress);
+                saveRegisterFrame(getLocals(), targetAddress);
                 clearLocalRegisters();
                 ip_.setOrdinal(memAddr);
                 getPFP().setOrdinal(fp);
@@ -1338,7 +1338,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     }
                     auto frameAddress = getFramePointer().getOrdinal() & (~c_); // make sure the lowest n bits are ignored
                     /// @todo implement support for caching register frames
-                    saveRegisterFrame(currentFrame->getUnderlyingFrame(), frameAddress);
+                    saveRegisterFrame(getLocals(), frameAddress);
                     clearLocalRegisters();
                     /// @todo expand pfp and fp to accurately model how this works
                     PreviousFramePointer pfp(getPFP());
@@ -1361,7 +1361,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                     // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
                     // we have to use the "c_" parameter for this
                     auto actualAddress = getFramePointer().getOrdinal() & (~c_);
-                    restoreRegisterFrame(currentFrame->getUnderlyingFrame(), actualAddress);
+                    restoreRegisterFrame(getLocals(), actualAddress);
                     auto returnValue = getRIP().getOrdinal();
                     ip_.setOrdinal(returnValue);
                     advanceIPBy = 0; // we already computed ahead of time where we will return to
@@ -1461,7 +1461,7 @@ Core::getInterruptStackPointer() {
 
 void
 Core::clearLocalRegisters() noexcept {
-    for (auto& reg : currentFrame->getUnderlyingFrame().gprs) {
+    for (auto& reg : getLocals().gprs) {
         reg.setOrdinal(0);
     }
 }
@@ -1562,29 +1562,19 @@ Core::shlo(const Instruction &inst) noexcept {
 
 
 
-Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) {
-    // setup the register frame circular queue for four entries
-    frames[0].setNext(frames[1]);
-    frames[0].setPrev(frames[3]);
-    frames[1].setNext(frames[2]);
-    frames[1].setPrev(frames[0]);
-    frames[2].setNext(frames[3]);
-    frames[2].setPrev(frames[1]);
-    frames[3].setNext(frames[0]);
-    frames[3].setPrev(frames[2]);
-    currentFrame = &frames[0];
-}
+Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) { }
 
 void
 Core::flushreg() noexcept {
     /// @todo expand this instruction to dump saved register sets to stack in the right places
     // currently this does nothing because I haven't implemented the register frame stack yet
-    for (auto* curr = currentFrame->getNext(); curr != currentFrame; curr = curr->getNext()) {
+    for (Ordinal curr = currentFrameIndex_ + 1; curr != currentFrameIndex_; curr = ((curr + 1) % NumRegisterFrames)) {
         //saveRegisterFrame(curr->getUnderlyingFrame(), curr->getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP).get
-        if (curr->isValid()) {
-            PreviousFramePointer pfp(curr->getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP)));
-            saveRegisterFrame(curr->getUnderlyingFrame(), pfp.getAddress());
-            curr->invalidate();
+        auto& theLocal = frames[curr];
+        if (theLocal.isValid()) {
+            PreviousFramePointer pfp(theLocal.getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP)));
+            saveRegisterFrame(theLocal.getUnderlyingFrame(), pfp.getAddress());
+            theLocal.invalidate();
         }
     }
 }
@@ -1603,4 +1593,13 @@ Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {
         advanceIPBy = 0;
         ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     }
+}
+
+RegisterFrame&
+Core::getLocals() noexcept {
+    return frames[currentFrameIndex_].getUnderlyingFrame();
+}
+const RegisterFrame&
+Core::getLocals() const noexcept {
+    return frames[currentFrameIndex_].getUnderlyingFrame();
 }
