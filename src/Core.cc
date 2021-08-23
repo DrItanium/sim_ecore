@@ -861,18 +861,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::flushreg:
-            [this]() {
-                /// @todo expand this instruction to dump saved register sets to stack in the right places
-                // currently this does nothing because I haven't implemented the register frame stack yet
-                for (auto* curr = currentFrame->getNext(); curr != currentFrame; curr = curr->getNext()) {
-                    //saveRegisterFrame(curr->getUnderlyingFrame(), curr->getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP).get
-                    if (curr->isValid()) {
-                        PreviousFramePointer pfp(curr->getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP)));
-                        saveRegisterFrame(curr->getUnderlyingFrame(), pfp.getAddress());
-                        curr->invalidate();
-                    }
-                }
-            }();
+            flushreg();
             break;
         case Opcode::fmark:
             [this]() {
@@ -1599,4 +1588,18 @@ Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_
     frames[3].setNext(frames[0]);
     frames[3].setPrev(frames[2]);
     currentFrame = &frames[0];
+}
+
+void
+Core::flushreg() noexcept {
+    /// @todo expand this instruction to dump saved register sets to stack in the right places
+    // currently this does nothing because I haven't implemented the register frame stack yet
+    for (auto* curr = currentFrame->getNext(); curr != currentFrame; curr = curr->getNext()) {
+        //saveRegisterFrame(curr->getUnderlyingFrame(), curr->getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP).get
+        if (curr->isValid()) {
+            PreviousFramePointer pfp(curr->getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP)));
+            saveRegisterFrame(curr->getUnderlyingFrame(), pfp.getAddress());
+            curr->invalidate();
+        }
+    }
 }
