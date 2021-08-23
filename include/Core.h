@@ -73,6 +73,13 @@ public:
         auto* getPrevious() const noexcept { return prev_; }
         void setNext(LocalRegisterPack& next) noexcept { next_ = &next; }
         void setPrev(LocalRegisterPack& prev) noexcept { prev_ = &prev; }
+        void invalidate() noexcept {
+            valid_ = false;
+            /// @todo disable this part of the code to improve performance at the cost of leaking state
+            for (auto& a : underlyingFrame.gprs) {
+                a.setOrdinal(0);
+            }
+        }
     private:
         RegisterFrame underlyingFrame;
         LocalRegisterPack* next_ = nullptr;
