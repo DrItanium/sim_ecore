@@ -322,21 +322,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #undef X
 #undef Z
     };
-    auto cmpibx = [this, &instruction](uint8_t mask) noexcept {
-        auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
-        auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
-        cmpi(src1, src2);
-        if ((mask & ac_.getConditionCode()) != 0) {
-            // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
-            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-
-            // I do not know why the Sx manual shows adding four while the hx manual does not
-            // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
-            // this will fix an off by four problem I'm currently encountering
-            advanceIPBy = 0;
-            ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
-        }
-    };
     auto condBranch = [this, &instruction](uint8_t mask) {
         if ((ac_.getConditionCode()& mask) != 0) {
             ipRelativeBranch(instruction.getDisplacement()) ;
@@ -553,28 +538,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             cmpobx(instruction, 0b110);
             break;
         case Opcode::cmpibno:
-            cmpibx(0b000);
+            cmpibx(instruction, 0b000);
             break;
         case Opcode::cmpibg:
-            cmpibx(0b001);
+            cmpibx(instruction, 0b001);
             break;
         case Opcode::cmpibe:
-            cmpibx(0b010);
+            cmpibx(instruction, 0b010);
             break;
         case Opcode::cmpibge:
-            cmpibx(0b011);
+            cmpibx(instruction, 0b011);
             break;
         case Opcode::cmpibl:
-            cmpibx(0b100);
+            cmpibx(instruction, 0b100);
             break;
         case Opcode::cmpibne:
-            cmpibx(0b101);
+            cmpibx(instruction, 0b101);
             break;
         case Opcode::cmpible:
-            cmpibx(0b110);
+            cmpibx(instruction, 0b110);
             break;
         case Opcode::cmpibo:
-            cmpibx(0b111);
+            cmpibx(instruction, 0b111);
             break;
         case Opcode::concmpi:
             [this, &instruction]() {
@@ -1601,5 +1586,21 @@ Core::flushreg() noexcept {
             saveRegisterFrame(curr->getUnderlyingFrame(), pfp.getAddress());
             curr->invalidate();
         }
+    }
+}
+void
+Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {
+    auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
+    auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
+    cmpi(src1, src2);
+    if ((mask & ac_.getConditionCode()) != 0) {
+        // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+        // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+
+        // I do not know why the Sx manual shows adding four while the hx manual does not
+        // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
+        // this will fix an off by four problem I'm currently encountering
+        advanceIPBy = 0;
+        ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     }
 }

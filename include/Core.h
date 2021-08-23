@@ -265,6 +265,7 @@ private:
     void shro(const Instruction& inst) noexcept;
     void shlo(const Instruction& inst) noexcept;
     void flushreg() noexcept;
+    void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;
     void ipRelativeBranch(Integer displacement) noexcept {
         advanceIPBy = 0;
         ip_.setInteger(ip_.getInteger() + displacement);
