@@ -50,7 +50,11 @@ using LongReal = double;
 // right now, we can just exploit the fact that extended real and long real are different sizes on x86_64, just like i960
 using ExtendedReal = long double;
 #endif
-// taken from https://stackoverflow.com/questions/23781506/compile-time-computing-of-number-of-bits-needed-to-encode-n-different-states
+constexpr Ordinal bitsNeeded(Ordinal n) noexcept {
+    // taken from https://stackoverflow.com/questions/23781506/compile-time-computing-of-number-of-bits-needed-to-encode-n-different-states
+    return n <= 1 ? 0 : 1 + bitsNeeded((n+1) / 2);
+}
+static_assert(bitsNeeded(64) == 6, "Sanity check of bitsNeeded(64) failed");
 /**
  * @brief List of opcodes translated from their 8/12-bit equivalents to a standard 12-bit opcode in all cases; Non-REG instructions are shifted left by four bits
  */
