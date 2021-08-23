@@ -71,12 +71,32 @@ public:
         constexpr auto isValid() const noexcept { return valid_; }
         void invalidate() noexcept {
             valid_ = false;
+            framePointerAddress_ = 0;
             /// @todo disable this part of the code to improve performance at the cost of leaking state
             for (auto& a : underlyingFrame.gprs) {
                 a.setOrdinal(0);
             }
         }
+        constexpr auto getFramePointerAddress() const noexcept { return framePointerAddress_; }
     private:
+        template<typename Fn>
+        void commit(Fn commitRegister) {
+            auto pointerAddress = framePointerAddress_;
+            for (auto& a : underlyingFrame.gprs) {
+                commitRegister(pointerAddress, a.getOrdinal());
+                pointerAddress += sizeof(Ordinal);
+            }
+        }
+        template<typename Fn>
+        void restore(Address fp, Fn loadRegister) {
+            auto currentAddress = fp;
+            for (auto& a : underlyingFrame.gprs) {
+                a.setOrdinal(loadRegister(currentAddress));
+                currentAddress += sizeof(Ordinal);
+            }
+        }
+    private:
+        Address framePointerAddress_ = 0;
         RegisterFrame underlyingFrame;
         bool valid_ = false;
     };
@@ -285,6 +305,8 @@ private:
     static constexpr Ordinal NumRegisterFrames = 256;
     RegisterFrame& getLocals() noexcept;
     const RegisterFrame& getLocals() const noexcept;
+    void enterCall() noexcept;
+    void exitCall() noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
