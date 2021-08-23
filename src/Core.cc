@@ -1581,3 +1581,15 @@ Core::shlo(const Instruction &inst) noexcept {
 
 
 
+Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) {
+    // setup the register frame circular queue for four entries
+    frames[0].setNext(frames[1]);
+    frames[0].setPrev(frames[3]);
+    frames[1].setNext(frames[2]);
+    frames[1].setPrev(frames[0]);
+    frames[2].setNext(frames[3]);
+    frames[2].setPrev(frames[1]);
+    frames[3].setNext(frames[0]);
+    frames[3].setPrev(frames[2]);
+    currentFrame = &frames[0];
+}

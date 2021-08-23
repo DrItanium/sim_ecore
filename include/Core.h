@@ -60,6 +60,26 @@ enum class FaultType : Ordinal {
 };
 class Core {
 public:
+    /**
+     * @brief The main node in a circular queue used to keep track of the on chip register entries
+     */
+    class LocalRegisterPack {
+    public:
+        LocalRegisterPack() = default;
+        RegisterFrame& getUnderlyingFrame() noexcept { return underlyingFrame; }
+        const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
+        constexpr auto isValid() const noexcept { return valid_; }
+        auto* getNext() const noexcept { return next_; }
+        auto* getPrevious() const noexcept { return prev_; }
+        void setNext(LocalRegisterPack& next) noexcept { next_ = &next; }
+        void setPrev(LocalRegisterPack& prev) noexcept { prev_ = &prev; }
+    private:
+        RegisterFrame underlyingFrame;
+        LocalRegisterPack* next_ = nullptr;
+        LocalRegisterPack* prev_ = nullptr;
+        bool valid_ = false;
+    };
+public:
     static constexpr Register OrdinalLiterals[32] {
 #define X(base) Register(base + 0), Register(base + 1), Register(base + 2), Register(base + 3)
             X(0),
@@ -110,7 +130,7 @@ public:
     };
 public:
 public:
-    explicit Core(Ordinal salign = 4) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) { };
+    explicit Core(Ordinal salign = 4);
     virtual ~Core() = default;
 public:
     void run();
@@ -264,7 +284,8 @@ protected:
     ArithmeticControls ac_;
     ProcessControls pc_;
     TraceControls tc_;
-    RegisterFrame locals;
+    LocalRegisterPack* currentFrame = nullptr;
+    // use a circular queue to store the last n local registers "on-chip"
     RegisterFrame globals;
 #ifdef NUMERICS_ARCHITECTURE
     ExtendedReal fpRegs[4] = { 0 };
@@ -272,5 +293,6 @@ protected:
     Ordinal advanceIPBy = 0;
     Ordinal salign_;
     Ordinal c_;
+    LocalRegisterPack frames[4];
 };
 #endif //SIM3_CORE_H
