@@ -80,7 +80,7 @@ public:
     };
 
 public:
-    static constexpr Address RamSize = 64_MB;
+    static constexpr Address RamSize = 8_MB;
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
 public:
