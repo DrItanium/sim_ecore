@@ -31,8 +31,10 @@
 #include "Types.h"
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
+//#define USE_PSRAM_CHIP
+#ifdef USE_PSRAM_CHIP
 #include "PSRAMChip.h"
-#define USE_PSRAM_CHIP
+#endif
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
