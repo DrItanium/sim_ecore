@@ -28,7 +28,9 @@
 #define SIM3_SBCORE_H
 #ifdef DESKTOP_BUILD
 #include "DesktopSBCore.h"
-#elif defined(ARDUINO)
+#elif defined(ARDUINO_NRF52832_FEATHER)
+#include "NRF52832FeatherSBCore.h"
+#elif defined(ARDUINO_GRAND_CENTRAL_M4)
 #include "GCM4SBCore.h"
 #else
 #error "NO VALID SBCORE IMPLEMENTATION FOR GIVEN TARGET"
