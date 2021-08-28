@@ -34,6 +34,7 @@
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
 #include "PSRAMChip.h"
+#define USE_PSRAM_CHIP
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
@@ -136,8 +137,13 @@ private:
             Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
         };
     };
+#ifndef USE_PSRAM_CHIP
+    using RAM = MemoryMappedFileThing;
+#else
+    using RAM = PSRAMChip<53>;
+#endif
 private:
-    MemoryMappedFileThing memoryImage_;
+    RAM memoryImage_;
     // we have so much space available, let's have some fun with this
     union {
         byte transferCache[TransferCacheSize] = { 0 };

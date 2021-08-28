@@ -47,13 +47,18 @@ GCM4SBCore::begin() {
         Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
         while (true) { delay(1000); }
     } else {
-#if 0
         memoryImage_.begin();
+#ifndef USE_PSRAM_CHIP
         Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
+#endif
         // now we copy from the pristine image over to the new one in blocks
         Address size = theFile.size();
         constexpr auto CacheSize = TransferCacheSize;
+#ifndef USE_PSRAM_CHIP
         Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
+#else
+        Serial.println(F("TRANSFERRING IMAGE TO PSRAM!"));
+#endif
         for (Address i = 0; i < size; i += CacheSize) {
             auto numRead = theFile.read(transferCache, CacheSize);
             if (numRead < 0) {
@@ -70,36 +75,6 @@ GCM4SBCore::begin() {
         // make a new copy of this file
         theFile.close();
         while (SD.card()->isBusy());
-#else
-        pinMode(53, OUTPUT);
-        digitalWrite(53, HIGH);
-        delayMicroseconds(200);
-        digitalWrite(53, LOW);
-        SPI.transfer(0x66);
-        digitalWrite(53, HIGH);
-        digitalWrite(53, LOW);
-        SPI.transfer(0x99);
-        digitalWrite(53, HIGH);
-        Address size = theFile.size();
-        constexpr auto CacheSize = TransferCacheSize;
-        Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
-        for (Address i = 0; i < size; i += CacheSize) {
-            auto numRead = theFile.read(transferCache, CacheSize);
-            if (numRead < 0) {
-                SD.errorHalt();
-            }
-            while (SD.card()->isBusy());
-            digitalWrite(53, LOW);
-            SPI.transfer(0x02);
-            SPI.transfer()
-            // wait until we are ready to
-            Serial.print(F("."));
-        }
-        Serial.println(F("CONSTRUCTION COMPLETE!!!"));
-        // make a new copy of this file
-        theFile.close();
-        while (SD.card()->isBusy());
-#endif
         // okay also clear out the cache lines since the transfer buffer is shared with the cache
         for (auto& line : lines_) {
             line.clear();
@@ -238,7 +213,11 @@ GCM4SBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 GCM4SBCore::~GCM4SBCore() noexcept {}
+#ifndef USE_PSRAM_CHIP
 GCM4SBCore::GCM4SBCore() : Parent(), memoryImage_(0,64_MB, 64_MB,"live.bin", FILE_WRITE) {}
+#else
+GCM4SBCore::GCM4SBCore() : Parent(), memoryImage_(0) {}
+#endif
 
 GCM4SBCore::CacheLine&
 GCM4SBCore::getCacheLine(Address target) noexcept {
