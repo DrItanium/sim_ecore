@@ -42,6 +42,7 @@
 class NRF52832FeatherSBCore : public SBCoreArduino {
 public:
     static constexpr auto SDCardEnablePin = 27;
+    static constexpr auto PSRAMEnablePin = 15;
 public:
     /**
      * @brief A grand central m4 specific cache line
@@ -142,7 +143,7 @@ private:
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
 #else
-    using RAM = PSRAMChip<12>;
+    using RAM = PSRAMChip<PSRAMEnablePin>;
 #endif
 private:
     RAM memoryImage_;
