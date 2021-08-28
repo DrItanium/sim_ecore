@@ -38,7 +38,7 @@ NRF52832FeatherSBCore::begin() {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
     SPI.begin();
-    while (!SD.begin(5)) {
+    while (!SD.begin(SDCardEnablePin)) {
         Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
     }

@@ -41,6 +41,8 @@
  */
 class NRF52832FeatherSBCore : public SBCoreArduino {
 public:
+    static constexpr auto SDCardEnablePin = 27;
+public:
     /**
      * @brief A grand central m4 specific cache line
      */
