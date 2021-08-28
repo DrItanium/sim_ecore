@@ -305,6 +305,7 @@ private:
     static constexpr Ordinal NumRegisterFrames = 256;
     RegisterFrame& getLocals() noexcept;
     const RegisterFrame& getLocals() const noexcept;
+    /// @todo finish implementing these two functions
     void enterCall() noexcept;
     void exitCall() noexcept;
 protected:

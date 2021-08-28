@@ -33,6 +33,7 @@
 #include "Types.h"
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
+#include "PSRAMChip.h"
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
