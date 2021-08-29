@@ -1473,7 +1473,6 @@ Core::shlo(const Instruction &inst) noexcept {
 
 
 Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) {
-    // on initial boot, a
 }
 
 void
@@ -1671,7 +1670,7 @@ Core::exitCall() noexcept {
 #endif
     // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
-#if 0
+#if 1
     // okay we are done with the current frame so relinquish ownership
     frames[currentFrameIndex_].relinquishOwnership();
     getPreviousPack().restoreOwnership(targetAddress,
@@ -1704,7 +1703,7 @@ Core::enterCall(Address newFP) noexcept {
     Serial.print("NEW FP: 0x");
     Serial.println(newFP, HEX);
 #endif
-#if 0
+#if 1
     // this is much simpler than exiting, we just need to take control of the next register frame in the set
     getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
     // then increment the frame index
