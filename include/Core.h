@@ -226,8 +226,10 @@ protected:
         store(destination + 8, reg.getOrdinal(2));
     }
     virtual void store(Address destination, const QuadRegister& reg) {
-        storeLong(destination + 0, reg.getHalf(0));
-        storeLong(destination + 8, reg.getHalf(1));
+        store(destination + 0, reg.getOrdinal(0));
+        store(destination + 4, reg.getOrdinal(1));
+        store(destination + 8, reg.getOrdinal(2));
+        store(destination + 12, reg.getOrdinal(3));
     }
     virtual void storeShortInteger(Address destination, ShortInteger value) {
         union {
@@ -260,8 +262,10 @@ protected:
         reg.setOrdinal(load(destination + 8), 2);
     }
     virtual void load(Address destination, QuadRegister& reg) noexcept {
-        reg.setHalf(loadLong(destination + 0), 0);
-        reg.setHalf(loadLong(destination + 8), 1);
+        reg.setOrdinal(load(destination + 0), 0);
+        reg.setOrdinal(load(destination + 4), 1);
+        reg.setOrdinal(load(destination + 8), 2);
+        reg.setOrdinal(load(destination + 12), 3);
     }
     QuadRegister loadQuad(Address destination) noexcept {
         QuadRegister tmp;

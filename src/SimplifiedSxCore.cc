@@ -27,9 +27,11 @@
 
 void
 SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__ );
+#endif
 #endif
     clearLocalRegisters();
     systemAddressTableBase_ = sat;
@@ -40,34 +42,42 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     pc_.setPriority(31);
     pc_.setState(true); // needs to be set as interrupted
     auto thePointer = getInterruptStackPointer();
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("THE POINTER: 0x");
     Serial.println(thePointer, HEX);
+#endif
 #endif
     getRegister(RegisterIndex::FP).setOrdinal(thePointer);
     // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well
     getRegister(RegisterIndex::SP960).setOrdinal(thePointer + 64);
     getRegister(RegisterIndex::PFP).setOrdinal(thePointer);
     advanceIPBy = 0; // make sure that we don't do anything dumb at this point
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__ );
 #endif
+#endif
 }
 void
 SimplifiedSxCore::boot() {
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__ );
+#endif
 #endif
     if (!initialized_) {
         initialized_ = true;
         auto q = loadQuad(0);
         boot0(q.getOrdinal(0), q.getOrdinal(1), q.getOrdinal(3));
     }
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__ );
+#endif
 #endif
 }
 Ordinal
@@ -110,6 +120,7 @@ SimplifiedSxCore::synchronizedStore(Address destination, const Register &value) 
 
 void
 SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__ );
@@ -127,6 +138,7 @@ SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {
     Serial.println(message.getField4(), HEX);
     Serial.print("IAC FIELD5: 0x");
     Serial.println(message.getField5(), HEX);
+#endif
 #endif
     switch (message.getMessageType()) {
         case 0x89: // purge instruction cache
@@ -165,8 +177,10 @@ SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {
             break;
 
     }
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__ );
+#endif
 #endif
 }

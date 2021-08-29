@@ -292,10 +292,30 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
 }
 void
 Core::lda(const Instruction &inst) noexcept {
+#ifdef EMULATOR_TRACE
+#ifdef ARDUINO
+    Serial.print("ENTERING ");
+    Serial.println(__PRETTY_FUNCTION__);
+    Serial.print("IP: 0x");
+    Serial.println(ip_.getOrdinal(), HEX);
+#endif
+#endif
     // compute the effective address (memory address) and store it in destination
     auto& dest = getRegister(inst.getSrcDest(false));
     auto addr = computeMemoryAddress(inst);
+#ifdef EMULATOR_TRACE
+#ifdef ARDUINO
+    Serial.print("ADDR: 0x");
+    Serial.println(addr, HEX);
+#endif
+#endif
     dest.setOrdinal(addr);
+#ifdef EMULATOR_TRACE
+#ifdef ARDUINO
+    Serial.print("EXITING ");
+    Serial.println(__PRETTY_FUNCTION__);
+#endif
+#endif
 }
 void
 Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
@@ -1236,6 +1256,17 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto src  = getSourceRegister(instruction.getSrc2()).getOrdinal(); // source address
                 auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF0; // align
                 QuadRegister temp = loadQuad(src);
+#ifdef EMULATOR_TRACE
+#ifdef ARDUINO
+                Serial.print("SRC ADDRESS: 0x");
+                Serial.println(src, HEX);
+                Serial.print("QUAD REGISTER CONTENTS: 0x");
+                Serial.print(temp.getOrdinal(3), HEX);
+                Serial.print(temp.getOrdinal(2), HEX);
+                Serial.print(temp.getOrdinal(1), HEX);
+                Serial.println(temp.getOrdinal(0), HEX);
+#endif
+#endif
                 synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
                 ac_.setConditionCode(0b010);
@@ -1296,7 +1327,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             generateFault(FaultType::Operation_InvalidOpcode);
             break;
     }
-#if 0
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
@@ -1655,10 +1686,10 @@ Core::exitCall() noexcept {
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-    //frames[currentFrameIndex_].restoreOwnership(targetAddress,
-    //                                            [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
-    //                                            [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
-    restoreRegisterFrame(getLocals(), targetAddress);
+    frames[currentFrameIndex_].restoreOwnership(targetAddress,
+                                                [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
+                                                [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+    //restoreRegisterFrame(getLocals(), targetAddress);
 #endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
@@ -1682,9 +1713,9 @@ Core::enterCall(Address newFP) noexcept {
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-    //frames[currentFrameIndex_].takeOwnership(properFramePointerAddress(), [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
-    saveRegisterFrame(getLocals(), properFramePointerAddress());
-    clearLocalRegisters();
+    frames[currentFrameIndex_].takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+    //saveRegisterFrame(getLocals(), newFP);
+    //clearLocalRegisters();
 #endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
