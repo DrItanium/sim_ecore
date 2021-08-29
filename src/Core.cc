@@ -1590,8 +1590,8 @@ Core::ret() noexcept {
     syncf();
     PreviousFramePointer pfp(getPFP());
     auto restoreStandardFrame = [this]() {
-        auto returnValue = getRIP().getOrdinal();
         exitCall();
+        auto returnValue = getRIP().getOrdinal();
         ip_.setOrdinal(returnValue);
         advanceIPBy = 0; // we already computed ahead of time where we will return to
     };
@@ -1686,7 +1686,7 @@ Core::exitCall() noexcept {
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-#if 0
+#if 1
     restoreRegisterFrame(getLocals(), targetAddress);
 #else
     frames[currentFrameIndex_].restoreOwnership(targetAddress,
@@ -1716,7 +1716,7 @@ Core::enterCall(Address newFP) noexcept {
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-#if 0
+#if 1
     // save to where we currently are pointing
     saveRegisterFrame(getLocals(), properFramePointerAddress());
     // then clear the memory out
