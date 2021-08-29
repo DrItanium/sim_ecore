@@ -1566,12 +1566,9 @@ Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_
 
 void
 Core::flushreg() noexcept {
-    /// @todo expand this instruction to dump saved register sets to stack in the right places
-    // currently this does nothing because I haven't implemented the register frame stack yet
+    // clear all registers except the current one
     for (Ordinal curr = currentFrameIndex_ + 1; curr != currentFrameIndex_; curr = ((curr + 1) % NumRegisterFrames)) {
-        //saveRegisterFrame(curr->getUnderlyingFrame(), curr->getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP).get
-        auto& theLocal = frames[curr];
-        if (theLocal.isValid()) {
+        if (auto& theLocal = frames[curr]; theLocal.isValid()) {
             PreviousFramePointer pfp(theLocal.getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP)));
             saveRegisterFrame(theLocal.getUnderlyingFrame(), pfp.getAddress());
             theLocal.invalidate();
