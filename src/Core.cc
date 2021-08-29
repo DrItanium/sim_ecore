@@ -1686,10 +1686,10 @@ Core::exitCall() noexcept {
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-    frames[currentFrameIndex_].restoreOwnership(targetAddress,
-                                                [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
-                                                [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
-    //restoreRegisterFrame(getLocals(), targetAddress);
+    //frames[currentFrameIndex_].restoreOwnership(targetAddress,
+    //                                            [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
+    //                                            [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+    restoreRegisterFrame(getLocals(), targetAddress);
 #endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
@@ -1713,9 +1713,9 @@ Core::enterCall(Address newFP) noexcept {
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-    frames[currentFrameIndex_].takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
-    //saveRegisterFrame(getLocals(), newFP);
-    //clearLocalRegisters();
+    //frames[currentFrameIndex_].takeOwnership(properFramePointerAddress(), [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+    saveRegisterFrame(getLocals(), properFramePointerAddress());
+    clearLocalRegisters();
 #endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
