@@ -355,7 +355,7 @@ private:
     /**
      * @brief Number of register frames allocated "on-chip", shouldn't be too large as performance will suffer
      */
-    static constexpr Ordinal NumRegisterFrames = 4;
+    static constexpr Ordinal NumRegisterFrames = 32;
     [[nodiscard]] RegisterFrame& getLocals() noexcept;
     [[nodiscard]] const RegisterFrame& getLocals() const noexcept;
     [[nodiscard]] LocalRegisterPack& getNextPack() noexcept;

@@ -140,7 +140,7 @@ private:
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
 #else
-    using RAM = PSRAMChip<53, 5_MHz>;
+    using RAM = PSRAMChip<53, 20_MHz>;
 #endif
 private:
     RAM memoryImage_;
