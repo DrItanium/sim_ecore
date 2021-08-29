@@ -8,7 +8,7 @@
 #include <SPI.h>
 #include "MemoryThing.h"
 
-template<int pin, uint64_t MaxClockSpeed = 5_MHz>
+template<int pin, uint64_t MaxClockSpeed = 30_MHz>
 class PSRAMChip : public MemoryThing
 {
 public:

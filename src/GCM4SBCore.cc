@@ -60,15 +60,14 @@ GCM4SBCore::begin() {
         Serial.println(F("TRANSFERRING IMAGE TO PSRAM!"));
 #endif
         for (Address i = 0; i < size; i += CacheSize) {
+            while (SD.card()->isBusy());
             auto numRead = theFile.read(transferCache, CacheSize);
             if (numRead < 0) {
                 SD.errorHalt();
             }
-            while (SD.card()->isBusy());
             // wait until the sd card is ready again to transfer
             (void)memoryImage_.write(i, transferCache, numRead);
             // wait until we are ready to
-            while (SD.card()->isBusy());
             Serial.print(F("."));
         }
         Serial.println(F("CONSTRUCTION COMPLETE!!!"));
