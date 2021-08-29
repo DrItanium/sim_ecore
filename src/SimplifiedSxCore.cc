@@ -48,7 +48,16 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     Serial.println(thePointer, HEX);
 #endif
 #endif
+    // also make sure that we set the target pack to zero
+    currentFrameIndex_ = 0;
+    // invalidate all cache entries forcefully
+    for (auto& a : frames) {
+        a.relinquishOwnership();
+    }
     getRegister(RegisterIndex::FP).setOrdinal(thePointer);
+    // we need to take ownership of the target frame on startup
+    // we want to take ownership and throw anything out just in case so make the lambda do nothing
+    getCurrentPack().takeOwnership(thePointer, [](const auto&, auto) noexcept { });
     // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well
     getRegister(RegisterIndex::SP960).setOrdinal(thePointer + 64);
     getRegister(RegisterIndex::PFP).setOrdinal(thePointer);

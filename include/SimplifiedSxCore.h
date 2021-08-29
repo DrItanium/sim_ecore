@@ -39,6 +39,7 @@ public:
     constexpr uint32_t getField0() const noexcept { return field0_; }
 private:
     union {
+        /// @todo revert this to do bit manipulation as the bitfield assumes little endian
         uint32_t field0_;
         struct {
             uint16_t field2_;

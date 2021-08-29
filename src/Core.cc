@@ -1473,12 +1473,7 @@ Core::shlo(const Instruction &inst) noexcept {
 
 
 Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) {
-    // we have to do it after the fact because we don't know how many frames will be stipulated (it can be changed)
-    // okay at this point all frames have been constructed we need to mark all but the first one as invalid
-    for (Ordinal i = 1; i < NumRegisterFrames; ++i) {
-        // just force clear it out
-        frames[i].relinquishOwnership();
-    }
+    // on initial boot, a
 }
 
 void
@@ -1686,7 +1681,7 @@ Core::exitCall() noexcept {
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-#if 1
+#if 0
     restoreRegisterFrame(getLocals(), targetAddress);
 #else
     frames[currentFrameIndex_].restoreOwnership(targetAddress,
@@ -1716,13 +1711,14 @@ Core::enterCall(Address newFP) noexcept {
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-#if 1
+#if 0
     // save to where we currently are pointing
     saveRegisterFrame(getLocals(), properFramePointerAddress());
     // then clear the memory out
     clearLocalRegisters();
 #else
-    frames[currentFrameIndex_].takeOwnership(properFramePointerAddress(), [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+    // we want to tell the frame system that we are going to be restoring stuff as we go along
+    frames[currentFrameIndex_].takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
 #endif
 #endif
 #ifdef ARDUINO

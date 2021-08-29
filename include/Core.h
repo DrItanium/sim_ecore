@@ -143,7 +143,7 @@ public:
     private:
         RegisterFrame underlyingFrame;
         Address framePointerAddress_ = 0;
-        bool valid_ = true; // start all as valid and then invalidate them
+        bool valid_ = false;
     };
 public:
     static constexpr Register OrdinalLiterals[32] {
@@ -323,6 +323,7 @@ protected:
 protected:
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
     virtual void resetExecutionStatus() noexcept = 0;
+    LocalRegisterPack& getCurrentPack() noexcept { return frames[currentFrameIndex_]; }
 private:
     void lda(const Instruction& inst) noexcept;
     void shro(const Instruction& inst) noexcept;
