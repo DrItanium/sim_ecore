@@ -1641,6 +1641,7 @@ Core::exitCall() noexcept {
 #endif
     // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
+#if 0
     // okay we are done with the current frame so relinquish ownership
     frames[currentFrameIndex_].relinquishOwnership();
     getPreviousPack().restoreOwnership(targetAddress,
@@ -1649,6 +1650,11 @@ Core::exitCall() noexcept {
     // okay the restoration is complete so just decrement the address
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
+#else
+    frames[currentFrameIndex_].restoreOwnership(targetAddress,
+                                                [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
+                                                [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+#endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
@@ -1664,11 +1670,15 @@ Core::enterCall(Address newFP) noexcept {
     Serial.print("NEW FP: 0x");
     Serial.println(newFP, HEX);
 #endif
+#if 0
     // this is much simpler than exiting, we just need to take control of the next register frame in the set
     getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
     // then increment the frame index
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
+#else
+    frames[currentFrameIndex_].takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+#endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
