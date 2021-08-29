@@ -1466,13 +1466,6 @@ Core::getLocals() const noexcept {
     return frames[currentFrameIndex_].getUnderlyingFrame();
 }
 void
-Core::enterCall() noexcept {
-    // okay we have to properly mask out the frame pointer address like we do for ret
-    auto targetAddress = getFramePointer().getOrdinal() & (~c_);
-    saveRegisterFrame(getLocals(), targetAddress);
-    clearLocalRegisters();
-}
-void
 Core::call(const Instruction& instruction) noexcept {
     /// @todo implement
     // wait for any uncompleted instructions to finish
@@ -1545,13 +1538,6 @@ Core::calls(const Instruction& instruction) noexcept {
     }
 }
 void
-Core::exitCall() noexcept {
-    // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
-    // we have to use the "c_" parameter for this
-    auto actualAddress = getFramePointer().getOrdinal() & (~c_);
-    restoreRegisterFrame(getLocals(), actualAddress);
-}
-void
 Core::ret() noexcept {
     syncf();
     PreviousFramePointer pfp(getPFP());
@@ -1613,4 +1599,19 @@ Core::ret() noexcept {
             // undefined
             break;
     }
+}
+
+void
+Core::exitCall() noexcept {
+    // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
+    // we have to use the "c_" parameter for this
+    auto actualAddress = getFramePointer().getOrdinal() & (~c_);
+    restoreRegisterFrame(getLocals(), actualAddress);
+}
+void
+Core::enterCall() noexcept {
+    // okay we have to properly mask out the frame pointer address like we do for ret
+    auto targetAddress = getFramePointer().getOrdinal() & (~c_);
+    saveRegisterFrame(getLocals(), targetAddress);
+    clearLocalRegisters();
 }
