@@ -1433,11 +1433,9 @@ void
 Core::flushreg() noexcept {
     // clear all registers except the current one
     for (Ordinal curr = currentFrameIndex_ + 1; curr != currentFrameIndex_; curr = ((curr + 1) % NumRegisterFrames)) {
-        if (auto& theLocal = frames[curr]; theLocal.isValid()) {
-            PreviousFramePointer pfp(theLocal.getUnderlyingFrame().getRegister(static_cast<uint8_t>(RegisterIndex::PFP)));
-            saveRegisterFrame(theLocal.getUnderlyingFrame(), pfp.getAddress());
-            theLocal.invalidate();
-        }
+        frames[curr].relinquishOwnership([this](const RegisterFrame& frame, Address dest) noexcept {
+            saveRegisterFrame(frame, dest);
+        });
     }
 }
 void
@@ -1474,7 +1472,7 @@ Core::call(const Instruction& instruction) noexcept {
     auto fp = getFramePointer().getOrdinal();
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip);
-    enterCall();
+    enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
     getPFP().setOrdinal(fp);
@@ -1491,7 +1489,7 @@ Core::callx(const Instruction& instruction) noexcept {
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip); // we need to save the result correctly
 /// @todo implement support for caching register frames
-    enterCall();
+    enterCall(temp);
     ip_.setOrdinal(memAddr);
     getPFP().setOrdinal(fp);
     getFramePointer().setOrdinal(temp);
@@ -1524,7 +1522,7 @@ Core::calls(const Instruction& instruction) noexcept {
             pc_.setExecutionMode(true);
             pc_.setTraceEnable(temp & 0b1);
         }
-        enterCall();
+        enterCall(temp);
         /// @todo expand pfp and fp to accurately model how this works
         PreviousFramePointer pfp(getPFP());
         pfp.setAddress(getFramePointer().getOrdinal());
@@ -1613,34 +1611,23 @@ Core::getPreviousPack() noexcept {
 }
 void
 Core::exitCall() noexcept {
-    // first replace the current frame pointer with the previous frame pointer, we must do this
-    // ahead of time.
     getFramePointer().setOrdinal(getPFP().getOrdinal());
+    // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
-    // okay we are done with the current frame so invalidate it
-    frames[currentFrameIndex_].invalidate([this](RegisterFrame& rf, Address destination) { saveRegisterFrame(rf, destination); });
-    // the check and see if the previous frame in the cache points to the frame pointer address and is
-    // valid (probably in reverse order)
-    if (auto& prev = getPreviousPack(); prev.isValid()) {
-        if (prev.getFramePointerAddress() != targetAddress) {
-            // okay we got a mismatch which means that what the previous entry points to is something that is further
-            // up in the chain so make sure that we preserve its to the stack and restore our new target
-            // extract the frame pointer address and save it to memory
-            auto saveAddress = prev.getUnderlyingFrame().getRegister(static_cast<int>(RegisterIndex::FP)).getOrdinal() & (~c_);
-            saveRegisterFrame(prev.getUnderlyingFrame(), saveAddress);
-
-        }
-        // decrement the frame index counter
-        currentFrameIndex_ = (currentFrameIndex_ - 1) % NumRegisterFrames;
-        // and we are done
-    } else {
-        // if the previous isn't valid then we should just reuse the current frame and not increment anything
-        restoreRegisterFrame(getLocals(), properFramePointerAddress());
-
-    }
+    // okay we are done with the current frame so relinquish ownership
+    frames[currentFrameIndex_].relinquishOwnership();
+    getPreviousPack().restoreOwnership(targetAddress,
+                          [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
+                          [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+    // okay the restoration is complete so just decrement the address
+    --currentFrameIndex_;
+    currentFrameIndex_ %= NumRegisterFrames;
 }
 void
-Core::enterCall() noexcept {
-    saveRegisterFrame(getLocals(), properFramePointerAddress());
-    clearLocalRegisters();
+Core::enterCall(Address newFP) noexcept {
+    // this is much simpler than exiting, we just need to take control of the next register frame in the set
+    getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+    // then increment the frame index
+    ++currentFrameIndex_;
+    currentFrameIndex_ %= NumRegisterFrames;
 }

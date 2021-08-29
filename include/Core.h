@@ -70,7 +70,7 @@ public:
         const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
         constexpr auto isValid() const noexcept { return valid_; }
         /**
-         * @brief Relinquish ownership of the current register pack
+         * @brief Relinquish ownership of the current register pack without saving the contents
          */
         void relinquishOwnership() noexcept {
             valid_ = false;
@@ -79,6 +79,18 @@ public:
             for (auto& a : underlyingFrame.gprs) {
                 a.setOrdinal(0);
             }
+        }
+        /**
+         * @brief Relinquish ownership of the current register pack after saving its contents to memory if valid
+         * @tparam T The function signature used to save registers to the stack
+         * @param saveRegisters the function used to save a valid register frame
+         */
+        template<typename T>
+        void relinquishOwnership(T saveRegisters) noexcept {
+            if (valid_) {
+                saveRegisters(underlyingFrame, framePointerAddress_);
+            }
+            relinquishOwnership();
         }
         /**
          * @brief Take ownership of this pack and save whatever is currently there (if valid); No analysis of old vs new FP is done;
@@ -103,13 +115,14 @@ public:
 
         /**
          * @brief Use this pack to try and reclaim ownership to a given register frame, if the pack is currently valid and matches the frame pointer address then we are safe to use it as is
-         * @tparam T A function signature used to save / restore registers
+         * @tparam RestoreFunction The function type used for restoring registers from the stack
+         * @tparam SaveFunction The function type used for saving registers to the stack
          * @param newFP The new frame pointer address that this pack will reflect
          * @param saveRegisters the function to use when saving registers to the stack
          * @param restoreRegisters the function to use when restoring registers from the stack
          */
-        template<typename T>
-        void restoreOwnership(Address newFP, T saveRegisters, T restoreRegisters) {
+        template<typename SaveFunction, typename RestoreFunction>
+        void restoreOwnership(Address newFP, SaveFunction saveRegisters, RestoreFunction restoreRegisters) {
             if (valid_) {
                 // okay we have something valid in there right now, so we need to determine if
                 // it is currently valid or not
@@ -345,7 +358,7 @@ private:
     [[nodiscard]] LocalRegisterPack& getNextPack() noexcept;
     [[nodiscard]] LocalRegisterPack& getPreviousPack() noexcept;
     /// @todo finish implementing these two functions
-    void enterCall() noexcept;
+    void enterCall(Address newAddress) noexcept;
     void exitCall() noexcept;
     void call(const Instruction& instruction) noexcept;
     void callx(const Instruction& instruction) noexcept;
