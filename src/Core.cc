@@ -1657,20 +1657,23 @@ Core::getPreviousPack() noexcept {
 }
 void
 Core::exitCall() noexcept {
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("OLD FP: 0x");
     Serial.println(properFramePointerAddress(), HEX);
 #endif
+#endif
     getFramePointer().setOrdinal(getPFP().getOrdinal());
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("NEW FP: 0x");
     Serial.println(properFramePointerAddress(), HEX);
 #endif
+#endif
     // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
-#if 1
     // okay we are done with the current frame so relinquish ownership
     frames[currentFrameIndex_].relinquishOwnership();
     getPreviousPack().restoreOwnership(targetAddress,
@@ -1679,22 +1682,16 @@ Core::exitCall() noexcept {
     // okay the restoration is complete so just decrement the address
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
-#else
-#if 0
-    restoreRegisterFrame(getLocals(), targetAddress);
-#else
-    frames[currentFrameIndex_].restoreOwnership(targetAddress,
-                                                [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
-                                                [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
-#endif
-#endif
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
 #endif
+#endif
 }
 void
 Core::enterCall(Address newFP) noexcept {
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
@@ -1703,25 +1700,16 @@ Core::enterCall(Address newFP) noexcept {
     Serial.print("NEW FP: 0x");
     Serial.println(newFP, HEX);
 #endif
-#if 1
+#endif
     // this is much simpler than exiting, we just need to take control of the next register frame in the set
     getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
     // then increment the frame index
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
-#else
-#if 0
-    // save to where we currently are pointing
-    saveRegisterFrame(getLocals(), properFramePointerAddress());
-    // then clear the memory out
-    clearLocalRegisters();
-#else
-    // we want to tell the frame system that we are going to be restoring stuff as we go along
-    frames[currentFrameIndex_].takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
-#endif
-#endif
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
+#endif
 #endif
 }
