@@ -1590,8 +1590,8 @@ Core::ret() noexcept {
     syncf();
     PreviousFramePointer pfp(getPFP());
     auto restoreStandardFrame = [this]() {
-        exitCall();
         auto returnValue = getRIP().getOrdinal();
+        exitCall();
         ip_.setOrdinal(returnValue);
         advanceIPBy = 0; // we already computed ahead of time where we will return to
     };
@@ -1686,10 +1686,13 @@ Core::exitCall() noexcept {
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-    //frames[currentFrameIndex_].restoreOwnership(targetAddress,
-    //                                            [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
-    //                                            [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+#if 0
     restoreRegisterFrame(getLocals(), targetAddress);
+#else
+    frames[currentFrameIndex_].restoreOwnership(targetAddress,
+                                                [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
+                                                [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+#endif
 #endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
@@ -1713,9 +1716,14 @@ Core::enterCall(Address newFP) noexcept {
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-    //frames[currentFrameIndex_].takeOwnership(properFramePointerAddress(), [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+#if 0
+    // save to where we currently are pointing
     saveRegisterFrame(getLocals(), properFramePointerAddress());
+    // then clear the memory out
     clearLocalRegisters();
+#else
+    frames[currentFrameIndex_].takeOwnership(properFramePointerAddress(), [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+#endif
 #endif
 #ifdef ARDUINO
     Serial.print("EXITING ");
