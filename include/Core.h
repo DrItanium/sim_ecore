@@ -312,6 +312,7 @@ private:
     void callx(const Instruction& instruction) noexcept;
     void calls(const Instruction& instruction) noexcept;
     void ret() noexcept;
+    [[nodiscard]] Ordinal properFramePointerAddress() const noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

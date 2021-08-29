@@ -1600,18 +1600,18 @@ Core::ret() noexcept {
             break;
     }
 }
-
-void
-Core::exitCall() noexcept {
+Ordinal
+Core::properFramePointerAddress() const noexcept {
     // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
     // we have to use the "c_" parameter for this
-    auto actualAddress = getFramePointer().getOrdinal() & (~c_);
-    restoreRegisterFrame(getLocals(), actualAddress);
+    return getFramePointer().getOrdinal() & (~c_);
+}
+void
+Core::exitCall() noexcept {
+    restoreRegisterFrame(getLocals(), properFramePointerAddress());
 }
 void
 Core::enterCall() noexcept {
-    // okay we have to properly mask out the frame pointer address like we do for ret
-    auto targetAddress = getFramePointer().getOrdinal() & (~c_);
-    saveRegisterFrame(getLocals(), targetAddress);
+    saveRegisterFrame(getLocals(), properFramePointerAddress());
     clearLocalRegisters();
 }
