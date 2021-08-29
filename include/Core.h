@@ -308,6 +308,10 @@ private:
     /// @todo finish implementing these two functions
     void enterCall() noexcept;
     void exitCall() noexcept;
+    void call(const Instruction& instruction) noexcept;
+    void callx(const Instruction& instruction) noexcept;
+    void calls(const Instruction& instruction) noexcept;
+    void ret() noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

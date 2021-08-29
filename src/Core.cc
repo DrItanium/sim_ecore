@@ -95,7 +95,7 @@ Core::getDoubleRegister(RegisterIndex targetIndex) {
         return globals.getDoubleRegister(static_cast<int>(targetIndex));
     } else
 #ifdef DESKTOP_BUILD
-    if (isLiteral(targetIndex)) {
+        if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
         throw "Illegal register requested";
@@ -117,7 +117,7 @@ Core::getTripleRegister(RegisterIndex targetIndex) {
         return globals.getTripleRegister(static_cast<int>(targetIndex));
     } else
 #ifdef DESKTOP_BUILD
-    if (isLiteral(targetIndex)) {
+        if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
         throw "Illegal register requested";
@@ -138,7 +138,7 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
         return globals.getQuadRegister(static_cast<int>(targetIndex));
     } else
 #ifdef DESKTOP_BUILD
-    if (isLiteral(targetIndex)) {
+        if (isLiteral(targetIndex)) {
         throw "Literals cannot be modified";
     } else {
         throw "Illegal register requested";
@@ -908,45 +908,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::call:
-            [this, &instruction]() {
-                /// @todo implement
-                // wait for any uncompleted instructions to finish
-                auto spPos = getStackPointer().getOrdinal();
-                auto temp = (spPos + c_) & ~c_; // round to next boundary
-                auto fp = getFramePointer().getOrdinal();
-                auto rip = ip_.getOrdinal() + advanceIPBy;
-                getRIP().setOrdinal(rip);
-                /// @todo implement support for caching register frames
-                // okay we have to properly mask out the frame pointer address like we do for ret
-                auto targetAddress = fp & (~c_);
-                saveRegisterFrame(getLocals(), targetAddress);
-                clearLocalRegisters();
-                ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
-                /// @todo expand pfp and fp to accurately model how this works
-                getPFP().setOrdinal(fp);
-                getFramePointer().setOrdinal(temp);
-                getStackPointer().setOrdinal(temp + 64);
-                advanceIPBy = 0; // we already know where we are going so do not jump ahead
-            }();
+            call(instruction);
             break;
         case Opcode::callx:
-            [this, &instruction]() {
-                // wait for any uncompleted instructions to finish
-                auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
-                auto fp = getFramePointer().getOrdinal();
-                auto memAddr = computeMemoryAddress(instruction);
-                auto rip = ip_.getOrdinal() + advanceIPBy;
-                getRIP().setOrdinal(rip); // we need to save the result correctly
-                /// @todo implement support for caching register frames
-                auto targetAddress = fp & (~c_);
-                saveRegisterFrame(getLocals(), targetAddress);
-                clearLocalRegisters();
-                ip_.setOrdinal(memAddr);
-                getPFP().setOrdinal(fp);
-                getFramePointer().setOrdinal(temp);
-                getStackPointer().setOrdinal(temp + 64);
-                advanceIPBy = 0; // we already know where we are going so do not jump ahead
-            }();
+            callx(instruction);
             break;
         case Opcode::shlo:
             shlo(instruction);
@@ -1313,111 +1278,11 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::calls:
-            [this, &instruction]() {
-                auto targ = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                if (targ > 259) {
-                    generateFault(FaultType::Protection_Length);
-                } else {
-                    syncf();
-                    auto tempPE = load(getSystemProcedureTableBase() + 48 + (4 * targ));
-                    auto type = tempPE & 0b11;
-                    auto procedureAddress = tempPE & ~0b11;
-                    // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
-                    getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal() + advanceIPBy);
-                    ip_.setOrdinal(procedureAddress);
-                    Ordinal temp = 0;
-                    Ordinal tempRRR = 0;
-                    if ((type == 0b00) || pc_.inSupervisorMode()) {
-                        temp = (getStackPointer().getOrdinal() + c_) & ~c_;
-                        tempRRR = 0;
-                    } else {
-                        temp = getSupervisorStackPointer();
-                        tempRRR = 0b010 | (pc_.getTraceEnable() ? 0b001 : 0);
-                        pc_.setExecutionMode(true);
-                        pc_.setTraceEnable(temp & 0b1);
-                    }
-                    auto frameAddress = getFramePointer().getOrdinal() & (~c_); // make sure the lowest n bits are ignored
-                    /// @todo implement support for caching register frames
-                    saveRegisterFrame(getLocals(), frameAddress);
-                    clearLocalRegisters();
-                    /// @todo expand pfp and fp to accurately model how this works
-                    PreviousFramePointer pfp(getPFP());
-                    pfp.setAddress(getFramePointer().getOrdinal());
-                    pfp.setReturnType(tempRRR);
-                    getFramePointer().setOrdinal(temp);
-                    getStackPointer().setOrdinal(temp + 64);
-                    // we do not want to jump ahead on calls
-                    advanceIPBy = 0;
-                }
-            }();
+            calls(instruction);
+            break;
             break;
         case Opcode::ret:
-            [this]() {
-                syncf();
-                PreviousFramePointer pfp(getPFP());
-                auto restoreStandardFrame = [this]() {
-                    getFramePointer().setOrdinal(getPFP().getOrdinal());
-                    /// @todo implement local register frame stack
-                    // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
-                    // we have to use the "c_" parameter for this
-                    auto actualAddress = getFramePointer().getOrdinal() & (~c_);
-                    restoreRegisterFrame(getLocals(), actualAddress);
-                    auto returnValue = getRIP().getOrdinal();
-                    ip_.setOrdinal(returnValue);
-                    advanceIPBy = 0; // we already computed ahead of time where we will return to
-                };
-                switch (pfp.getReturnType()) {
-                    case 0b000:
-                        restoreStandardFrame();
-                        break;
-                    case 0b001:
-                        [this, &restoreStandardFrame]() {
-                            auto& fp = getFramePointer();
-                            auto x = load(fp.getOrdinal() - 16);
-                            auto y = load(fp.getOrdinal() - 12);
-                            restoreStandardFrame();
-                            ac_.setValue(y);
-                            if (pc_.inSupervisorMode()) {
-                                pc_.setValue(x);
-                            }
-                        }();
-                        break;
-                    case 0b010:
-                        [this, &restoreStandardFrame]() {
-                            if (pc_.inSupervisorMode()) {
-                                pc_.setTraceEnable(false);
-                                pc_.setExecutionMode(false);
-                            }
-                            restoreStandardFrame();
-                        }();
-                        break;
-                    case 0b011:
-                        [this, &restoreStandardFrame]() {
-                            if (pc_.inSupervisorMode())  {
-                                pc_.setTraceEnable(true);
-                                pc_.setExecutionMode(false);
-                            }
-                            restoreStandardFrame();
-                        }();
-                        break;
-                    case 0b111: // interrupt return
-                        [this,&restoreStandardFrame]() {
-                            auto& fp = getFramePointer();
-                            auto x = load(fp.getOrdinal() - 16);
-                            auto y = load(fp.getOrdinal() - 12);
-                            restoreStandardFrame();
-                            ac_.setValue(y);
-                            if (pc_.inSupervisorMode()) {
-                                pc_.setValue(x);
-                                /// @todo check_pending_interrupts
-                            }
-                        }();
-                        break;
-                    default:
-                        // undefined
-                        break;
-                }
-            }();
+            ret();
             break;
         default:
             generateFault(FaultType::Operation_InvalidOpcode);
@@ -1456,7 +1321,7 @@ Core::getFaultTableBase() {
 
 Ordinal
 Core::getInterruptStackPointer() {
-   return load(getPRCBPtrBase() + 20);
+    return load(getPRCBPtrBase() + 20);
 }
 
 void
@@ -1516,13 +1381,13 @@ Core::loadShort(Address destination) noexcept {
 
 void
 Core::store(Address destination, Ordinal value) {
-   if ((destination & 0b11) == 0b00) {
-       storeAligned(destination, value);
-   } else {
-       // store the upper and lower halves in separate requests
-       storeShort(destination + 0, value);
-       storeShort(destination + 2, value >> 16);
-   }
+    if ((destination & 0b11) == 0b00) {
+        storeAligned(destination, value);
+    } else {
+        // store the upper and lower halves in separate requests
+        storeShort(destination + 0, value);
+        storeShort(destination + 2, value >> 16);
+    }
 }
 void
 Core::storeShort(Address destination, ShortOrdinal value) {
@@ -1599,4 +1464,150 @@ Core::getLocals() noexcept {
 const RegisterFrame&
 Core::getLocals() const noexcept {
     return frames[currentFrameIndex_].getUnderlyingFrame();
+}
+void
+Core::call(const Instruction& instruction) noexcept {
+    /// @todo implement
+    // wait for any uncompleted instructions to finish
+    auto spPos = getStackPointer().getOrdinal();
+    auto temp = (spPos + c_) & ~c_; // round to next boundary
+    auto fp = getFramePointer().getOrdinal();
+    auto rip = ip_.getOrdinal() + advanceIPBy;
+    getRIP().setOrdinal(rip);
+    /// @todo implement support for caching register frames
+    // okay we have to properly mask out the frame pointer address like we do for ret
+    auto targetAddress = fp & (~c_);
+    saveRegisterFrame(getLocals(), targetAddress);
+    clearLocalRegisters();
+    ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+    /// @todo expand pfp and fp to accurately model how this works
+    getPFP().setOrdinal(fp);
+    getFramePointer().setOrdinal(temp);
+    getStackPointer().setOrdinal(temp + 64);
+    advanceIPBy = 0; // we already know where we are going so do not jump ahead
+}
+void
+Core::callx(const Instruction& instruction) noexcept {
+// wait for any uncompleted instructions to finish
+    auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+    auto fp = getFramePointer().getOrdinal();
+    auto memAddr = computeMemoryAddress(instruction);
+    auto rip = ip_.getOrdinal() + advanceIPBy;
+    getRIP().setOrdinal(rip); // we need to save the result correctly
+/// @todo implement support for caching register frames
+    auto targetAddress = fp & (~c_);
+    saveRegisterFrame(getLocals(), targetAddress);
+    clearLocalRegisters();
+    ip_.setOrdinal(memAddr);
+    getPFP().setOrdinal(fp);
+    getFramePointer().setOrdinal(temp);
+    getStackPointer().setOrdinal(temp + 64);
+    advanceIPBy = 0; // we already know where we are going so do not jump ahead
+
+}
+
+void
+Core::calls(const Instruction& instruction) noexcept {
+    auto targ = getSourceRegister(instruction.getSrc1()).getOrdinal();
+    if (targ > 259) {
+        generateFault(FaultType::Protection_Length);
+    } else {
+        syncf();
+        auto tempPE = load(getSystemProcedureTableBase() + 48 + (4 * targ));
+        auto type = tempPE & 0b11;
+        auto procedureAddress = tempPE & ~0b11;
+        // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
+        getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal() + advanceIPBy);
+        ip_.setOrdinal(procedureAddress);
+        Ordinal temp = 0;
+        Ordinal tempRRR = 0;
+        if ((type == 0b00) || pc_.inSupervisorMode()) {
+            temp = (getStackPointer().getOrdinal() + c_) & ~c_;
+            tempRRR = 0;
+        } else {
+            temp = getSupervisorStackPointer();
+            tempRRR = 0b010 | (pc_.getTraceEnable() ? 0b001 : 0);
+            pc_.setExecutionMode(true);
+            pc_.setTraceEnable(temp & 0b1);
+        }
+        auto frameAddress = getFramePointer().getOrdinal() & (~c_); // make sure the lowest n bits are ignored
+        /// @todo implement support for caching register frames
+        saveRegisterFrame(getLocals(), frameAddress);
+        clearLocalRegisters();
+        /// @todo expand pfp and fp to accurately model how this works
+        PreviousFramePointer pfp(getPFP());
+        pfp.setAddress(getFramePointer().getOrdinal());
+        pfp.setReturnType(tempRRR);
+        getFramePointer().setOrdinal(temp);
+        getStackPointer().setOrdinal(temp + 64);
+        // we do not want to jump ahead on calls
+        advanceIPBy = 0;
+    }
+}
+void
+Core::ret() noexcept {
+    syncf();
+    PreviousFramePointer pfp(getPFP());
+    auto restoreStandardFrame = [this]() {
+        getFramePointer().setOrdinal(getPFP().getOrdinal());
+        /// @todo implement local register frame stack
+        // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
+        // we have to use the "c_" parameter for this
+        auto actualAddress = getFramePointer().getOrdinal() & (~c_);
+        restoreRegisterFrame(getLocals(), actualAddress);
+        auto returnValue = getRIP().getOrdinal();
+        ip_.setOrdinal(returnValue);
+        advanceIPBy = 0; // we already computed ahead of time where we will return to
+    };
+    switch (pfp.getReturnType()) {
+        case 0b000:
+            restoreStandardFrame();
+            break;
+        case 0b001:
+            [this, &restoreStandardFrame]() {
+                auto& fp = getFramePointer();
+                auto x = load(fp.getOrdinal() - 16);
+                auto y = load(fp.getOrdinal() - 12);
+                restoreStandardFrame();
+                ac_.setValue(y);
+                if (pc_.inSupervisorMode()) {
+                    pc_.setValue(x);
+                }
+            }();
+            break;
+        case 0b010:
+            [this, &restoreStandardFrame]() {
+                if (pc_.inSupervisorMode()) {
+                    pc_.setTraceEnable(false);
+                    pc_.setExecutionMode(false);
+                }
+                restoreStandardFrame();
+            }();
+            break;
+        case 0b011:
+            [this, &restoreStandardFrame]() {
+                if (pc_.inSupervisorMode())  {
+                    pc_.setTraceEnable(true);
+                    pc_.setExecutionMode(false);
+                }
+                restoreStandardFrame();
+            }();
+            break;
+        case 0b111: // interrupt return
+            [this,&restoreStandardFrame]() {
+                auto& fp = getFramePointer();
+                auto x = load(fp.getOrdinal() - 16);
+                auto y = load(fp.getOrdinal() - 12);
+                restoreStandardFrame();
+                ac_.setValue(y);
+                if (pc_.inSupervisorMode()) {
+                    pc_.setValue(x);
+                    /// @todo check_pending_interrupts
+                }
+            }();
+            break;
+        default:
+            // undefined
+            break;
+    }
 }
