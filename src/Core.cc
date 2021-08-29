@@ -1492,8 +1492,6 @@ Core::callx(const Instruction& instruction) noexcept {
     getRIP().setOrdinal(rip); // we need to save the result correctly
 /// @todo implement support for caching register frames
     enterCall();
-    //saveRegisterFrame(getLocals(), targetAddress);
-    //clearLocalRegisters();
     ip_.setOrdinal(memAddr);
     getPFP().setOrdinal(fp);
     getFramePointer().setOrdinal(temp);
@@ -1605,6 +1603,14 @@ Core::properFramePointerAddress() const noexcept {
     // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
     // we have to use the "c_" parameter for this
     return getFramePointer().getOrdinal() & (~c_);
+}
+RegisterFrame&
+Core::getNextFrame() noexcept {
+    return frames[(currentFrameIndex_ + 1) % NumRegisterFrames].getUnderlyingFrame();
+}
+RegisterFrame&
+Core::getPreviousFrame() noexcept {
+    return frames[(currentFrameIndex_ - 1) % NumRegisterFrames].getUnderlyingFrame();
 }
 void
 Core::exitCall() noexcept {

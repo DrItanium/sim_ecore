@@ -303,8 +303,10 @@ protected:
     void clearLocalRegisters() noexcept;
 private:
     static constexpr Ordinal NumRegisterFrames = 256;
-    RegisterFrame& getLocals() noexcept;
-    const RegisterFrame& getLocals() const noexcept;
+    [[nodiscard]] RegisterFrame& getLocals() noexcept;
+    [[nodiscard]] const RegisterFrame& getLocals() const noexcept;
+    [[nodiscard]] RegisterFrame& getNextFrame() noexcept;
+    [[nodiscard]] RegisterFrame& getPreviousFrame() noexcept;
     /// @todo finish implementing these two functions
     void enterCall() noexcept;
     void exitCall() noexcept;
