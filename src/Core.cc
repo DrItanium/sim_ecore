@@ -314,6 +314,12 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
+#ifdef ARDUINO
+    Serial.print("ENTERING ");
+    Serial.println(__PRETTY_FUNCTION__);
+    Serial.print("IP: 0x");
+    Serial.println(ip_.getOrdinal(), HEX);
+#endif
     static constexpr Ordinal bitPositions[32] {
 #define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
 #define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
@@ -1288,6 +1294,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             generateFault(FaultType::Operation_InvalidOpcode);
             break;
     }
+#ifdef ARDUINO
+    Serial.print("EXITING ");
+    Serial.println(__PRETTY_FUNCTION__);
+#endif
 }
 void
 Core::run() {
