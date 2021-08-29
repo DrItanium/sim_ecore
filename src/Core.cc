@@ -1427,7 +1427,14 @@ Core::shlo(const Instruction &inst) noexcept {
 
 
 
-Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) { }
+Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) {
+    // we have to do it after the fact because we don't know how many frames will be stipulated (it can be changed)
+    // okay at this point all frames have been constructed we need to mark all but the first one as invalid
+    for (Ordinal i = 1; i < NumRegisterFrames; ++i) {
+        // just force clear it out
+        frames[i].relinquishOwnership();
+    }
+}
 
 void
 Core::flushreg() noexcept {
@@ -1611,7 +1618,17 @@ Core::getPreviousPack() noexcept {
 }
 void
 Core::exitCall() noexcept {
+#ifdef ARDUINO
+    Serial.print("ENTERING ");
+    Serial.println(__PRETTY_FUNCTION__);
+    Serial.print("OLD FP: 0x");
+    Serial.println(properFramePointerAddress(), HEX);
+#endif
     getFramePointer().setOrdinal(getPFP().getOrdinal());
+#ifdef ARDUINO
+    Serial.print("NEW FP: 0x");
+    Serial.println(properFramePointerAddress(), HEX);
+#endif
     // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
     // okay we are done with the current frame so relinquish ownership
@@ -1622,12 +1639,28 @@ Core::exitCall() noexcept {
     // okay the restoration is complete so just decrement the address
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
+#ifdef ARDUINO
+    Serial.print("EXITING ");
+    Serial.println(__PRETTY_FUNCTION__);
+#endif
 }
 void
 Core::enterCall(Address newFP) noexcept {
+#ifdef ARDUINO
+    Serial.print("ENTERING ");
+    Serial.println(__PRETTY_FUNCTION__);
+    Serial.print("OLD FP: 0x");
+    Serial.println(properFramePointerAddress(), HEX);
+    Serial.print("NEW FP: 0x");
+    Serial.println(newFP, HEX);
+#endif
     // this is much simpler than exiting, we just need to take control of the next register frame in the set
     getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
     // then increment the frame index
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
+#ifdef ARDUINO
+    Serial.print("EXITING ");
+    Serial.println(__PRETTY_FUNCTION__);
+#endif
 }

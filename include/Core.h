@@ -68,7 +68,6 @@ public:
         LocalRegisterPack() = default;
         RegisterFrame& getUnderlyingFrame() noexcept { return underlyingFrame; }
         const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
-        constexpr auto isValid() const noexcept { return valid_; }
         /**
          * @brief Relinquish ownership of the current register pack without saving the contents
          */
@@ -141,11 +140,10 @@ public:
             framePointerAddress_ = newFP;
             restoreRegisters(underlyingFrame, framePointerAddress_);
         }
-        constexpr auto getFramePointerAddress() const noexcept { return framePointerAddress_; }
     private:
         RegisterFrame underlyingFrame;
         Address framePointerAddress_ = 0;
-        bool valid_ = false;
+        bool valid_ = true; // start all as valid and then invalidate them
     };
 public:
     static constexpr Register OrdinalLiterals[32] {
