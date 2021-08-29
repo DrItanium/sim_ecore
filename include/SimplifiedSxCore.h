@@ -26,9 +26,7 @@
 class IACMessage {
 public:
     explicit IACMessage(const QuadRegister& qr) noexcept :
-            messageType_((qr.getOrdinal(0) & 0xFF00'0000) >> 24),
-            field1_((qr.getOrdinal(0) & 0x00FF'0000) >> 16),
-            field2_(qr.getOrdinal(0)),
+             field0_(qr.getOrdinal(0)),
             field3_(qr.getOrdinal(1)),
             field4_(qr.getOrdinal(2)),
             field5_(qr.getOrdinal(3)) { }
@@ -38,10 +36,16 @@ public:
     constexpr uint32_t getField3() const noexcept { return field3_; }
     constexpr uint32_t getField4() const noexcept { return field4_; }
     constexpr uint32_t getField5() const noexcept { return field5_; }
+    constexpr uint32_t getField0() const noexcept { return field0_; }
 private:
-    uint8_t messageType_;
-    uint8_t field1_;
-    uint16_t field2_;
+    union {
+        uint32_t field0_;
+        struct {
+            uint16_t field2_;
+            uint8_t field1_;
+            uint8_t messageType_;
+        };
+    };
     uint32_t field3_;
     uint32_t field4_;
     uint32_t field5_;

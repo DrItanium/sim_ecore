@@ -314,11 +314,13 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
+#if 0
 #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("IP: 0x");
     Serial.println(ip_.getOrdinal(), HEX);
+#endif
 #endif
     static constexpr Ordinal bitPositions[32] {
 #define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
@@ -1294,9 +1296,11 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             generateFault(FaultType::Operation_InvalidOpcode);
             break;
     }
+#if 0
 #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
+#endif
 #endif
 }
 void
@@ -1653,7 +1657,7 @@ Core::exitCall() noexcept {
 #else
     //frames[currentFrameIndex_].restoreOwnership(targetAddress,
     //                                            [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
-                                                //[this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+    //                                            [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
     restoreRegisterFrame(getLocals(), targetAddress);
 #endif
 #ifdef ARDUINO
@@ -1678,8 +1682,8 @@ Core::enterCall(Address newFP) noexcept {
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #else
-    //frames[currentFrameIndex_].takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
-    saveRegisterFrame(getLocals(), newFP);
+    //frames[currentFrameIndex_].takeOwnership(properFramePointerAddress(), [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
+    saveRegisterFrame(getLocals(), properFramePointerAddress());
     clearLocalRegisters();
 #endif
 #ifdef ARDUINO

@@ -21,9 +21,16 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SimplifiedSxCore.h"
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
 
 void
 SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
+#ifdef ARDUINO
+    Serial.print("ENTERING ");
+    Serial.println(__PRETTY_FUNCTION__ );
+#endif
     clearLocalRegisters();
     systemAddressTableBase_ = sat;
     prcbBase_ = pcb;
@@ -33,19 +40,35 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     pc_.setPriority(31);
     pc_.setState(true); // needs to be set as interrupted
     auto thePointer = getInterruptStackPointer();
+#ifdef ARDUINO
+    Serial.print("THE POINTER: 0x");
+    Serial.println(thePointer, HEX);
+#endif
     getRegister(RegisterIndex::FP).setOrdinal(thePointer);
     // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well
     getRegister(RegisterIndex::SP960).setOrdinal(thePointer + 64);
     getRegister(RegisterIndex::PFP).setOrdinal(thePointer);
     advanceIPBy = 0; // make sure that we don't do anything dumb at this point
+#ifdef ARDUINO
+    Serial.print("EXITING ");
+    Serial.println(__PRETTY_FUNCTION__ );
+#endif
 }
 void
 SimplifiedSxCore::boot() {
+#ifdef ARDUINO
+    Serial.print("ENTERING ");
+    Serial.println(__PRETTY_FUNCTION__ );
+#endif
     if (!initialized_) {
         initialized_ = true;
         auto q = loadQuad(0);
         boot0(q.getOrdinal(0), q.getOrdinal(1), q.getOrdinal(3));
     }
+#ifdef ARDUINO
+    Serial.print("EXITING ");
+    Serial.println(__PRETTY_FUNCTION__ );
+#endif
 }
 Ordinal
 SimplifiedSxCore::getSystemAddressTableBase() const noexcept {
@@ -87,6 +110,24 @@ SimplifiedSxCore::synchronizedStore(Address destination, const Register &value) 
 
 void
 SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {
+#ifdef ARDUINO
+    Serial.print("ENTERING ");
+    Serial.println(__PRETTY_FUNCTION__ );
+    Serial.print("IAC MESSAGE CODE: 0x");
+    Serial.println(message.getMessageType(), HEX);
+    Serial.print("IAC FIELD0: 0x");
+    Serial.println(message.getField0(), HEX);
+    Serial.print("IAC FIELD1: 0x");
+    Serial.println(message.getField1(), HEX);
+    Serial.print("IAC FIELD2: 0x");
+    Serial.println(message.getField2(), HEX);
+    Serial.print("IAC FIELD3: 0x");
+    Serial.println(message.getField3(), HEX);
+    Serial.print("IAC FIELD4: 0x");
+    Serial.println(message.getField4(), HEX);
+    Serial.print("IAC FIELD5: 0x");
+    Serial.println(message.getField5(), HEX);
+#endif
     switch (message.getMessageType()) {
         case 0x89: // purge instruction cache
             // do nothing as we don't have an instruction cache
@@ -124,4 +165,8 @@ SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {
             break;
 
     }
+#ifdef ARDUINO
+    Serial.print("EXITING ");
+    Serial.println(__PRETTY_FUNCTION__ );
+#endif
 }
