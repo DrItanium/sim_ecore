@@ -1540,7 +1540,6 @@ Core::ret() noexcept {
     syncf();
     PreviousFramePointer pfp(getPFP());
     auto restoreStandardFrame = [this]() {
-        getFramePointer().setOrdinal(getPFP().getOrdinal());
         exitCall();
         auto returnValue = getRIP().getOrdinal();
         ip_.setOrdinal(returnValue);
@@ -1604,17 +1603,41 @@ Core::properFramePointerAddress() const noexcept {
     // we have to use the "c_" parameter for this
     return getFramePointer().getOrdinal() & (~c_);
 }
-RegisterFrame&
-Core::getNextFrame() noexcept {
-    return frames[(currentFrameIndex_ + 1) % NumRegisterFrames].getUnderlyingFrame();
+Core::LocalRegisterPack&
+Core::getNextPack() noexcept {
+    return frames[(currentFrameIndex_ + 1) % NumRegisterFrames];
 }
-RegisterFrame&
-Core::getPreviousFrame() noexcept {
-    return frames[(currentFrameIndex_ - 1) % NumRegisterFrames].getUnderlyingFrame();
+Core::LocalRegisterPack&
+Core::getPreviousPack() noexcept {
+    return frames[(currentFrameIndex_ - 1) % NumRegisterFrames];
 }
 void
 Core::exitCall() noexcept {
-    restoreRegisterFrame(getLocals(), properFramePointerAddress());
+    // first replace the current frame pointer with the previous frame pointer, we must do this
+    // ahead of time.
+    getFramePointer().setOrdinal(getPFP().getOrdinal());
+    auto targetAddress = properFramePointerAddress();
+    // okay we are done with the current frame so invalidate it
+    frames[currentFrameIndex_].invalidate();
+    // the check and see if the previous frame in the cache points to the frame pointer address and is
+    // valid (probably in reverse order)
+    if (auto& prev = getPreviousPack(); prev.isValid()) {
+        if (prev.getFramePointerAddress() != targetAddress) {
+            // okay we got a mismatch which means that what the previous entry points to is something that is further
+            // up in the chain so make sure that we preserve its to the stack and restore our new target
+            // extract the frame pointer address and save it to memory
+            auto saveAddress = prev.getUnderlyingFrame().getRegister(static_cast<int>(RegisterIndex::FP)).getOrdinal() & (~c_);
+            saveRegisterFrame(prev.getUnderlyingFrame(), saveAddress);
+
+        }
+        // decrement the frame index counter
+        currentFrameIndex_ = (currentFrameIndex_ - 1) % NumRegisterFrames;
+        // and we are done
+    } else {
+        // if the previous isn't valid then we should just reuse the current frame and not increment anything
+        restoreRegisterFrame(getLocals(), properFramePointerAddress());
+
+    }
 }
 void
 Core::enterCall() noexcept {

@@ -69,7 +69,11 @@ public:
         RegisterFrame& getUnderlyingFrame() noexcept { return underlyingFrame; }
         const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
         constexpr auto isValid() const noexcept { return valid_; }
-        void invalidate() noexcept {
+        template<typename T>
+        void invalidate(T saveRegisters) noexcept {
+            if (valid_) {
+                saveRegisters(underlyingFrame, framePointerAddress_);
+            }
             valid_ = false;
             framePointerAddress_ = 0;
             /// @todo disable this part of the code to improve performance at the cost of leaking state
@@ -78,26 +82,15 @@ public:
             }
         }
         constexpr auto getFramePointerAddress() const noexcept { return framePointerAddress_; }
-    private:
-        template<typename Fn>
-        void commit(Fn commitRegister) {
-            auto pointerAddress = framePointerAddress_;
-            for (auto& a : underlyingFrame.gprs) {
-                commitRegister(pointerAddress, a.getOrdinal());
-                pointerAddress += sizeof(Ordinal);
-            }
-        }
-        template<typename Fn>
-        void restore(Address fp, Fn loadRegister) {
-            auto currentAddress = fp;
-            for (auto& a : underlyingFrame.gprs) {
-                a.setOrdinal(loadRegister(currentAddress));
-                currentAddress += sizeof(Ordinal);
-            }
+        template<typename T>
+        void reset(Address fpAddr, T populateRegisters) noexcept {
+            valid_ = true;
+            framePointerAddress_ = fpAddr;
+            populateRegisters(underlyingFrame, fpAddr);
         }
     private:
-        Address framePointerAddress_ = 0;
         RegisterFrame underlyingFrame;
+        Address framePointerAddress_ = 0;
         bool valid_ = false;
     };
 public:
@@ -302,11 +295,14 @@ private:
 protected:
     void clearLocalRegisters() noexcept;
 private:
-    static constexpr Ordinal NumRegisterFrames = 256;
+    /**
+     * @brief Number of register frames allocated "on-chip", shouldn't be too large as performance will suffer
+     */
+    static constexpr Ordinal NumRegisterFrames = 4;
     [[nodiscard]] RegisterFrame& getLocals() noexcept;
     [[nodiscard]] const RegisterFrame& getLocals() const noexcept;
-    [[nodiscard]] RegisterFrame& getNextFrame() noexcept;
-    [[nodiscard]] RegisterFrame& getPreviousFrame() noexcept;
+    [[nodiscard]] LocalRegisterPack& getNextPack() noexcept;
+    [[nodiscard]] LocalRegisterPack& getPreviousPack() noexcept;
     /// @todo finish implementing these two functions
     void enterCall() noexcept;
     void exitCall() noexcept;
