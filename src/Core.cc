@@ -1618,7 +1618,7 @@ Core::exitCall() noexcept {
     getFramePointer().setOrdinal(getPFP().getOrdinal());
     auto targetAddress = properFramePointerAddress();
     // okay we are done with the current frame so invalidate it
-    frames[currentFrameIndex_].invalidate();
+    frames[currentFrameIndex_].invalidate([this](RegisterFrame& rf, Address destination) { saveRegisterFrame(rf, destination); });
     // the check and see if the previous frame in the cache points to the frame pointer address and is
     // valid (probably in reverse order)
     if (auto& prev = getPreviousPack(); prev.isValid()) {

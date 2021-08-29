@@ -69,11 +69,10 @@ public:
         RegisterFrame& getUnderlyingFrame() noexcept { return underlyingFrame; }
         const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
         constexpr auto isValid() const noexcept { return valid_; }
-        template<typename T>
-        void invalidate(T saveRegisters) noexcept {
-            if (valid_) {
-                saveRegisters(underlyingFrame, framePointerAddress_);
-            }
+        /**
+         * @brief Relinquish ownership of the current register pack
+         */
+        void relinquishOwnership() noexcept {
             valid_ = false;
             framePointerAddress_ = 0;
             /// @todo disable this part of the code to improve performance at the cost of leaking state
@@ -81,13 +80,55 @@ public:
                 a.setOrdinal(0);
             }
         }
-        constexpr auto getFramePointerAddress() const noexcept { return framePointerAddress_; }
+        /**
+         * @brief Take ownership of this pack and save whatever is currently there (if valid); No analysis of old vs new FP is done;
+         * Generally this function is meant for generating new calls into the stack
+         * @tparam T
+         * @param saveRegisters
+         */
         template<typename T>
-        void reset(Address fpAddr, T populateRegisters) noexcept {
+        void takeOwnership(Address newFP, T saveRegisters) noexcept {
+            if (valid_) {
+                // we do not analyze to see if we got a match because that should never happen
+                saveRegisters(underlyingFrame, framePointerAddress_);
+            }
             valid_ = true;
-            framePointerAddress_ = fpAddr;
-            populateRegisters(underlyingFrame, fpAddr);
+            framePointerAddress_ = newFP;
+            for (auto& a : underlyingFrame.dprs) {
+                // clear out storage two registers at a time
+                a.setLongOrdinal(0);
+            }
+            // the instruction contents will be responsible for populating this back up
         }
+
+        /**
+         * @brief Use this pack to try and reclaim ownership to a given register frame, if the pack is currently valid and matches the frame pointer address then we are safe to use it as is
+         * @tparam T A function signature used to save / restore registers
+         * @param newFP The new frame pointer address that this pack will reflect
+         * @param saveRegisters the function to use when saving registers to the stack
+         * @param restoreRegisters the function to use when restoring registers from the stack
+         */
+        template<typename T>
+        void restoreOwnership(Address newFP, T saveRegisters, T restoreRegisters) {
+            if (valid_) {
+                // okay we have something valid in there right now, so we need to determine if
+                // it is currently valid or not
+                if (newFP == framePointerAddress_) {
+                    // okay so we got a match, great!
+                    // just leave early since the frame is already setup
+                    return;
+                }
+                // okay we got a mismatch, the goal is to now save the current frame contents to memory
+                saveRegisters(underlyingFrame, framePointerAddress_);
+                // now we continue on as though this pack was initially invalid
+            }
+            // either is not valid
+            // now do the restore operation since it doesn't matter how we got here
+            valid_ = true;
+            framePointerAddress_ = newFP;
+            restoreRegisters(underlyingFrame, framePointerAddress_);
+        }
+        constexpr auto getFramePointerAddress() const noexcept { return framePointerAddress_; }
     private:
         RegisterFrame underlyingFrame;
         Address framePointerAddress_ = 0;
