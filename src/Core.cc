@@ -1466,6 +1466,13 @@ Core::getLocals() const noexcept {
     return frames[currentFrameIndex_].getUnderlyingFrame();
 }
 void
+Core::enterCall() noexcept {
+    // okay we have to properly mask out the frame pointer address like we do for ret
+    auto targetAddress = getFramePointer().getOrdinal() & (~c_);
+    saveRegisterFrame(getLocals(), targetAddress);
+    clearLocalRegisters();
+}
+void
 Core::call(const Instruction& instruction) noexcept {
     /// @todo implement
     // wait for any uncompleted instructions to finish
@@ -1474,11 +1481,7 @@ Core::call(const Instruction& instruction) noexcept {
     auto fp = getFramePointer().getOrdinal();
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip);
-    /// @todo implement support for caching register frames
-    // okay we have to properly mask out the frame pointer address like we do for ret
-    auto targetAddress = fp & (~c_);
-    saveRegisterFrame(getLocals(), targetAddress);
-    clearLocalRegisters();
+    enterCall();
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
     getPFP().setOrdinal(fp);
@@ -1495,9 +1498,9 @@ Core::callx(const Instruction& instruction) noexcept {
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip); // we need to save the result correctly
 /// @todo implement support for caching register frames
-    auto targetAddress = fp & (~c_);
-    saveRegisterFrame(getLocals(), targetAddress);
-    clearLocalRegisters();
+    enterCall();
+    //saveRegisterFrame(getLocals(), targetAddress);
+    //clearLocalRegisters();
     ip_.setOrdinal(memAddr);
     getPFP().setOrdinal(fp);
     getFramePointer().setOrdinal(temp);
@@ -1530,10 +1533,7 @@ Core::calls(const Instruction& instruction) noexcept {
             pc_.setExecutionMode(true);
             pc_.setTraceEnable(temp & 0b1);
         }
-        auto frameAddress = getFramePointer().getOrdinal() & (~c_); // make sure the lowest n bits are ignored
-        /// @todo implement support for caching register frames
-        saveRegisterFrame(getLocals(), frameAddress);
-        clearLocalRegisters();
+        enterCall();
         /// @todo expand pfp and fp to accurately model how this works
         PreviousFramePointer pfp(getPFP());
         pfp.setAddress(getFramePointer().getOrdinal());
@@ -1545,16 +1545,19 @@ Core::calls(const Instruction& instruction) noexcept {
     }
 }
 void
+Core::exitCall() noexcept {
+    // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
+    // we have to use the "c_" parameter for this
+    auto actualAddress = getFramePointer().getOrdinal() & (~c_);
+    restoreRegisterFrame(getLocals(), actualAddress);
+}
+void
 Core::ret() noexcept {
     syncf();
     PreviousFramePointer pfp(getPFP());
     auto restoreStandardFrame = [this]() {
         getFramePointer().setOrdinal(getPFP().getOrdinal());
-        /// @todo implement local register frame stack
-        // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
-        // we have to use the "c_" parameter for this
-        auto actualAddress = getFramePointer().getOrdinal() & (~c_);
-        restoreRegisterFrame(getLocals(), actualAddress);
+        exitCall();
         auto returnValue = getRIP().getOrdinal();
         ip_.setOrdinal(returnValue);
         advanceIPBy = 0; // we already computed ahead of time where we will return to
