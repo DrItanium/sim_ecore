@@ -52,6 +52,7 @@ public:
     static constexpr auto LCDCSPin = 31;
     static constexpr auto LCDDCPin = 11;
     static constexpr auto NeopixelPin = 7;
+    static constexpr auto AmbientLightSensorPin = A5;
 public:
     /**
      * @brief A grand central m4 specific cache line

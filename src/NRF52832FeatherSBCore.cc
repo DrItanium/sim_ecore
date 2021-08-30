@@ -128,7 +128,9 @@ NRF52832FeatherSBCore::pushCharacterOut(char value) {
     } else if (value == '\b') {
         // backspace
         if (tft.getCursorX() > 0) {
-            // do nothing
+            // step back, clear the space and then step back again
+            tft.setCursor(tft.getCursorX() - 1, tft.getCursorY());
+            tft.print(' ');
             tft.setCursor(tft.getCursorX() - 1, tft.getCursorY());
         }
     } else {
