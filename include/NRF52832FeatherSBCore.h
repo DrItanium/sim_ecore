@@ -126,9 +126,9 @@ protected:
 private:
     CacheLine& getCacheLine(Address target) noexcept;
 private:
-    static constexpr auto NumCacheLines = 256;
+    static constexpr auto NumCacheLines = 512;
     static constexpr auto TransferCacheSize = NumCacheLines * sizeof(CacheLine);
-    static constexpr auto NumBitsForCacheLineIndex = 8;
+    static constexpr auto NumBitsForCacheLineIndex = 9;
     /**
      * @brief Readonly view of a cache address
      */

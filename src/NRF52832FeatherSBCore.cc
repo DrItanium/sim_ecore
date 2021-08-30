@@ -34,6 +34,13 @@ SdFat SD;
 
 void
 NRF52832FeatherSBCore::begin() {
+    pixels.begin();
+    pixels.setBrightness(10);
+    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
+    pixels.show();
+    delay(1000);
+    pixels.setPixelColor(0, pixels.Color(0,0,0));
+    pixels.show();
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
@@ -43,12 +50,6 @@ NRF52832FeatherSBCore::begin() {
     tft.fillScreen(tft.color565(0,0,0));
     tft.println("BOOTING HITAGI SBCORE EMULATOR!");
     ts.begin();
-    pixels.begin();
-    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
-    pixels.show();
-    delay(1000);
-    pixels.setPixelColor(0, pixels.Color(0,0,0));
-    pixels.show();
     SPI.begin();
     while (!SD.begin(SDCardEnablePin)) {
         tft.println(F("NO SDCARD...WILL TRY AGAIN!"));
@@ -123,7 +124,13 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
             // so availableForWrite will return 0 on this chip so just return 1;
             return 1;
         case 6:
-            return Serial.read();
+            return [this]() {
+                auto result = Serial.read();
+                if (result != -1) {
+                    tft.write(result);
+                }
+                return result;
+            }();
         default:
             break;
     }
