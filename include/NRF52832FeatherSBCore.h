@@ -126,6 +126,7 @@ protected:
 private:
     CacheLine& getCacheLine(Address target) noexcept;
 private:
+    void pushCharacterOut(char value);
     static constexpr auto NumCacheLines = 256;
     static constexpr auto TransferCacheSize = NumCacheLines * sizeof(CacheLine);
     static constexpr auto NumBitsForCacheLineIndex = 8;

@@ -48,6 +48,10 @@ NRF52832FeatherSBCore::begin() {
     tft.begin();
     tft.setRotation(1);
     tft.fillScreen(tft.color565(0,0,0));
+    Serial.print("DISPLAY RESOLUTION: ");
+    Serial.print(tft.width());
+    Serial.print(" x ");
+    Serial.println(tft.height());
     tft.println("BOOTING HITAGI SBCORE EMULATOR!");
     ts.begin();
     SPI.begin();
@@ -112,6 +116,19 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
     // right now there is nothing to do here
     return 0;
 }
+void
+NRF52832FeatherSBCore::pushCharacterOut(char value) {
+    // push a character out to the screen
+    if (tft.getCursorY() > tft.height()) {
+        tft.fillScreen(tft.color565(0,0,0));
+        tft.setCursor(0, 0);
+    }
+    if (value == '\n') {
+        tft.println();
+    } else {
+        tft.write(value);
+    }
+}
 ShortOrdinal
 NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
     switch (address) {
@@ -127,11 +144,7 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
             return [this]() {
                 auto result = Serial.read();
                 if (result != -1) {
-                    if (tft.getCursorY() > tft.height()) {
-                        tft.fillScreen(tft.color565(0,0,0));
-                        tft.setCursor(0,0);
-                    }
-                    tft.print(result);
+                    pushCharacterOut(static_cast<char>(result));
                 }
                 return result;
             }();
@@ -148,7 +161,7 @@ NRF52832FeatherSBCore::ioSpaceStore(Address address, ShortOrdinal value) {
             Serial.flush();
             break;
         case 6:
-            tft.write(static_cast<char>(value));
+            pushCharacterOut(static_cast<char>(value));
             Serial.write(static_cast<char>(value));
             break;
         default:
