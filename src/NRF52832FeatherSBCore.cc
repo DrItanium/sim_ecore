@@ -36,7 +36,12 @@ void
 NRF52832FeatherSBCore::begin() {
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(LED_BUILTIN, HIGH);
+    // setup the tft display
+    tft.begin();
+    tft.setRotation(1);
+    tft.println("BOOTING HITAGI SBCORE EMULATOR!");
+    ts.begin();
     SPI.begin();
     while (!SD.begin(SDCardEnablePin)) {
         Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
@@ -80,6 +85,7 @@ NRF52832FeatherSBCore::begin() {
             line.clear();
         }
     }
+    digitalWrite(LED_BUILTIN, LOW);
 }
 
 
@@ -214,11 +220,14 @@ NRF52832FeatherSBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 NRF52832FeatherSBCore::~NRF52832FeatherSBCore() noexcept {}
+NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), tft(LCDCSPin, LCDDCPin), memoryImage_(
 #ifndef USE_PSRAM_CHIP
-NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), memoryImage_(0,64_MB, 64_MB,"live.bin", FILE_WRITE) {}
+0,64_MB, 64_MB,"live.bin", FILE_WRITE
 #else
-NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), memoryImage_(0) {}
+0
 #endif
+)
+{}
 
 NRF52832FeatherSBCore::CacheLine&
 NRF52832FeatherSBCore::getCacheLine(Address target) noexcept {

@@ -28,6 +28,9 @@
 #define SIM3_NRF52832FEATHERSBCORE_H
 #include <Arduino.h>
 #include <SdFat.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+#include <TSC2004.h>
 #include "Types.h"
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
@@ -43,6 +46,10 @@ class NRF52832FeatherSBCore : public SBCoreArduino {
 public:
     static constexpr auto SDCardEnablePin = 27;
     static constexpr auto PSRAMEnablePin = 15;
+    static constexpr auto KeyboardInterruptPin = 30;
+    static constexpr auto LCDCSPin = 31;
+    static constexpr auto LCDDCPin = 11;
+    static constexpr auto NeopixelPin = 7;
 public:
     /**
      * @brief A grand central m4 specific cache line
@@ -146,15 +153,15 @@ private:
     using RAM = PSRAMChip<PSRAMEnablePin>;
 #endif
 private:
+    Adafruit_ILI9341 tft;
+    TSC2004 ts;
     RAM memoryImage_;
     // we have so much space available, let's have some fun with this
     union {
         byte transferCache[TransferCacheSize] = { 0 };
         CacheLine lines_[NumCacheLines];
     };
-    // make space for the on chip request cache as well as the psram copy buffer
-    // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
-    // are going to allocate a 4k buffer
+
 };
 
 using SBCore = NRF52832FeatherSBCore;
