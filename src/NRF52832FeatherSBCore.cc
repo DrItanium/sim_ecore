@@ -34,6 +34,13 @@ SdFat SD;
 
 void
 NRF52832FeatherSBCore::begin() {
+    pixels.begin();
+    pixels.setBrightness(10);
+    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
+    pixels.show();
+    delay(1000);
+    pixels.setPixelColor(0, pixels.Color(0,0,0));
+    pixels.show();
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
@@ -42,13 +49,6 @@ NRF52832FeatherSBCore::begin() {
     tft.setRotation(1);
     tft.fillScreen(tft.color565(0,0,0));
     tft.println("BOOTING HITAGI SBCORE EMULATOR!");
-    pixels.begin();
-    pixels.setBrightness(10);
-    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
-    pixels.show();
-    delay(1000);
-    pixels.setPixelColor(0, pixels.Color(0,0,0));
-    pixels.show();
     ts.begin();
     SPI.begin();
     while (!SD.begin(SDCardEnablePin)) {
