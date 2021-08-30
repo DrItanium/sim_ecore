@@ -119,12 +119,18 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
 void
 NRF52832FeatherSBCore::pushCharacterOut(char value) {
     // push a character out to the screen
-    if (tft.getCursorY() > tft.height()) {
+    if (tft.getCursorY() >= tft.height()) {
         tft.fillScreen(tft.color565(0,0,0));
         tft.setCursor(0, 0);
     }
-    if (value == '\n') {
+    if (value == '\r') {
         tft.println();
+    } else if (value == '\b') {
+        // backspace
+        if (tft.getCursorX() > 0) {
+            // do nothing
+            tft.setCursor(tft.getCursorX() - 1, tft.getCursorY());
+        }
     } else {
         tft.write(value);
     }
