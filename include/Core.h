@@ -74,10 +74,10 @@ public:
         void relinquishOwnership() noexcept {
             valid_ = false;
             framePointerAddress_ = 0;
-            /// @todo disable this part of the code to improve performance at the cost of leaking state
-            for (auto& a : underlyingFrame.gprs) {
-                a.setOrdinal(0);
-            }
+            // the following code does something the original i960 spec does not do, clear registers out
+            //for (auto& a : underlyingFrame.gprs) {
+            //    a.setOrdinal(0);
+            //}
         }
         /**
          * @brief Relinquish ownership of the current register pack after saving its contents to memory if valid
@@ -105,10 +105,11 @@ public:
             }
             valid_ = true;
             framePointerAddress_ = newFP;
-            for (auto& a : underlyingFrame.dprs) {
-                // clear out storage two registers at a time
-                a.setLongOrdinal(0);
-            }
+            // don't clear out the registers
+            //for (auto& a : underlyingFrame.dprs) {
+            //    // clear out storage two registers at a time
+            //    a.setLongOrdinal(0);
+            //}
             // the instruction contents will be responsible for populating this back up
         }
 
@@ -349,8 +350,8 @@ private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
     Ordinal computeMemoryAddress(const Instruction& instruction) noexcept;
-protected:
-    void clearLocalRegisters() noexcept;
+//protected:
+    //void clearLocalRegisters() noexcept;
 private:
     /**
      * @brief Number of register frames allocated "on-chip", shouldn't be too large as performance will suffer

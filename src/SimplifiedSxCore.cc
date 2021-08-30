@@ -33,7 +33,6 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     Serial.println(__PRETTY_FUNCTION__ );
 #endif
 #endif
-    clearLocalRegisters();
     systemAddressTableBase_ = sat;
     prcbBase_ = pcb;
     // skip the check words
@@ -53,6 +52,10 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     // invalidate all cache entries forcefully
     for (auto& a : frames) {
         a.relinquishOwnership();
+        // at this point we want all of the locals to be cleared, this is the only time
+        for (auto& reg : a.getUnderlyingFrame().dprs) {
+            reg.setLongOrdinal(0);
+        }
     }
     getRegister(RegisterIndex::FP).setOrdinal(thePointer);
     // we need to take ownership of the target frame on startup

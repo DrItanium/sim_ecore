@@ -1368,13 +1368,14 @@ Ordinal
 Core::getInterruptStackPointer() {
     return load(getPRCBPtrBase() + 20);
 }
-
+/*
 void
 Core::clearLocalRegisters() noexcept {
     for (auto& reg : getLocals().gprs) {
         reg.setOrdinal(0);
     }
 }
+ */
 
 void
 Core::setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
