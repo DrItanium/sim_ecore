@@ -334,7 +334,7 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
-#if 0
+#ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
