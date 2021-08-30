@@ -57,7 +57,7 @@ public:
         bool dirty_ = false;
         bool valid_ = false;
     };
-    static constexpr auto CacheSize = NumLines * sizeof(CellType);
+    static constexpr auto CacheSize = NumLines * sizeof(CacheLine);
     static constexpr auto NumBitsForCacheLineIndex = bitsNeeded(NumLines);
 public:
     /**
