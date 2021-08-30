@@ -40,29 +40,36 @@ NRF52832FeatherSBCore::begin() {
     // setup the tft display
     tft.begin();
     tft.setRotation(1);
+    tft.fillScreen(tft.color565(0,0,0));
     tft.println("BOOTING HITAGI SBCORE EMULATOR!");
     ts.begin();
+    pixels.begin();
+    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
+    pixels.show();
+    delay(1000);
+    pixels.setPixelColor(0, pixels.Color(0,0,0));
+    pixels.show();
     SPI.begin();
     while (!SD.begin(SDCardEnablePin)) {
-        Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
+        tft.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
     }
-    Serial.println(F("SDCARD UP!"));
+    tft.println(F("SDCARD UP!"));
     if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
-        Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
+        tft.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
         while (true) { delay(1000); }
     } else {
         memoryImage_.begin();
 #ifndef USE_PSRAM_CHIP
-        Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
+        tft.println(F("SUCCESSFULLY OPENED \"live.bin\""));
 #endif
         // now we copy from the pristine image over to the new one in blocks
         Address size = theFile.size();
         constexpr auto CacheSize = TransferCacheSize;
 #ifndef USE_PSRAM_CHIP
-        Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
+        tft.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
 #else
-        Serial.println(F("TRANSFERRING IMAGE TO PSRAM!"));
+        tft.println(F("TRANSFERRING IMAGE TO PSRAM!"));
 #endif
         for (Address i = 0; i < size; i += CacheSize) {
             auto numRead = theFile.read(transferCache, CacheSize);
@@ -74,9 +81,10 @@ NRF52832FeatherSBCore::begin() {
             (void)memoryImage_.write(i, transferCache, numRead);
             // wait until we are ready to
             while (SD.card()->isBusy());
-            Serial.print(F("."));
+            tft.print(F("."));
         }
-        Serial.println(F("CONSTRUCTION COMPLETE!!!"));
+        tft.println();
+        tft.println(F("CONSTRUCTION COMPLETE!!!"));
         // make a new copy of this file
         theFile.close();
         while (SD.card()->isBusy());
@@ -220,14 +228,6 @@ NRF52832FeatherSBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 NRF52832FeatherSBCore::~NRF52832FeatherSBCore() noexcept {}
-NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), tft(LCDCSPin, LCDDCPin), memoryImage_(
-#ifndef USE_PSRAM_CHIP
-0,64_MB, 64_MB,"live.bin", FILE_WRITE
-#else
-0
-#endif
-)
-{}
 
 NRF52832FeatherSBCore::CacheLine&
 NRF52832FeatherSBCore::getCacheLine(Address target) noexcept {
@@ -322,6 +322,16 @@ NRF52832FeatherSBCore::CacheLine::reset(Address newAddress, MemoryThing &newThin
 }
 
 
-
+NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), tft(LCDCSPin, LCDDCPin),
+pixels(1, NeopixelPin, NEO_GRB + NEO_KHZ800),
+memoryImage_(
+#ifndef USE_PSRAM_CHIP
+        0,64_MB, 64_MB,"live.bin", FILE_WRITE
+#else
+        0
 #endif
+)
+{}
 
+// must be last line in file
+#endif // end defined ARDUINO_NRF52832_FEATHER

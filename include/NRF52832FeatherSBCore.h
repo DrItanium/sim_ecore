@@ -30,10 +30,12 @@
 #include <SdFat.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
+#include <Adafruit_NeoPixel.h>
 #include <TSC2004.h>
 #include "Types.h"
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
+
 //#define USE_PSRAM_CHIP
 #ifdef USE_PSRAM_CHIP
 #include "PSRAMChip.h"
@@ -155,6 +157,7 @@ private:
 private:
     Adafruit_ILI9341 tft;
     TSC2004 ts;
+    Adafruit_NeoPixel pixels;
     RAM memoryImage_;
     // we have so much space available, let's have some fun with this
     union {
