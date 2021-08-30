@@ -114,9 +114,9 @@ protected:
 private:
     CacheLine& getCacheLine(Address target) noexcept;
 private:
-    static constexpr auto NumCacheLines = 1024;
+    static constexpr auto NumCacheLines = 2048;
     static constexpr auto TransferCacheSize = NumCacheLines * sizeof(CacheLine);
-    static constexpr auto NumBitsForCacheLineIndex = 10;
+    static constexpr auto NumBitsForCacheLineIndex = 11;
     /**
      * @brief Readonly view of a cache address
      */
