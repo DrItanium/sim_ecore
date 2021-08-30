@@ -137,6 +137,7 @@ NRF52832FeatherSBCore::ioSpaceStore(Address address, ShortOrdinal value) {
             Serial.flush();
             break;
         case 6:
+            tft.write(static_cast<char>(value));
             Serial.write(static_cast<char>(value));
             break;
         default:
