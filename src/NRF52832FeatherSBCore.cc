@@ -127,6 +127,10 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
             return [this]() {
                 auto result = Serial.read();
                 if (result != -1) {
+                    if (tft.getCursorY() > tft.height()) {
+                        tft.fillScreen(tft.color565(0,0,0));
+                        tft.setCursor(0,0);
+                    }
                     tft.write(result);
                 }
                 return result;
