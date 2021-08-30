@@ -47,6 +47,7 @@ public:
     static constexpr Address RamMask = RamSize - 1;
 public:
     using Parent = SBCoreArduino;
+    using Cache = ::Cache<MemoryCell32, 2048, 64>;
     GCM4SBCore();
     ~GCM4SBCore() override;
     void begin() override;
@@ -72,7 +73,7 @@ protected:
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
 private:
-    auto& getCacheLine(Address target) noexcept { return theCache_.getCacheLine(target); }
+    auto& getCacheLine(Address target, MemoryThing& thing) noexcept { return theCache_.getCacheLine(target, thing); }
 private:
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
@@ -81,7 +82,7 @@ private:
 #endif
 private:
     RAM memoryImage_;
-    Cache<MemoryCell32, 2048, 64> theCache_;
+    Cache theCache_;
 };
 
 using SBCore = GCM4SBCore;
