@@ -131,7 +131,7 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
                         tft.fillScreen(tft.color565(0,0,0));
                         tft.setCursor(0,0);
                     }
-                    tft.write(result);
+                    tft.print(result);
                 }
                 return result;
             }();
