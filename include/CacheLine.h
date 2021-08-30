@@ -14,8 +14,6 @@
 template<typename C, size_t numBytesPerLine, size_t numLines>
 struct Cache {
 public:
-    using CellType = C;
-    static constexpr auto NumBytesPerLine = numBytesPerLine;
     static constexpr auto NumLines = numLines;
     union CacheAddress;
 /**
