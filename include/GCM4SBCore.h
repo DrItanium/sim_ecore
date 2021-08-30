@@ -34,53 +34,13 @@
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
 #include "PSRAMChip.h"
+#include "CacheLine.h"
 #define USE_PSRAM_CHIP
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
  */
 class GCM4SBCore : public SBCoreArduino {
-public:
-    /**
-     * @brief A grand central m4 specific cache line
-     */
-    struct CacheLine {
-        static constexpr auto NumBytesPerCacheLine = 64;
-        static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
-        static constexpr auto Mask = NumBytesPerCacheLine - 1;
-        static constexpr auto NumBitsForCacheLineOffset = bitsNeeded(NumBytesPerCacheLine);
-        static constexpr auto NumBitsForCellIndex = bitsNeeded(NumCellsPerCacheLine);
-        static constexpr auto NumBitsForCellOffset = bitsNeeded(sizeof(MemoryCell32));
-        static_assert(NumBitsForCacheLineOffset == (NumBitsForCellIndex + NumBitsForCellOffset), "Cell offset + Cell index should equal the total offset in an address!");
-        constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
-    public:
-        TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
-        TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal) const noexcept;
-        TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal) const noexcept;
-        void set(Address targetAddress, Ordinal value);
-        void set(Address targetAddress, ShortOrdinal value);
-        void set(Address targetAddress, ByteOrdinal value);
-        static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
-        static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
-        constexpr bool valid() const noexcept { return valid_; }
-        constexpr bool matches(Address other) const noexcept {
-            return valid() && (toCacheLineAddress(other) == address_);
-        }
-        /**
-         * @brief Returns true if the cache line is valid and flagged as dirty
-         * @return true if the cache line is valid and the dirty flag has been set
-         */
-        constexpr bool dirty() const noexcept { return dirty_; }
-        void reset(Address newAddress, MemoryThing& newThing);
-        void clear() noexcept;
-    private:
-        MemoryCell32 storage_[NumCellsPerCacheLine] = { 0 };
-        Address address_ = 0;
-        MemoryThing* backingStorage_ = nullptr;
-        bool dirty_ = false;
-        bool valid_ = false;
-    };
-
 public:
     static constexpr Address RamSize = 8_MB;
     static constexpr Address RamStart = 0x0000'0000;
@@ -112,31 +72,8 @@ protected:
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
 private:
-    CacheLine& getCacheLine(Address target) noexcept;
+    auto& getCacheLine(Address target) noexcept { return theCache_.getCacheLine(target); }
 private:
-    static constexpr auto NumCacheLines = 2048;
-    static constexpr auto TransferCacheSize = NumCacheLines * sizeof(CacheLine);
-    static constexpr auto NumBitsForCacheLineIndex = bitsNeeded(NumCacheLines);
-    /**
-     * @brief Readonly view of a cache address
-     */
-    union CacheAddress {
-        constexpr explicit CacheAddress(Address target) noexcept : value_(target) { }
-        constexpr auto getOriginalAddress() const noexcept { return value_; }
-        constexpr auto getTagAddress () const noexcept { return value_ & ~(CacheLine::Mask); }
-        constexpr auto getCacheIndex() const noexcept { return index; }
-        constexpr auto getCellIndex() const noexcept { return cellIndex; }
-        constexpr auto getCellOffset(TreatAsByteOrdinal) const noexcept { return cellOffset; }
-        constexpr auto getCellOffset(TreatAsShortOrdinal) const noexcept { return cellOffset >> 1; }
-    private:
-        Address value_;
-        struct {
-            Address cellOffset : CacheLine::NumBitsForCellOffset;
-            Address cellIndex : CacheLine::NumBitsForCellIndex;
-            Address index : NumBitsForCacheLineIndex;
-            Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
-        };
-    };
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
 #else
@@ -144,14 +81,7 @@ private:
 #endif
 private:
     RAM memoryImage_;
-    // we have so much space available, let's have some fun with this
-    union {
-        byte transferCache[TransferCacheSize] = { 0 };
-        CacheLine lines_[NumCacheLines];
-    };
-    // make space for the on chip request cache as well as the psram copy buffer
-    // minimum size is going to be 8k or so (256 x 32) but for our current purposes we
-    // are going to allocate a 4k buffer
+    Cache<MemoryCell32, 2048, 64> theCache_;
 };
 
 using SBCore = GCM4SBCore;
