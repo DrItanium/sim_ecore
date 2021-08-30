@@ -48,9 +48,9 @@ public:
         static constexpr auto NumBytesPerCacheLine = 64;
         static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
         static constexpr auto Mask = NumBytesPerCacheLine - 1;
-        static constexpr auto NumBitsForCacheLineOffset = 6;
-        static constexpr auto NumBitsForCellIndex = 4;
-        static constexpr auto NumBitsForCellOffset = 2;
+        static constexpr auto NumBitsForCacheLineOffset = bitsNeeded(NumBytesPerCacheLine);
+        static constexpr auto NumBitsForCellIndex = bitsNeeded(NumCellsPerCacheLine);
+        static constexpr auto NumBitsForCellOffset = bitsNeeded(sizeof(MemoryCell32));
         static_assert(NumBitsForCacheLineOffset == (NumBitsForCellIndex + NumBitsForCellOffset), "Cell offset + Cell index should equal the total offset in an address!");
         constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
     public:
@@ -116,7 +116,7 @@ private:
 private:
     static constexpr auto NumCacheLines = 2048;
     static constexpr auto TransferCacheSize = NumCacheLines * sizeof(CacheLine);
-    static constexpr auto NumBitsForCacheLineIndex = 11;
+    static constexpr auto NumBitsForCacheLineIndex = bitsNeeded(NumCacheLines);
     /**
      * @brief Readonly view of a cache address
      */

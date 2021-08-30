@@ -58,12 +58,13 @@ public:
      * @brief A grand central m4 specific cache line
      */
     struct CacheLine {
+        using CellType = MemoryCell32;
         static constexpr auto NumBytesPerCacheLine = 64;
-        static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(MemoryCell32);
+        static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(CellType);
         static constexpr auto Mask = NumBytesPerCacheLine - 1;
-        static constexpr auto NumBitsForCacheLineOffset = 6;
-        static constexpr auto NumBitsForCellIndex = 4;
-        static constexpr auto NumBitsForCellOffset = 2;
+        static constexpr auto NumBitsForCacheLineOffset = bitsNeeded(NumBytesPerCacheLine);
+        static constexpr auto NumBitsForCellIndex = bitsNeeded(NumCellsPerCacheLine);
+        static constexpr auto NumBitsForCellOffset = bitsNeeded(sizeof(CellType));
         static_assert(NumBitsForCacheLineOffset == (NumBitsForCellIndex + NumBitsForCellOffset), "Cell offset + Cell index should equal the total offset in an address!");
         constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
     public:
@@ -87,7 +88,7 @@ public:
         void reset(Address newAddress, MemoryThing& newThing);
         void clear() noexcept;
     private:
-        MemoryCell32 storage_[NumCellsPerCacheLine] = { 0 };
+        CellType storage_[NumCellsPerCacheLine] = { 0 };
         Address address_ = 0;
         MemoryThing* backingStorage_ = nullptr;
         bool dirty_ = false;
@@ -130,7 +131,7 @@ private:
     void pushCharacterOut(char value);
     static constexpr auto NumCacheLines = 256;
     static constexpr auto TransferCacheSize = NumCacheLines * sizeof(CacheLine);
-    static constexpr auto NumBitsForCacheLineIndex = 8;
+    static constexpr auto NumBitsForCacheLineIndex = bitsNeeded(NumCacheLines);
     /**
      * @brief Readonly view of a cache address
      */
