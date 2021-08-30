@@ -103,10 +103,11 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
         case 0:
             Serial.flush();
             break;
-        case 2:
+        case 2: // available
             return Serial.available();
-        case 4:
-            return Serial.availableForWrite();
+        case 4: // available for write
+            // so availableForWrite will return 0 on this chip so just return 1;
+            return 1;
         case 6:
             return Serial.read();
         default:
