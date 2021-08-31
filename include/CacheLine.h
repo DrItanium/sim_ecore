@@ -11,11 +11,10 @@
 #endif
 #include "MemoryThing.h"
 #include "Types.h"
-template<typename C, size_t numBytesPerLine, size_t numLines>
+template<typename C, size_t numLines, size_t numBytesPerLine>
 struct Cache {
 public:
     static constexpr auto NumLines = numLines;
-    union CacheAddress;
 /**
  * @brief A grand central m4 specific cache line
  */
@@ -77,7 +76,7 @@ public:
             Address index : NumBitsForCacheLineIndex;
             Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
         };
-    };
+    } __attribute__((packed));
 public:
     CacheLine&
     getCacheLine(Address target, MemoryThing& backingMemoryThing) noexcept {
@@ -90,7 +89,7 @@ public:
         }
         return targetLine;
     }
-    byte* asTransferCache() noexcept { return transferCache; }
+    byte* asTransferCache() noexcept { return reinterpret_cast<byte*>(lines_); }
     /**
      * @brief Go through and forcefully zero out all cache lines without saving anything
      */
@@ -99,12 +98,8 @@ public:
             line.clear();
         }
     }
-    Cache() noexcept { }
 private:
-    union {
-        byte transferCache[CacheSize] = { 0 };
-        CacheLine lines_[NumLines];
-    };
+    CacheLine lines_[NumLines];
 
 };
 template<typename C, size_t a, size_t b>
