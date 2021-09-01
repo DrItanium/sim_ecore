@@ -45,7 +45,9 @@ public:
     static constexpr Address ConsoleRegisterOffset = 0x00E0'0000;
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
     static constexpr Address IACBaseAddress = 0x0000'0010;
-    static constexpr size_t MemorySize = 64_MB / sizeof(MemoryCell32);
+    static constexpr auto NumRAMBytes = 128_MB;
+    static constexpr auto RAMMask = NumRAMBytes - 1;
+    static constexpr size_t NumCells = NumRAMBytes / sizeof(MemoryCell32);
     DesktopSBCore();
     ~DesktopSBCore() override = default;
     void clearMemory() noexcept;
@@ -78,7 +80,7 @@ private:
         return target >= 0xFF00'0000;
     }
     static constexpr bool inRAMArea(Address target) noexcept {
-        return target < 64_MB;
+        return target < NumRAMBytes;
     }
 private:
     // allocate a 128 megabyte memory storage buffer

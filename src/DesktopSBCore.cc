@@ -150,18 +150,18 @@ DesktopSBCore::generateFault(FaultType ) {
 
 void
 DesktopSBCore::clearMemory() noexcept {
-    for (size_t i = 0; i < MemorySize; ++i) {
+    for (size_t i = 0; i < NumCells; ++i) {
         memory_[i].clear();
     }
 }
 void
 DesktopSBCore::installToMemory(Address loc, Ordinal value) {
-    auto alignedAddress = ((64_MB -1) & loc) >> 2;
+    auto alignedAddress = (RAMMask & loc) >> 2;
     memory_[alignedAddress].setOrdinalValue(value);
 }
 void
 DesktopSBCore::installToMemory(Address loc, ByteOrdinal value) {
-    auto alignedAddress = ((64_MB - 1) & loc) >> 2;
+    auto alignedAddress = (RAMMask & loc) >> 2;
     auto offset = loc & 0b11;
     memory_[alignedAddress].setByteOrdinal(value, offset);
 }
@@ -170,7 +170,7 @@ DesktopSBCore::installBlockToMemory(Address base, Ordinal curr) noexcept  {
     installToMemory(base, curr);
 }
 
-DesktopSBCore::DesktopSBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(MemorySize)) {
+DesktopSBCore::DesktopSBCore() : Parent(), memory_(std::make_unique<MemoryCell32[]>(NumCells)) {
 
 }
 #endif
