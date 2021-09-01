@@ -62,7 +62,7 @@ public:
     using Cache = ::Cache<MemoryCell32, 256, 64>;
     using Parent = SBCoreArduino;
     NRF52832FeatherSBCore();
-    ~NRF52832FeatherSBCore() override;
+    ~NRF52832FeatherSBCore() override = default;
     void begin() override;
 protected:
     ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal ordinal) override;

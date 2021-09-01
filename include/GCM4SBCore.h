@@ -49,7 +49,7 @@ public:
     using Parent = SBCoreArduino;
     using Cache = ::Cache<MemoryCell32, 2048, 64>;
     GCM4SBCore();
-    ~GCM4SBCore() override;
+    ~GCM4SBCore() override = default;
     void begin() override;
 protected:
     ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal ordinal) override;

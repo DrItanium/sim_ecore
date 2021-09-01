@@ -259,10 +259,6 @@ Address
 NRF52832FeatherSBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
-NRF52832FeatherSBCore::~NRF52832FeatherSBCore() noexcept {}
-
-
-
 
 NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), tft(LCDCSPin, LCDDCPin),
 pixels(1, NeopixelPin, NEO_GRB + NEO_KHZ800),

@@ -198,7 +198,7 @@ public:
 public:
 public:
     explicit Core(Ordinal salign = 4);
-    virtual ~Core() = default;
+    virtual ~Core();
 public:
     void run();
 protected:

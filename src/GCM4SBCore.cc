@@ -210,7 +210,6 @@ Address
 GCM4SBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
-GCM4SBCore::~GCM4SBCore() noexcept {}
 GCM4SBCore::GCM4SBCore() : Parent(),
 memoryImage_(
 #ifndef USE_PSRAM_CHIP

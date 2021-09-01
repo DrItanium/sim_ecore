@@ -1714,3 +1714,7 @@ Core::enterCall(Address newFP) noexcept {
 #endif
 #endif
 }
+
+Core::~Core() {
+    // default impl
+}
