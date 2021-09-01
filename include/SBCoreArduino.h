@@ -39,7 +39,7 @@ public:
     static constexpr Address ConsoleFlushOffset = 0x00E0'0004;
     static constexpr Address IACBaseAddress = 0x0000'0010;
     SBCoreArduino();
-    ~SBCoreArduino() override;
+    ~SBCoreArduino() override = default;
     virtual void begin();
 protected:
     ShortOrdinal loadShortAligned(Address destination) override;

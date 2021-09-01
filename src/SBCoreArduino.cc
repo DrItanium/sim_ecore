@@ -36,7 +36,6 @@ SBCoreArduino::generateFault(FaultType ) {
     haltExecution();
 }
 
-SBCoreArduino::~SBCoreArduino() { }
 
 void
 SBCoreArduino::storeAligned(Address destination, Ordinal value) {
