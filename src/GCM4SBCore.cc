@@ -98,14 +98,10 @@ GCM4SBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
 ShortOrdinal
 GCM4SBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
     switch (address) {
-        case 0:
+        case 2:
             Serial.flush();
             break;
-        case 2:
-            return Serial.available();
-        case 4:
-            return Serial.availableForWrite();
-        case 6:
+        case 0:
             return Serial.read();
         default:
             break;
@@ -116,10 +112,10 @@ GCM4SBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
 void
 GCM4SBCore::ioSpaceStore(Address address, ShortOrdinal value) {
     switch (address) {
-        case 0:
+        case 2:
             Serial.flush();
             break;
-        case 6:
+        case 0:
             Serial.write(static_cast<char>(value));
             break;
         default:

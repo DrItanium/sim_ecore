@@ -140,14 +140,6 @@ ShortOrdinal
 NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
     switch (address) {
         case 0:
-            Serial.flush();
-            break;
-        case 2: // available
-            return Serial.available();
-        case 4: // available for write
-            // so availableForWrite will return 0 on this chip so just return 1;
-            return 1;
-        case 6:
             return [this]() {
                 auto result = Serial.read();
                 if (result != -1) {
@@ -155,6 +147,9 @@ NRF52832FeatherSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
                 }
                 return result;
             }();
+        case 2:
+            Serial.flush();
+            break;
         default:
             break;
     }
@@ -165,11 +160,11 @@ void
 NRF52832FeatherSBCore::ioSpaceStore(Address address, ShortOrdinal value) {
     switch (address) {
         case 0:
-            Serial.flush();
-            break;
-        case 6:
             pushCharacterOut(static_cast<char>(value));
             Serial.write(static_cast<char>(value));
+            break;
+        case 2:
+            Serial.flush();
             break;
         default:
             break;

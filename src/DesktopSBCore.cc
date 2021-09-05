@@ -31,15 +31,11 @@ ShortOrdinal
 DesktopSBCore::loadShortAligned(Address destination) {
     if (inIOSpace(destination)) {
         switch (destination & 0x00FF'FFFF) {
-            case 0: // console flush
+            case 0:
+                return static_cast<ShortOrdinal>(std::cin.get());
+            case 2: // console flush
                 std::cout.flush();
                 break;
-            case 2: // console available
-                return 1;
-            case 4: // console available for write
-                return 1;
-            case 6:
-                return static_cast<ShortOrdinal>(std::cin.get());
             default:
                 break;
         }
@@ -56,11 +52,11 @@ void
 DesktopSBCore::storeShortAligned(Address destination, ShortOrdinal value) {
     if (inIOSpace(destination)) {
         switch (destination & 0x00FF'FFFF) {
-            case 0: // console flush
-            std::cout.flush();
-            break;
-            case 6: // console io
+            case 0: // console io
             std::cout.put(value);
+            break;
+            case 2: // console flush
+            std::cout.flush();
             break;
             default:
                 break;
