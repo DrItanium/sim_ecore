@@ -28,10 +28,6 @@
 #define SIM3_ADAFRUIT_FEATHER_M0_ADALOGGER_SBCORE_H
 #include <Arduino.h>
 #include <SdFat.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_ILI9341.h>
-#include <Adafruit_NeoPixel.h>
-#include <TSC2004.h>
 #include "Types.h"
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
@@ -47,13 +43,9 @@
  */
 class FeatherM0AdaloggerSBCore : public SBCoreArduino {
 public:
-    static constexpr auto SDCardEnablePin = 5;
+    static constexpr auto SDCardEnablePin = 4;
+    static constexpr auto CardDetectPin = 7;
     static constexpr auto PSRAMEnablePin = 12;
-    static constexpr auto KeyboardInterruptPin = 6;
-    static constexpr auto LCDCSPin = 9;
-    static constexpr auto LCDDCPin = 10;
-    static constexpr auto NeopixelPin = 11;
-    static constexpr auto AmbientLightSensorPin = A5;
 public:
     static constexpr Address RamSize = 8_MB;
     static constexpr Address RamStart = 0x0000'0000;
@@ -88,21 +80,16 @@ protected:
 private:
     auto& getCacheLine(Address target, MemoryThing& thing) noexcept { return theCache_.getCacheLine(target, thing); }
 private:
-    void pushCharacterOut(char value);
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
 #else
     using RAM = PSRAMChip<PSRAMEnablePin, 20_MHz>;
 #endif
 private:
-    Adafruit_ILI9341 tft;
-    TSC2004 ts;
-    Adafruit_NeoPixel pixels;
     RAM memoryImage_;
     // we have so much space available, let's have some fun with this
     Cache theCache_;
 };
 
 using SBCore = FeatherM0AdaloggerSBCore;
-#endif //SIM3_NRF52832FEATHERSBCORE_H
-
+#endif // end SIM3_ADAFRUIT_FEATHER_M0_ADALOGGER_SBCORE_H

@@ -34,47 +34,31 @@ SdFat SD;
 
 void
 FeatherM0AdaloggerSBCore::begin() {
-    pixels.begin();
-    pixels.setBrightness(10);
-    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
-    pixels.show();
-    delay(1000);
-    pixels.setPixelColor(0, pixels.Color(0,0,0));
-    pixels.show();
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     // setup the tft display
-    tft.begin();
-    tft.setRotation(1);
-    tft.fillScreen(tft.color565(0,0,0));
-    Serial.print("DISPLAY RESOLUTION: ");
-    Serial.print(tft.width());
-    Serial.print(" x ");
-    Serial.println(tft.height());
-    tft.println("BOOTING HITAGI SBCORE EMULATOR!");
-    ts.begin();
     SPI.begin();
     while (!SD.begin(SDCardEnablePin)) {
-        tft.println(F("NO SDCARD...WILL TRY AGAIN!"));
+        Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
     }
-    tft.println(F("SDCARD UP!"));
+    Serial.println(F("SDCARD UP!"));
     if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
-        tft.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
+        Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
         while (true) { delay(1000); }
     } else {
         memoryImage_.begin();
 #ifndef USE_PSRAM_CHIP
-        tft.println(F("SUCCESSFULLY OPENED \"live.bin\""));
+        Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
 #endif
         // now we copy from the pristine image over to the new one in blocks
         Address size = theFile.size();
         constexpr auto CacheSize = Cache::CacheSize;
 #ifndef USE_PSRAM_CHIP
-        tft.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
+        Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
 #else
-        tft.println(F("TRANSFERRING IMAGE TO PSRAM!"));
+        Serial.println(F("TRANSFERRING IMAGE TO PSRAM!"));
 #endif
         auto* transferCache = theCache_.asTransferCache();
         for (Address i = 0; i < size; i += CacheSize) {
@@ -87,10 +71,10 @@ FeatherM0AdaloggerSBCore::begin() {
             (void)memoryImage_.write(i, transferCache, numRead);
             // wait until we are ready to
             while (SD.card()->isBusy());
-            tft.print(F("."));
+            Serial.print(F("."));
         }
-        tft.println();
-        tft.println(F("CONSTRUCTION COMPLETE!!!"));
+        Serial.println();
+        Serial.println(F("CONSTRUCTION COMPLETE!!!"));
         // make a new copy of this file
         theFile.close();
         while (SD.card()->isBusy());
@@ -115,38 +99,11 @@ FeatherM0AdaloggerSBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
     // right now there is nothing to do here
     return 0;
 }
-void
-FeatherM0AdaloggerSBCore::pushCharacterOut(char value) {
-    // push a character out to the screen
-    if (tft.getCursorY() >= tft.height()) {
-        tft.fillScreen(tft.color565(0,0,0));
-        tft.setCursor(0, 0);
-    }
-    if (value == '\r') {
-        tft.println();
-    } else if (value == '\b') {
-        // backspace
-        if (tft.getCursorX() > 0) {
-            // step back, clear the space and then step back again
-            tft.setCursor(tft.getCursorX() - 1, tft.getCursorY());
-            tft.print(' ');
-            tft.setCursor(tft.getCursorX() - 1, tft.getCursorY());
-        }
-    } else {
-        tft.write(value);
-    }
-}
 ShortOrdinal
 FeatherM0AdaloggerSBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
     switch (address) {
         case 0:
-            return [this]() {
-                auto result = Serial.read();
-                if (result != -1) {
-                    pushCharacterOut(static_cast<char>(result));
-                }
-                return result;
-            }();
+            return Serial.read();
         case 2:
             Serial.flush();
             break;
@@ -160,7 +117,6 @@ void
 FeatherM0AdaloggerSBCore::ioSpaceStore(Address address, ShortOrdinal value) {
     switch (address) {
         case 0:
-            pushCharacterOut(static_cast<char>(value));
             Serial.write(static_cast<char>(value));
             break;
         case 2:
@@ -255,8 +211,7 @@ FeatherM0AdaloggerSBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 
-FeatherM0AdaloggerSBCore::FeatherM0AdaloggerSBCore() : Parent(), tft(LCDCSPin, LCDDCPin),
-pixels(1, NeopixelPin, NEO_GRB + NEO_KHZ800),
+FeatherM0AdaloggerSBCore::FeatherM0AdaloggerSBCore() : Parent(),
 memoryImage_(
 #ifndef USE_PSRAM_CHIP
         0,64_MB, 64_MB,"live.bin", FILE_WRITE
