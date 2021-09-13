@@ -42,6 +42,11 @@
  */
 class GCM4SBCore : public SBCoreArduino {
 public:
+    static constexpr auto PSRAM_EN0 = A0;
+    static constexpr auto PSRAM_EN1 = A1;
+    static constexpr auto PSRAM_EN2 = A2;
+    static constexpr auto PSRAM_EN3 = A3;
+public:
     static constexpr Address RamSize = 8_MB;
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
@@ -78,7 +83,7 @@ private:
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
 #else
-    using RAM = PSRAMChip<53, 10_MHz>;
+    using RAM = PSRAMChip<PSRAM_EN0, 10_MHz>;
 #endif
 private:
     Cache theCache_;
