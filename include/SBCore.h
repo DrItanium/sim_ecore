@@ -32,6 +32,8 @@
 #include "NRF52832FeatherSBCore.h"
 #elif defined(ARDUINO_GRAND_CENTRAL_M4)
 #include "GCM4SBCore.h"
+#elif defined(ARDUINO_FEATHER_M0_ADALOGGER)
+#include "FeatherM0AdaloggerSBCore.h"
 #else
 #error "NO VALID SBCORE IMPLEMENTATION FOR GIVEN TARGET"
 #endif

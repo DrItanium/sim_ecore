@@ -47,12 +47,12 @@
  */
 class FeatherM0AdaloggerSBCore : public SBCoreArduino {
 public:
-    static constexpr auto SDCardEnablePin = 27;
-    static constexpr auto PSRAMEnablePin = 15;
-    static constexpr auto KeyboardInterruptPin = 30;
-    static constexpr auto LCDCSPin = 31;
-    static constexpr auto LCDDCPin = 11;
-    static constexpr auto NeopixelPin = 7;
+    static constexpr auto SDCardEnablePin = 5;
+    static constexpr auto PSRAMEnablePin = 12;
+    static constexpr auto KeyboardInterruptPin = 6;
+    static constexpr auto LCDCSPin = 9;
+    static constexpr auto LCDDCPin = 10;
+    static constexpr auto NeopixelPin = 11;
     static constexpr auto AmbientLightSensorPin = A5;
 public:
     static constexpr Address RamSize = 8_MB;
