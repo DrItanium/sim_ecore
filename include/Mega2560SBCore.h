@@ -50,7 +50,7 @@ public:
     static constexpr Address RamMask = RamSize - 1;
 public:
     using Parent = SBCoreArduino;
-    using Cache = ::Cache<MemoryCell32, 128, 16>;
+    using Cache = ::Cache<MemoryCell32, 64, 16>;
     MEGA2560SBCore();
     ~MEGA2560SBCore() override = default;
     void begin() override;
