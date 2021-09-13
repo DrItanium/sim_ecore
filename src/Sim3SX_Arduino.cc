@@ -39,6 +39,20 @@ void setup() {
 void loop() {
     delay(1000);
 }
+#if __cplusplus >= 201402L
+#ifdef ARDUINO_AVR_MEGA2560
 
+void operator delete(void * ptr, size_t)
+{
+    ::operator delete(ptr);
+}
+
+
+void operator delete[](void * ptr, size_t)
+{
+    ::operator delete(ptr);
+}
+#endif
+#endif // end language is C++14 or greater
 #endif
 

@@ -36,6 +36,8 @@
 #include "FeatherM0AdaloggerSBCore.h"
 #elif defined(ARDUINO_AVR_ATmega1284)
 #include "1284pSBCore.h"
+#elif defined(ARDUINO_AVR_MEGA2560)
+#include "Mega2560SBCore.h"
 #else
 #error "NO VALID SBCORE IMPLEMENTATION FOR GIVEN TARGET"
 #endif
