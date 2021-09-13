@@ -51,7 +51,7 @@ public:
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
 public:
-    using Cache = ::Cache<MemoryCell32, 256, 32>;
+    using Cache = ::Cache<MemoryCell32, 256, 64>;
     using Parent = SBCoreArduino;
     FeatherM0AdaloggerSBCore();
     ~FeatherM0AdaloggerSBCore() override = default;
