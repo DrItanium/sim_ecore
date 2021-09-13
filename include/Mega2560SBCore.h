@@ -35,14 +35,14 @@
 #include "MemoryMappedFileThing.h"
 #include "PSRAMChip.h"
 #include "CacheLine.h"
-#define USE_PSRAM_CHIP
+//#define USE_PSRAM_CHIP
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
  */
 class MEGA2560SBCore : public SBCoreArduino {
 public:
-    static constexpr auto SDCardPin = 3;
+    static constexpr auto SDCardPin = 4;
     static constexpr auto PSRAMPin = 2;
 public:
     static constexpr Address RamSize = 8_MB;
