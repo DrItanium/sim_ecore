@@ -35,6 +35,7 @@
 #include "MemoryMappedFileThing.h"
 #include "PSRAMChip.h"
 #include "CacheLine.h"
+#include <Adafruit_NeoPixel.h>
 #define USE_PSRAM_CHIP
 
 /**
@@ -46,6 +47,7 @@ public:
     static constexpr auto PSRAM_EN1 = A1;
     static constexpr auto PSRAM_EN2 = A2;
     static constexpr auto PSRAM_EN3 = A3;
+    static constexpr auto NeoPixelPin = 80;
 public:
     static constexpr Address RamSize = 8_MB;
     static constexpr Address RamStart = 0x0000'0000;
@@ -87,6 +89,7 @@ private:
 #endif
 private:
     Cache theCache_;
+    Adafruit_NeoPixel pixels;
     RAM memoryImage_;
 };
 

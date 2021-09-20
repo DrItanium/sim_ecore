@@ -34,6 +34,13 @@ SdFat SD(&SDCARD_SPI);
 
 void
 GCM4SBCore::begin() {
+    pixels.begin();
+    pixels.setBrightness(10);
+    pixels.setPixelColor(0, pixels.Color(255, 0, 255));
+    pixels.show();
+    delay(1000);
+    pixels.setPixelColor(0, pixels.Color(0,0,0));
+    pixels.show();
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
@@ -207,6 +214,7 @@ GCM4SBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 GCM4SBCore::GCM4SBCore() : Parent(),
+                           pixels(1, NeoPixelPin, NEO_GRB + NEO_KHZ800),
 memoryImage_(
 #ifndef USE_PSRAM_CHIP
 0,64_MB, 64_MB,"live.bin", FILE_WRITE
