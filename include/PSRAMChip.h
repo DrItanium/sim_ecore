@@ -8,15 +8,11 @@
 #include <SPI.h>
 #include "MemoryThing.h"
 
-template<int pin, uint64_t MaxClockSpeed = 30_MHz>
+template<int pin, uint64_t MaxReadSpeed = 30_MHz, uint64_t MaxWriteSpeed = 50_MHz>
 class PSRAMChip : public MemoryThing
 {
 public:
     static constexpr auto EnablePin = pin;
-    static SPISettings& getSettings() noexcept {
-        static SPISettings settings(MaxClockSpeed, MSBFIRST, SPI_MODE0);
-        return settings;
-    }
 public:
     explicit PSRAMChip(Address baseAddress) noexcept : MemoryThing(baseAddress, baseAddress + 8_MB) { }
     ~PSRAMChip() override = default;
@@ -25,7 +21,7 @@ public:
         digitalWrite(EnablePin, HIGH);
         SPI.begin();
         delayMicroseconds(200); // give the psram chip time to come up
-        SPI.beginTransaction(getSettings());
+        SPI.beginTransaction(SPISettings(MaxWriteSpeed, MSBFIRST, SPI_MODE0));
         digitalWrite(EnablePin, LOW);
         SPI.transfer(0x66);
         digitalWrite(EnablePin, HIGH);
@@ -36,7 +32,7 @@ public:
     }
 protected:
     size_t blockWrite(Address baseAddress, uint8_t *buf, size_t amount) noexcept override {
-        SPI.beginTransaction(getSettings());
+        SPI.beginTransaction(SPISettings(MaxWriteSpeed, MSBFIRST, SPI_MODE0));
         digitalWrite(EnablePin, LOW);
         SPI.transfer(0x02);
         SPI.transfer(baseAddress >> 16);
@@ -48,7 +44,7 @@ protected:
         return amount;
     }
     size_t blockRead(Address baseAddress, uint8_t *buf, size_t amount) noexcept override {
-        SPI.beginTransaction(getSettings());
+        SPI.beginTransaction(SPISettings(MaxReadSpeed, MSBFIRST, SPI_MODE0));
         digitalWrite(EnablePin, LOW);
         SPI.transfer(0x03);
         SPI.transfer(baseAddress >> 16);
