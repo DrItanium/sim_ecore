@@ -55,6 +55,9 @@ GCM4SBCore::begin() {
         while (true) { delay(1000); }
     } else {
         memoryImage_.begin();
+        mem2_.begin();
+        mem3_.begin();
+        mem4_.begin();
 #ifndef USE_PSRAM_CHIP
         Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
 #endif
@@ -221,7 +224,13 @@ memoryImage_(
 #else
 0
 #endif
-) {}
+)
+#ifdef USE_PSRAM_CHIP
+        , mem2_(8_MB),
+          mem3_(16_MB),
+          mem4_(24_MB)
+#endif
+{}
 
 
 

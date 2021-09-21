@@ -85,12 +85,18 @@ private:
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
 #else
-    using RAM = PSRAMChip<PSRAM_EN0, 30_MHz>;
+    using RAM = PSRAMChip<PSRAM_EN0, 10_MHz, 10_MHz>;
+    using RAM2 = PSRAMChip<PSRAM_EN1, 10_MHz, 10_MHz>;
+    using RAM3 = PSRAMChip<PSRAM_EN2, 10_MHz, 10_MHz>;
+    using RAM4 = PSRAMChip<PSRAM_EN3, 10_MHz, 10_MHz>;
 #endif
 private:
     Cache theCache_;
     Adafruit_NeoPixel pixels;
     RAM memoryImage_;
+    RAM2 mem2_;
+    RAM3 mem3_;
+    RAM4 mem4_;
 };
 
 using SBCore = GCM4SBCore;
