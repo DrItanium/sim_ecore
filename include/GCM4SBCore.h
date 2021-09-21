@@ -85,7 +85,7 @@ private:
 #ifndef USE_PSRAM_CHIP
     using RAM = MemoryMappedFileThing;
 #else
-    using RAM = PSRAMChip<PSRAM_EN0, 12_MHz>;
+    using RAM = PSRAMChip<PSRAM_EN0, 30_MHz>;
 #endif
 private:
     Cache theCache_;
