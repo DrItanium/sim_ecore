@@ -34,6 +34,8 @@ SdFat SD;
 
 void
 NRF52832FeatherSBCore::begin() {
+    pinMode(PSRAMEnablePin2, OUTPUT);
+    digitalWrite(PSRAMEnablePin2, HIGH);
     pixels.begin();
     pixels.setBrightness(10);
     pixels.setPixelColor(0, pixels.Color(255, 0, 255));

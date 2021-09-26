@@ -49,6 +49,7 @@ class NRF52832FeatherSBCore : public SBCoreArduino {
 public:
     static constexpr auto SDCardEnablePin = 27;
     static constexpr auto PSRAMEnablePin = 15;
+    static constexpr auto PSRAMEnablePin2 = 16;
     static constexpr auto KeyboardInterruptPin = 30;
     static constexpr auto LCDCSPin = 31;
     static constexpr auto LCDDCPin = 11;
