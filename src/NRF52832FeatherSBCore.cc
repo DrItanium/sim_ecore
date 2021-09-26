@@ -34,8 +34,6 @@ SdFat SD;
 
 void
 NRF52832FeatherSBCore::begin() {
-    pinMode(PSRAMEnablePin2, OUTPUT);
-    digitalWrite(PSRAMEnablePin2, HIGH);
     pixels.begin();
     pixels.setBrightness(10);
     pixels.setPixelColor(0, pixels.Color(255, 0, 255));
@@ -67,17 +65,11 @@ NRF52832FeatherSBCore::begin() {
         while (true) { delay(1000); }
     } else {
         memoryImage_.begin();
-#ifndef USE_PSRAM_CHIP
-        tft.println(F("SUCCESSFULLY OPENED \"live.bin\""));
-#endif
+        mem2_.begin();
         // now we copy from the pristine image over to the new one in blocks
         Address size = theFile.size();
         constexpr auto CacheSize = Cache::CacheSize;
-#ifndef USE_PSRAM_CHIP
-        tft.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
-#else
         tft.println(F("TRANSFERRING IMAGE TO PSRAM!"));
-#endif
         auto* transferCache = theCache_.asTransferCache();
         for (Address i = 0; i < size; i += CacheSize) {
             auto numRead = theFile.read(transferCache, CacheSize);
@@ -225,27 +217,51 @@ NRF52832FeatherSBCore::doIACStore(Address address, Ordinal value) {
 }
 Ordinal
 NRF52832FeatherSBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
-    return getCacheLine(address, memoryImage_).get(address, thingy);
+    if (memoryImage_.respondsTo(address)) {
+        return getCacheLine(address, memoryImage_) .get(address, thingy);
+    } else {
+        return getCacheLine(address, mem2_).get(address, thingy);
+    }
 }
 ShortOrdinal
 NRF52832FeatherSBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
-    return getCacheLine(address, memoryImage_).get(address, thingy);
+    if (memoryImage_.respondsTo(address)) {
+        return getCacheLine(address, memoryImage_) .get(address, thingy);
+    } else {
+        return getCacheLine(address, mem2_).get(address, thingy);
+    }
 }
 ByteOrdinal
 NRF52832FeatherSBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
-    return getCacheLine(address, memoryImage_).get(address, thingy);
+    if (memoryImage_.respondsTo(address)) {
+        return getCacheLine(address, memoryImage_) .get(address, thingy);
+    } else {
+        return getCacheLine(address, mem2_).get(address, thingy);
+    }
 }
 void
 NRF52832FeatherSBCore::doRAMStore(Address address, ByteOrdinal value) {
-    getCacheLine(address, memoryImage_).set(address, value);
+    if (memoryImage_.respondsTo(address)) {
+        getCacheLine(address, memoryImage_) .set(address, value);
+    } else {
+        getCacheLine(address, mem2_).set(address, value);
+    }
 }
 void
 NRF52832FeatherSBCore::doRAMStore(Address address, ShortOrdinal value) {
-    getCacheLine(address, memoryImage_).set(address, value);
+    if (memoryImage_.respondsTo(address)) {
+        getCacheLine(address, memoryImage_) .set(address, value);
+    } else {
+        getCacheLine(address, mem2_).set(address, value);
+    }
 }
 void
 NRF52832FeatherSBCore::doRAMStore(Address address, Ordinal value) {
-    getCacheLine(address, memoryImage_).set(address, value);
+    if (memoryImage_.respondsTo(address)) {
+        getCacheLine(address, memoryImage_) .set(address, value);
+    } else {
+        getCacheLine(address, mem2_).set(address, value);
+    }
 }
 bool
 NRF52832FeatherSBCore::inRAMArea(Address target) noexcept{
@@ -257,16 +273,7 @@ NRF52832FeatherSBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
 
-NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), tft(LCDCSPin, LCDDCPin),
-pixels(1, NeopixelPin, NEO_GRB + NEO_KHZ800),
-memoryImage_(
-#ifndef USE_PSRAM_CHIP
-        0,64_MB, 64_MB,"live.bin", FILE_WRITE
-#else
-        0
-#endif
-)
-{}
+NRF52832FeatherSBCore::NRF52832FeatherSBCore() : Parent(), tft(LCDCSPin, LCDDCPin), pixels(1, NeopixelPin, NEO_GRB + NEO_KHZ800), memoryImage_(0), mem2_(8_MB) {}
 
 // must be last line in file
 #endif // end defined ARDUINO_NRF52832_FEATHER

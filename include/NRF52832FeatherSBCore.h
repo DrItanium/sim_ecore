@@ -36,11 +36,7 @@
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
 #include "CacheLine.h"
-
-#define USE_PSRAM_CHIP
-#ifdef USE_PSRAM_CHIP
 #include "PSRAMChip.h"
-#endif
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
@@ -56,11 +52,11 @@ public:
     static constexpr auto NeopixelPin = 7;
     static constexpr auto AmbientLightSensorPin = A5;
 public:
-    static constexpr Address RamSize = 8_MB;
+    static constexpr Address RamSize = 16_MB;
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
 public:
-    using Cache = ::Cache<MemoryCell32, 256, 64>;
+    using Cache = ::Cache<MemoryCell32, 1024, 16>;
     using Parent = SBCoreArduino;
     NRF52832FeatherSBCore();
     ~NRF52832FeatherSBCore() override = default;
@@ -90,16 +86,14 @@ private:
     auto& getCacheLine(Address target, MemoryThing& thing) noexcept { return theCache_.getCacheLine(target, thing); }
 private:
     void pushCharacterOut(char value);
-#ifndef USE_PSRAM_CHIP
-    using RAM = MemoryMappedFileThing;
-#else
-    using RAM = PSRAMChip<PSRAMEnablePin, 20_MHz>;
-#endif
+    template<auto pin>
+    using RAM = PSRAMChip<pin, 30_MHz>;
 private:
     Adafruit_ILI9341 tft;
     TSC2004 ts;
     Adafruit_NeoPixel pixels;
-    RAM memoryImage_;
+    RAM<PSRAMEnablePin> memoryImage_;
+    RAM<PSRAMEnablePin2> mem2_;
     // we have so much space available, let's have some fun with this
     Cache theCache_;
 };
