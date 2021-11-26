@@ -54,7 +54,7 @@ public:
     static constexpr Address RamMask = RamSize - 1;
 public:
     using Parent = SBCoreArduino;
-    using Cache = ::Cache<DirectMappedCacheWay, MemoryCell32, 2048, 64>;
+    using Cache = ::Cache<TwoElementLRUCacheWay, MemoryCell32, 2048/2, 64>;
     GCM4SBCore();
     ~GCM4SBCore() override = default;
     void begin() override;
