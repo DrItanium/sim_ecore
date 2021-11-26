@@ -15,7 +15,7 @@
  * @brief Readonly view of a cache address
  */
 template<typename C, byte numOffsetBits, byte numTagBits, byte totalBits = 32>
-struct CacheAddress {
+union CacheAddress {
     // Unlike the i960Sx chipset, this version of the cache address is broken up into several parts to make
     // it easy to drill down into each individual cell.
     static constexpr auto NumGroupBits = bitsNeeded(sizeof(C));
@@ -23,7 +23,7 @@ struct CacheAddress {
     static constexpr auto NumOffsetBits = NumTotalOffsetBits - NumGroupBits;
     static constexpr auto NumTagBits = numTagBits;
     static constexpr auto TotalBits = totalBits;
-    static constexpr auto NumRestBits = (TotalBits - (NumTagBits + NumOffsetBits));
+    static constexpr auto NumRestBits = (TotalBits - (NumTagBits + NumOffsetBits + NumGroupBits));
     using CellOffsetType = Address;
     using OffsetType = Address;
     using TagType = Address;
@@ -43,19 +43,16 @@ struct CacheAddress {
     void setTag(TagType v) noexcept { tag = v; }
     void setRest(RestType v) noexcept { rest = v; }
     void setCellOffset(CellOffsetType v) noexcept { cellOffset = v; }
-    [[nodiscard]] constexpr Self aligned() const noexcept { return Self(rest, tag, 0, 0); }
+    [[nodiscard]] constexpr Self aligned() const noexcept { return Self{rest, tag, 0, 0}; }
     void clear() noexcept { value_ = 0; }
 private:
-    union
+    Address value_ = 0;
+    struct
     {
-        Address value_ = 0;
-        struct
-        {
-            CellOffsetType cellOffset: NumGroupBits;
-            OffsetType offset: NumOffsetBits;
-            TagType tag: NumTagBits;
-            RestType rest: NumRestBits;
-        };
+        CellOffsetType cellOffset: NumGroupBits;
+        OffsetType offset: NumOffsetBits;
+        TagType tag: NumTagBits;
+        RestType rest: NumRestBits;
     };
 } __attribute__((packed));
 /**
