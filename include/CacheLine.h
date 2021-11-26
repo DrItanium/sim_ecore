@@ -63,7 +63,7 @@ struct CacheLine {
 public:
     using CellType = C;
     using CacheAddress = ::CacheAddress<CellType, numOffsetBits, numTagBits, totalNumberOfBits>;
-    static constexpr auto NumBytesPerCacheLine = bitsNeeded(numOffsetBits);
+    static constexpr auto NumBytesPerCacheLine = bytesNeeded(numOffsetBits);
     static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(CellType);
     static constexpr auto Mask = NumBytesPerCacheLine - 1;
     static constexpr auto NumBitsForCacheLineOffset = bitsNeeded(NumBytesPerCacheLine);

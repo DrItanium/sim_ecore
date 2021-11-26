@@ -56,7 +56,7 @@ public:
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
 public:
-    using Cache = ::Cache<DirectMappedCacheWay, MemoryCell32, 1024, 64>;
+    using Cache = ::Cache<DirectMappedCacheWay, MemoryCell32, 1024/2, 64>;
     using Parent = SBCoreArduino;
     NRF52832FeatherSBCore();
     ~NRF52832FeatherSBCore() override = default;
