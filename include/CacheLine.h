@@ -11,72 +11,81 @@
 #endif
 #include "MemoryThing.h"
 #include "Types.h"
-template<typename C, size_t numLines, size_t numBytesPerLine>
-struct Cache {
-public:
-    static constexpr auto NumLines = numLines;
+/**
+ * @brief Readonly view of a cache address
+ */
+template<typename C, byte numBitsForCacheLineIndex, byte numBitsForOffset, byte numCellIndexBits, byte num>
+union CacheAddress {
+    using CacheLine = C;
+    constexpr explicit CacheAddress(Address target) noexcept : value_(target) { }
+    constexpr auto getOriginalAddress() const noexcept { return value_; }
+    constexpr auto getTagAddress () const noexcept { return value_ & ~(CacheLine::Mask); }
+    constexpr auto getCacheIndex() const noexcept { return index; }
+    constexpr auto getCellIndex() const noexcept { return cellIndex; }
+    constexpr auto getCellOffset(TreatAsByteOrdinal) const noexcept { return cellOffset; }
+    constexpr auto getCellOffset(TreatAsShortOrdinal) const noexcept { return cellOffset >> 1; }
+    static constexpr auto NumBitsForCacheLineIndex = numBitsForCacheLineIndex;
+private:
+    Address value_;
+    struct {
+        Address cellOffset : CacheLine::NumBitsForCellOffset;
+        Address cellIndex : CacheLine::NumBitsForCellIndex;
+        Address index : NumBitsForCacheLineIndex;
+        Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
+    };
+} __attribute__((packed));
 /**
  * @brief A grand central m4 specific cache line
  */
-    struct CacheLine {
-    public:
-        using CellType = C;
-        static constexpr auto NumBytesPerCacheLine = numBytesPerLine;
-        static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(CellType);
-        static constexpr auto Mask = NumBytesPerCacheLine - 1;
-        static constexpr auto NumBitsForCacheLineOffset = bitsNeeded(NumBytesPerCacheLine);
-        static constexpr auto NumBitsForCellIndex = bitsNeeded(NumCellsPerCacheLine);
-        static constexpr auto NumBitsForCellOffset = bitsNeeded(sizeof(CellType));
-        static_assert(NumBitsForCacheLineOffset == (NumBitsForCellIndex + NumBitsForCellOffset), "Cell offset + Cell index should equal the total offset in an address!");
-        constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
-    public:
-        [[nodiscard]] TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
-        [[nodiscard]] TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal thingy) const noexcept;
-        [[nodiscard]] TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal thingy) const noexcept;
-        void set(Address targetAddress, Ordinal value);
-        void set(Address targetAddress, ShortOrdinal value);
-        void set(Address targetAddress, ByteOrdinal value);
-        static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
-        static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
-        [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
-        [[nodiscard]] constexpr bool matches(Address other) const noexcept { return valid() && (toCacheLineAddress(other) == address_); }
-        /**
-         * @brief Returns true if the cache line is valid and flagged as dirty
-         * @return true if the cache line is valid and the dirty flag has been set
-         */
-        [[nodiscard]] constexpr bool dirty() const noexcept { return dirty_; }
-        void reset(Address newAddress, MemoryThing &newThing);
-        void clear() noexcept;
-    private:
-        CellType storage_[NumCellsPerCacheLine] = { 0 };
-        Address address_ = 0;
-        MemoryThing* backingStorage_ = nullptr;
-        bool dirty_ = false;
-        bool valid_ = false;
-    };
+template<typename C, size_t numLines, size_t numBytesPerLine>
+struct CacheLine {
+public:
+    using CellType = C;
+    static constexpr auto NumBytesPerCacheLine = numBytesPerLine;
+    static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(CellType);
+    static constexpr auto Mask = NumBytesPerCacheLine - 1;
+    static constexpr auto NumBitsForCacheLineOffset = bitsNeeded(NumBytesPerCacheLine);
+    static constexpr auto NumBitsForCellIndex = bitsNeeded(NumCellsPerCacheLine);
+    static constexpr auto NumBitsForCellOffset = bitsNeeded(sizeof(CellType));
+    static_assert(NumBitsForCacheLineOffset == (NumBitsForCellIndex + NumBitsForCellOffset), "Cell offset + Cell index should equal the total offset in an address!");
+    constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
+public:
+    [[nodiscard]] TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
+    [[nodiscard]] TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal thingy) const noexcept;
+    [[nodiscard]] TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal thingy) const noexcept;
+    void set(Address targetAddress, Ordinal value);
+    void set(Address targetAddress, ShortOrdinal value);
+    void set(Address targetAddress, ByteOrdinal value);
+    static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
+    static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
+    [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
+    [[nodiscard]] constexpr bool matches(Address other) const noexcept { return valid() && (toCacheLineAddress(other) == address_); }
+    /**
+     * @brief Returns true if the cache line is valid and flagged as dirty
+     * @return true if the cache line is valid and the dirty flag has been set
+     */
+    [[nodiscard]] constexpr bool dirty() const noexcept { return dirty_; }
+    void reset(Address newAddress, MemoryThing &newThing);
+    void clear() noexcept;
+private:
+    CellType storage_[NumCellsPerCacheLine] = { 0 };
+    Address address_ = 0;
+    MemoryThing* backingStorage_ = nullptr;
+    bool dirty_ = false;
+    bool valid_ = false;
+};
+template<typename C, size_t numLines, size_t numBytesPerLine>
+struct CacheWay {
+
+};
+template<typename C, size_t numLines, size_t numBytesPerLine>
+struct Cache {
+public:
+    using CacheLine = ::CacheLine<C, numLines, numBytesPerLine>;
+    static constexpr auto NumLines = numLines;
     static constexpr auto CacheSize = NumLines * sizeof(CacheLine);
     static constexpr auto NumBitsForCacheLineIndex = bitsNeeded(NumLines);
 public:
-    /**
-     * @brief Readonly view of a cache address
-     */
-    union CacheAddress {
-        constexpr explicit CacheAddress(Address target) noexcept : value_(target) { }
-        constexpr auto getOriginalAddress() const noexcept { return value_; }
-        constexpr auto getTagAddress () const noexcept { return value_ & ~(CacheLine::Mask); }
-        constexpr auto getCacheIndex() const noexcept { return index; }
-        constexpr auto getCellIndex() const noexcept { return cellIndex; }
-        constexpr auto getCellOffset(TreatAsByteOrdinal) const noexcept { return cellOffset; }
-        constexpr auto getCellOffset(TreatAsShortOrdinal) const noexcept { return cellOffset >> 1; }
-    private:
-        Address value_;
-        struct {
-            Address cellOffset : CacheLine::NumBitsForCellOffset;
-            Address cellIndex : CacheLine::NumBitsForCellIndex;
-            Address index : NumBitsForCacheLineIndex;
-            Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
-        };
-    } __attribute__((packed));
 public:
     CacheLine&
     getCacheLine(Address target, MemoryThing& backingMemoryThing) noexcept {
