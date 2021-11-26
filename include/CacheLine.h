@@ -154,6 +154,42 @@ public:
 private:
     Line way_;
 };
+
+template<typename C, byte numOffsetBits, byte numTagBits, byte totalNumberOfBits = 32>
+struct TwoElementLRUCacheWay {
+public:
+    using Line = CacheLine<C, numOffsetBits, numTagBits, totalNumberOfBits>;
+    using CacheAddress = typename Line::CacheAddress;
+    Line& getCacheLine(const CacheAddress& target, MemoryThing& backingMemoryThing) noexcept {
+        static constexpr bool UpdateTable[2] { true, false, };
+        for (auto i = 0; i < 2; ++i) {
+            auto& way = ways_[i];
+            if (way.matches(target)) {
+                leastRecentlyUsed_ = UpdateTable[i] ;
+            }
+        }
+        // mismatch
+        if (leastRecentlyUsed_) {
+           // ways 0
+           leastRecentlyUsed_ = false;
+            ways_[0].reset(target, backingMemoryThing);
+            return ways_[0];
+        } else {
+            // ways 1
+            leastRecentlyUsed_ = true;
+            ways_[1].reset(target, backingMemoryThing);
+            return ways_[1];
+        }
+    }
+    void clear() {
+        for (auto& a : ways_) {
+            a.clear();
+        }
+    }
+private:
+    Line ways_[2];
+    bool leastRecentlyUsed_ = false;
+};
 template<template<typename, auto, auto, auto> typename W, typename C, size_t numLines, size_t numBytesPerLine>
 struct Cache {
 public:
