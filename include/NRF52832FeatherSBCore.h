@@ -56,7 +56,7 @@ public:
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
 public:
-    using Cache = ::Cache<MemoryCell32, 1024/2, 64>;
+    using Cache = ::Cache<DirectMappedCacheWay, MemoryCell32, 1024/2, 64>;
     using Parent = SBCoreArduino;
     NRF52832FeatherSBCore();
     ~NRF52832FeatherSBCore() override = default;
@@ -82,8 +82,15 @@ protected:
     void doRAMStore(Address address, Ordinal value) override;
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
+    using CacheAddress = typename Cache::CacheAddress;
 private:
-    auto& getCacheLine(Address target, MemoryThing& thing) noexcept { return theCache_.getCacheLine(target, thing); }
+    auto& getCacheLine(const CacheAddress& target, MemoryThing& thing) noexcept {
+        return theCache_.getCacheLine(target, thing);
+    }
+    auto& getCacheLine(Address target, MemoryThing& thing) noexcept {
+        CacheAddress addr(target);
+        return getCacheLine(addr, thing);
+    }
 private:
     void pushCharacterOut(char value);
     template<auto pin>

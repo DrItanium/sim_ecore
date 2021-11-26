@@ -217,50 +217,56 @@ NRF52832FeatherSBCore::doIACStore(Address address, Ordinal value) {
 }
 Ordinal
 NRF52832FeatherSBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
+    CacheAddress addr(address);
     if (memoryImage_.respondsTo(address)) {
-        return getCacheLine(address, memoryImage_) .get(address, thingy);
+        return getCacheLine(addr, memoryImage_) .get(addr, thingy);
     } else {
-        return getCacheLine(address, mem2_).get(address, thingy);
+        return getCacheLine(addr, mem2_).get(addr, thingy);
     }
 }
 ShortOrdinal
 NRF52832FeatherSBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
+    CacheAddress addr(address);
     if (memoryImage_.respondsTo(address)) {
-        return getCacheLine(address, memoryImage_) .get(address, thingy);
+        return getCacheLine(addr, memoryImage_) .get(addr, thingy);
     } else {
-        return getCacheLine(address, mem2_).get(address, thingy);
+        return getCacheLine(addr, mem2_).get(addr, thingy);
     }
 }
 ByteOrdinal
 NRF52832FeatherSBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
+    CacheAddress addr(address);
     if (memoryImage_.respondsTo(address)) {
-        return getCacheLine(address, memoryImage_) .get(address, thingy);
+        return getCacheLine(addr, memoryImage_) .get(addr, thingy);
     } else {
-        return getCacheLine(address, mem2_).get(address, thingy);
+        return getCacheLine(addr, mem2_).get(addr, thingy);
     }
 }
 void
 NRF52832FeatherSBCore::doRAMStore(Address address, ByteOrdinal value) {
+    CacheAddress addr(address);
     if (memoryImage_.respondsTo(address)) {
-        getCacheLine(address, memoryImage_) .set(address, value);
+        getCacheLine(addr, memoryImage_) .set(addr, value);
     } else {
-        getCacheLine(address, mem2_).set(address, value);
+        getCacheLine(addr, mem2_).set(addr, value);
     }
 }
 void
 NRF52832FeatherSBCore::doRAMStore(Address address, ShortOrdinal value) {
+    CacheAddress addr(address);
     if (memoryImage_.respondsTo(address)) {
-        getCacheLine(address, memoryImage_) .set(address, value);
+        getCacheLine(addr, memoryImage_) .set(addr, value);
     } else {
-        getCacheLine(address, mem2_).set(address, value);
+        getCacheLine(addr, mem2_).set(addr, value);
     }
 }
 void
 NRF52832FeatherSBCore::doRAMStore(Address address, Ordinal value) {
+    CacheAddress addr(address);
     if (memoryImage_.respondsTo(address)) {
-        getCacheLine(address, memoryImage_) .set(address, value);
+        getCacheLine(addr, memoryImage_) .set(addr, value);
     } else {
-        getCacheLine(address, mem2_).set(address, value);
+        getCacheLine(addr, mem2_).set(addr, value);
     }
 }
 bool
