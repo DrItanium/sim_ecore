@@ -14,24 +14,28 @@
 /**
  * @brief Readonly view of a cache address
  */
-template<typename C, byte numBitsForCacheLineIndex, byte numBitsForOffset, byte numCellIndexBits, byte num>
+template<byte numOffsetBits, byte numTagBits, byte totalBits = 32>
 union CacheAddress {
-    using CacheLine = C;
-    constexpr explicit CacheAddress(Address target) noexcept : value_(target) { }
-    constexpr auto getOriginalAddress() const noexcept { return value_; }
-    constexpr auto getTagAddress () const noexcept { return value_ & ~(CacheLine::Mask); }
-    constexpr auto getCacheIndex() const noexcept { return index; }
-    constexpr auto getCellIndex() const noexcept { return cellIndex; }
-    constexpr auto getCellOffset(TreatAsByteOrdinal) const noexcept { return cellOffset; }
-    constexpr auto getCellOffset(TreatAsShortOrdinal) const noexcept { return cellOffset >> 1; }
-    static constexpr auto NumBitsForCacheLineIndex = numBitsForCacheLineIndex;
+    static constexpr auto NumOffsetBits = numOffsetBits;
+    static constexpr auto NumTagBits = numTagBits;
+    static constexpr auto NumRestBits = (totalBits - (NumTagBits + NumOffsetBits));
+    using OffsetType = Address;
+    using TagType = Address;
+    using RestType = Address;
+    using Self = CacheAddress<numOffsetBits, numTagBits, totalBits>;
+    constexpr explicit CacheAddress(Address target = 0) noexcept : value_(target) { }
+    constexpr CacheAddress(RestType r, TagType t, OffsetType o) noexcept : offset(o), tag(t), rest(r) { }
+    [[nodiscard]] constexpr auto getOriginalAddress() const noexcept { return value_; }
+    [[nodiscard]] constexpr auto getOffset() const noexcept { return offset; }
+    [[nodiscard]] constexpr auto getTag() const noexcept { return tag; }
+    [[nodiscard]] constexpr auto getRest() const noexcept { return rest; }
+    [[nodiscard]] constexpr auto restEqual(const Self& other) const noexcept { return other.getRest() == getRest(); }
 private:
     Address value_;
     struct {
-        Address cellOffset : CacheLine::NumBitsForCellOffset;
-        Address cellIndex : CacheLine::NumBitsForCellIndex;
-        Address index : NumBitsForCacheLineIndex;
-        Address rest : (32 - (NumBitsForCacheLineIndex + CacheLine::NumBitsForCacheLineOffset));
+        Address offset : NumOffsetBits;
+        Address tag : NumTagBits;
+        Address rest : NumRestBits;
     };
 } __attribute__((packed));
 /**
