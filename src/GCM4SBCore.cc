@@ -184,27 +184,33 @@ GCM4SBCore::doIACStore(Address address, Ordinal value) {
     }
 }
 Ordinal
-GCM4SBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
+GCM4SBCore::doRAMLoad(Address addr, TreatAsOrdinal thingy) {
+    CacheAddress address(addr);
     return getCacheLine(address, memoryImage_).get(address, thingy);
 }
 ShortOrdinal
-GCM4SBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
+GCM4SBCore::doRAMLoad(Address addr, TreatAsShortOrdinal thingy) {
+    CacheAddress address(addr);
     return getCacheLine(address, memoryImage_).get(address, thingy);
 }
 ByteOrdinal
-GCM4SBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
+GCM4SBCore::doRAMLoad(Address addr, TreatAsByteOrdinal thingy) {
+    CacheAddress address(addr);
     return getCacheLine(address, memoryImage_).get(address, thingy);
 }
 void
-GCM4SBCore::doRAMStore(Address address, ByteOrdinal value) {
+GCM4SBCore::doRAMStore(Address addr, ByteOrdinal value) {
+    CacheAddress address(addr);
     getCacheLine(address, memoryImage_).set(address, value);
 }
 void
-GCM4SBCore::doRAMStore(Address address, ShortOrdinal value) {
+GCM4SBCore::doRAMStore(Address addr, ShortOrdinal value) {
+    CacheAddress address(addr);
     getCacheLine(address, memoryImage_).set(address, value);
 }
 void
-GCM4SBCore::doRAMStore(Address address, Ordinal value) {
+GCM4SBCore::doRAMStore(Address addr, Ordinal value) {
+    CacheAddress address(addr);
     getCacheLine(address, memoryImage_).set(address, value);
 }
 bool
