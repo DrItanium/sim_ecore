@@ -16,36 +16,44 @@
  */
 template<byte numOffsetBits, byte numTagBits, byte totalBits = 32>
 union CacheAddress {
+    // Unlike the i960Sx chipset, this version of the cache address is broken up into several parts to make
+    // it easy to drill down into each individual cell.
     static constexpr auto NumOffsetBits = numOffsetBits;
     static constexpr auto NumTagBits = numTagBits;
-    static constexpr auto NumRestBits = (totalBits - (NumTagBits + NumOffsetBits));
+    static constexpr auto TotalBits = totalBits;
+    static constexpr auto NumRestBits = (TotalBits - (NumTagBits + NumOffsetBits));
     using OffsetType = Address;
     using TagType = Address;
     using RestType = Address;
     using Self = CacheAddress<numOffsetBits, numTagBits, totalBits>;
     constexpr explicit CacheAddress(Address target = 0) noexcept : value_(target) { }
-    constexpr CacheAddress(RestType r, TagType t, OffsetType o) noexcept : offset(o), tag(t), rest(r) { }
+    constexpr CacheAddress(RestType r, TagType t, OffsetType o = 0) noexcept : offset(o), tag(t), rest(r) { }
     [[nodiscard]] constexpr auto getOriginalAddress() const noexcept { return value_; }
     [[nodiscard]] constexpr auto getOffset() const noexcept { return offset; }
     [[nodiscard]] constexpr auto getTag() const noexcept { return tag; }
     [[nodiscard]] constexpr auto getRest() const noexcept { return rest; }
     [[nodiscard]] constexpr auto restEqual(const Self& other) const noexcept { return other.getRest() == getRest(); }
+    void setOffset(OffsetType v) noexcept { offset = v; }
+    void setTag(TagType v) noexcept { tag = v; }
+    void setRest(RestType v) noexcept { rest = v; }
+    [[nodiscard]] constexpr Self aligned() const noexcept { return Self(rest, tag, 0); }
 private:
     Address value_;
     struct {
-        Address offset : NumOffsetBits;
-        Address tag : NumTagBits;
-        Address rest : NumRestBits;
+        OffsetType  offset : NumOffsetBits;
+        TagType tag : NumTagBits;
+        RestType rest : NumRestBits;
     };
 } __attribute__((packed));
 /**
  * @brief A grand central m4 specific cache line
  */
-template<typename C, size_t numLines, size_t numBytesPerLine>
+template<typename C, byte numOffsetBits,  byte numTagBits, byte totalNumberOfBits = 32>
 struct CacheLine {
 public:
     using CellType = C;
-    static constexpr auto NumBytesPerCacheLine = numBytesPerLine;
+    using CacheAddress = ::CacheAddress<numOffsetBits, numTagBits, totalNumberOfBits>;
+    static constexpr auto NumBytesPerCacheLine = bitsNeeded(numOffsetBits);
     static constexpr auto NumCellsPerCacheLine = NumBytesPerCacheLine / sizeof(CellType);
     static constexpr auto Mask = NumBytesPerCacheLine - 1;
     static constexpr auto NumBitsForCacheLineOffset = bitsNeeded(NumBytesPerCacheLine);
@@ -53,27 +61,48 @@ public:
     static constexpr auto NumBitsForCellOffset = bitsNeeded(sizeof(CellType));
     static_assert(NumBitsForCacheLineOffset == (NumBitsForCellIndex + NumBitsForCellOffset), "Cell offset + Cell index should equal the total offset in an address!");
     constexpr CacheLine() noexcept : address_(0), dirty_(false) { }
+    using CacheOffsetKind = typename CacheAddress::OffsetType;
 public:
-    [[nodiscard]] TreatAsOrdinal::UnderlyingType get(Address targetAddress, TreatAsOrdinal) const noexcept;
-    [[nodiscard]] TreatAsShortOrdinal::UnderlyingType get(Address targetAddress, TreatAsShortOrdinal thingy) const noexcept;
-    [[nodiscard]] TreatAsByteOrdinal::UnderlyingType get(Address targetAddress, TreatAsByteOrdinal thingy) const noexcept;
-    void set(Address targetAddress, Ordinal value);
-    void set(Address targetAddress, ShortOrdinal value);
-    void set(Address targetAddress, ByteOrdinal value);
-    static constexpr auto toCacheLineAddress(Address input) noexcept { return input & ~Mask; }
-    static constexpr auto toCacheLineOffset(Address input) noexcept { return input & Mask; }
+    [[nodiscard]] TreatAsOrdinal::UnderlyingType get(CacheOffsetKind targetAddress, TreatAsOrdinal) const noexcept {
+
+    }
+    [[nodiscard]] TreatAsShortOrdinal::UnderlyingType get(CacheOffsetKind targetAddress, TreatAsShortOrdinal) const noexcept {
+
+    }
+    [[nodiscard]] TreatAsByteOrdinal::UnderlyingType get(CacheOffsetKind targetAddress, TreatAsByteOrdinal) const noexcept {
+
+    }
+    void set(CacheOffsetKind targetAddress, Ordinal value) {
+
+    }
+    void set(CacheOffsetKind targetAddress, ShortOrdinal value) {
+
+    }
+    void set(CacheOffsetKind targetAddress, ByteOrdinal value) {
+
+    }
     [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
-    [[nodiscard]] constexpr bool matches(Address other) const noexcept { return valid() && (toCacheLineAddress(other) == address_); }
+    [[nodiscard]] constexpr bool matches(const CacheAddress& other) const noexcept { return address_.restEqual(other); }
     /**
      * @brief Returns true if the cache line is valid and flagged as dirty
      * @return true if the cache line is valid and the dirty flag has been set
      */
     [[nodiscard]] constexpr bool dirty() const noexcept { return dirty_; }
-    void reset(Address newAddress, MemoryThing &newThing);
-    void clear() noexcept;
+    void reset(Address newAddress, MemoryThing &newThing) {
+
+    }
+    void clear() noexcept {
+        for (auto& entry : storage_) {
+            entry.clear();
+        }
+        dirty_ = false;
+        valid_ = false;
+        backingStorage_ = nullptr;
+        address_.clear();
+    }
 private:
     CellType storage_[NumCellsPerCacheLine] = { 0 };
-    Address address_ = 0;
+    CacheAddress address_{0};
     MemoryThing* backingStorage_ = nullptr;
     bool dirty_ = false;
     bool valid_ = false;
@@ -107,9 +136,6 @@ public:
      * @brief Go through and forcefully zero out all cache lines without saving anything
      */
     void clear() noexcept {
-        for (auto& line : lines_) {
-            line.clear();
-        }
     }
 private:
     CacheLine lines_[NumLines];

@@ -317,14 +317,6 @@ private:
 };
 static_assert(sizeof(MemoryCell32) == sizeof(Ordinal), "MemoryCell32 must be the same size as a long ordinal");
 
-constexpr byte pow2(uint32_t value) noexcept {
-    if (value == 0) {
-        return 1;
-    } else {
-        return pow2(value - 1) * 2;
-    }
-}
-
 static constexpr byte numberOfBitsForCount(uint32_t count) noexcept {
     switch (count) {
         case 0x2: return 1;
