@@ -166,6 +166,7 @@ public:
             auto& way = ways_[i];
             if (way.matches(target)) {
                 leastRecentlyUsed_ = UpdateTable[i] ;
+                return way;
             }
         }
         // mismatch
@@ -182,6 +183,7 @@ public:
         }
     }
     void clear() {
+        leastRecentlyUsed_ = false;
         for (auto& a : ways_) {
             a.clear();
         }
