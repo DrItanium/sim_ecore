@@ -657,28 +657,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::logicalAnd:
-            [this, &instruction]() {
-                setDestination(instruction.getSrcDest(false),
-                               getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) &
-                               getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                               TreatAsOrdinal{});
-            }();
+            setDestination(instruction.getSrcDest(false),
+                           getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) &
+                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
+                           TreatAsOrdinal{});
             break;
         case Opcode::logicalOr:
-            [this, &instruction]() {
-                setDestination(instruction.getSrcDest(false),
-                               getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) |
-                               getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                               TreatAsOrdinal{});
-            }();
+            setDestination(instruction.getSrcDest(false),
+                           getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) |
+                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
+                           TreatAsOrdinal{});
             break;
         case Opcode::logicalXor:
-            [this, &instruction]() {
-                setDestination(instruction.getSrcDest(false),
-                               getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) ^
-                               getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                               TreatAsOrdinal{});
-            }();
+            setDestination(instruction.getSrcDest(false),
+                           getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) ^
+                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
+                           TreatAsOrdinal{});
             break;
         case Opcode::logicalXnor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc2()).getOrdinal() ^ getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
         case Opcode::logicalNor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc2()).getOrdinal() | getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
@@ -690,8 +684,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::notor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
         case Opcode::remi:
             [this, &instruction]() {
-                auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
-                auto src1 = getSourceRegister(instruction.getSrc1()).getInteger();
+                auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
+                auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
                 // taken from the i960Sx manual
                 //dest.setInteger(src2 - ((src2 / src1) * src1));
                 setDestination(instruction.getSrcDest(false), src2 % src1, TreatAsInteger{});
@@ -1307,13 +1301,11 @@ Core::clearLocalRegisters() noexcept {
 
 void
 Core::setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
-    auto& reg = getRegister(index);
-    reg.setOrdinal(value);
+    getRegister(index).setOrdinal(value);
 }
 void
 Core::setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
-    auto& reg = getRegister(index);
-    reg.setInteger(value);
+    getRegister(index).setInteger(value);
 }
 Integer
 Core::getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const {
