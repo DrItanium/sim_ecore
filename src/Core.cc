@@ -294,6 +294,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #undef X
 #undef Z
     };
+    static constexpr Ordinal reverseBitPositions[32] {
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
+            X(28), X(24), X(20), X(16),
+            X(12), X(8), X(4), X(0),
+#undef X
+#undef Z
+    };
     auto condBranch = [this, &instruction](uint8_t mask) {
         if ((ac_.getConditionCode()& mask) != 0) {
             ipRelativeBranch(instruction.getDisplacement()) ;
@@ -887,14 +895,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::scanbit:
             [this, &instruction]() {
-                constexpr Ordinal reverseBitPositions[32] {
-#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
-#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
-                        X(28), X(24), X(20), X(16),
-                        X(12), X(8), X(4), X(0),
-#undef X
-#undef Z
-                };
                 // perform a sanity check
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
@@ -913,14 +913,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::spanbit:
             [this, &instruction]() {
-                constexpr Ordinal reverseBitPositions[32] {
-#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
-#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
-                        X(28), X(24), X(20), X(16),
-                        X(12), X(8), X(4), X(0),
-#undef X
-#undef Z
-                };
                 // perform a sanity check
 #ifdef DESKTOP_BUILD
                 static_assert(reverseBitPositions[0] == (1u << 31));
@@ -1117,13 +1109,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::shrdi:
             [this, &instruction]() {
-                static constexpr Integer bitPositions[32] {
-#define Z(base, offset) static_cast<Integer>(1) << static_cast<Integer>(base + offset)
-#define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
-                        X(0), X(4), X(8), X(12),
-                        X(16), X(20), X(24), X(28)
-#undef X
-                };
                 // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto src = getSourceRegister(instruction.getSrc2()).getInteger();
