@@ -968,7 +968,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 ac_.setConditionCode(0);
                 if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
                     // set the overflow bit in ac
-                    ac_.setOverflowBit(1);
+                    ac_.setOverflowBit(true);
                 }
                 ac_.setCarryBit(result.halves[1] != 0);
 
@@ -991,7 +991,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 ac_.setConditionCode(0);
                 if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
                     // set the overflow bit in ac
-                    ac_.setOverflowBit(1);
+                    ac_.setOverflowBit(true);
                 }
                 ac_.setCarryBit(result.halves[1] != 0);
                 // set the carry out bit
