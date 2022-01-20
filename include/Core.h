@@ -213,26 +213,26 @@ protected:
     virtual Ordinal getFaultTableBase() ;
     virtual Ordinal getInterruptStackPointer();
     virtual void generateFault(FaultType fault);
-    virtual void storeLong(Address destination, LongOrdinal value) {
+    void storeLong(Address destination, LongOrdinal value) {
         DoubleRegister wrapper(value);
         store(destination + 0, wrapper.getOrdinal(0));
         store(destination + 4, wrapper.getOrdinal(1));
     }
-    virtual void atomicStore(Address destination, Ordinal value) {
+    void atomicStore(Address destination, Ordinal value) {
         store(destination, value);
     }
-    virtual void store(Address destination, const TripleRegister& reg) {
+    void store(Address destination, const TripleRegister& reg) {
         store(destination + 0, reg.getOrdinal(0));
         store(destination + 4, reg.getOrdinal(1));
         store(destination + 8, reg.getOrdinal(2));
     }
-    virtual void store(Address destination, const QuadRegister& reg) {
+    void store(Address destination, const QuadRegister& reg) {
         store(destination + 0, reg.getOrdinal(0));
         store(destination + 4, reg.getOrdinal(1));
         store(destination + 8, reg.getOrdinal(2));
         store(destination + 12, reg.getOrdinal(3));
     }
-    virtual void storeShortInteger(Address destination, ShortInteger value) {
+    void storeShortInteger(Address destination, ShortInteger value) {
         union {
             ShortInteger in;
             ShortOrdinal out;
@@ -240,7 +240,7 @@ protected:
         thing.in = value;
         storeShort(destination, thing.out);
     }
-    virtual void storeByteInteger(Address destination, ByteInteger value) {
+    void storeByteInteger(Address destination, ByteInteger value) {
         union {
             ByteInteger in;
             ByteOrdinal out;
@@ -248,21 +248,21 @@ protected:
         thing.in = value;
         storeByte(destination, thing.out);
     }
-    virtual Ordinal atomicLoad(Address destination) {
+    Ordinal atomicLoad(Address destination) {
         return load(destination);
     }
-    virtual LongOrdinal loadLong(Address destination) {
+    LongOrdinal loadLong(Address destination) {
         auto lower = load(destination + 0);
         auto upper = load(destination + 4);
         auto outcome = DoubleRegister(lower, upper).getLongOrdinal();
         return outcome;
     }
-    virtual void load(Address destination, TripleRegister& reg) noexcept {
+    void load(Address destination, TripleRegister& reg) noexcept {
         reg.setOrdinal(load(destination + 0), 0);
         reg.setOrdinal(load(destination + 4), 1);
         reg.setOrdinal(load(destination + 8), 2);
     }
-    virtual void load(Address destination, QuadRegister& reg) noexcept {
+    void load(Address destination, QuadRegister& reg) noexcept {
         reg.setOrdinal(load(destination + 0), 0);
         reg.setOrdinal(load(destination + 4), 1);
         reg.setOrdinal(load(destination + 8), 2);
