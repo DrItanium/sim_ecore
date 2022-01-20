@@ -545,11 +545,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
             // MEM Format
         case Opcode::ldob:
-            [this, &instruction]() {
-                auto address = computeMemoryAddress(instruction);
-                auto result = loadByte(address);
-                setDestination(instruction.getSrcDest(false), result, TreatAsOrdinal{});
-            }();
+            setDestination(instruction.getSrcDest(false),
+                           loadByte(computeMemoryAddress(instruction)),
+                           TreatAsOrdinal {});
             break;
         case Opcode::bx:
             [this, &instruction]() {
@@ -567,38 +565,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::ldos:
-            setDestination(instruction.getSrcDest(false), loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal{});
+            setDestination(instruction.getSrcDest(false),
+                           loadShort(computeMemoryAddress(instruction)),
+                           TreatAsOrdinal{});
             break;
         case Opcode::lda:
             lda(instruction);
             break;
         case Opcode::ld:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto address = computeMemoryAddress(instruction);
-                auto result = load(address);
-                dest.setOrdinal(result);
-            }();
+            setDestination(instruction.getSrcDest(false),
+                           load(computeMemoryAddress(instruction)),
+                           TreatAsOrdinal {});
             break;
         case Opcode::ldl:
-            [this, &instruction]() {
-                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                auto address = computeMemoryAddress(instruction);
-                auto result = loadLong(address);
-                dest.setLongOrdinal(result);
-            }();
+            getDoubleRegister(instruction.getSrcDest(false)).setLongOrdinal( loadLong(computeMemoryAddress(instruction)) );
             break;
         case Opcode::ldt:
-            [this, &instruction]() {
-                load(computeMemoryAddress(instruction),
-                     getTripleRegister(instruction.getSrcDest(false)));
-            }();
+            load(computeMemoryAddress(instruction),
+                 getTripleRegister(instruction.getSrcDest(false)));
             break;
         case Opcode::ldq:
-            [this, &instruction]() {
-                load(computeMemoryAddress(instruction),
-                     getQuadRegister(instruction.getSrcDest(false)));
-            }();
+            load(computeMemoryAddress(instruction),
+                 getQuadRegister(instruction.getSrcDest(false)));
             break;
             // REG format
         case Opcode::addi:
@@ -913,10 +901,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::spanbit:
             [this, &instruction]() {
-                // perform a sanity check
-#ifdef DESKTOP_BUILD
-                static_assert(reverseBitPositions[0] == (1u << 31));
-#endif
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
                 dest.setOrdinal(0xFFFF'FFFF);
@@ -1225,7 +1209,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::calls:
             calls(instruction);
-            break;
             break;
         case Opcode::ret:
             ret();
