@@ -315,7 +315,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     auto testOp = [this, &instruction](byte code) {
         getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(code) ? 1 : 0);
     };
-    switch (instruction.identifyOpcode()) {
+    auto theOpcode = instruction.identifyOpcode();
+    switch (theOpcode) {
         // CTRL Format opcodes
         case Opcode::b:
             ipRelativeBranch(instruction.getDisplacement()) ;
@@ -329,26 +330,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 ipRelativeBranch(instruction.getDisplacement()) ;
             }
             break;
+            // branch instruction opcodes are 0x100-0x170, we shift right by four and then mask the lowest three bits to get the mask
+            // intel encoded the mask directly into the encoding :)
         case Opcode::bg:
-            condBranch(0b001);
-            break;
         case Opcode::be:
-            condBranch(0b010);
-            break;
         case Opcode::bge:
-            condBranch(0b011);
-            break;
         case Opcode::bl:
-            condBranch(0b100);
-            break;
         case Opcode::bne:
-            condBranch(0b101);
-            break;
         case Opcode::ble:
-            condBranch(0b110);
-            break;
         case Opcode::bo:
-            condBranch(0b111);
+            condBranch((static_cast<uint8_t>(theOpcode) >> 4) & 0b111);
             break;
         case Opcode::faultno:
             if (ac_.getConditionCode() == 0) {
