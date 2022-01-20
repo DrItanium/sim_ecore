@@ -26,8 +26,8 @@
 
 #ifndef SIM_ECORE_SBCORE_H
 #define SIM_ECORE_SBCORE_H
-#if defined(ARDUINO_AVR_MEGA2560)
-#include "Mega2560SBCore.h"
+#if defined(EBI_COMMUNICATION)
+#include "EBISBCore.h"
 #else
 #error "NO VALID SBCORE IMPLEMENTATION FOR GIVEN TARGET"
 #endif

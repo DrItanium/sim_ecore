@@ -23,17 +23,17 @@
 // Created by jwscoggins on 8/21/21.
 //
 
-#ifdef ARDUINO_AVR_MEGA2560
+#ifdef EBI_COMMUNICATION
 #include <Arduino.h>
 
 #include <SPI.h>
 #include "Types.h"
-#include "Mega2560SBCore.h"
+#include "EBISBCore.h"
 //#include <SdFat.h>
 //SdFat SD;
 
 void
-MEGA2560SBCore::begin() {
+EBISBCore::begin() {
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
@@ -85,20 +85,20 @@ MEGA2560SBCore::begin() {
 
 
 ByteOrdinal
-MEGA2560SBCore::ioSpaceLoad(Address address, TreatAsByteOrdinal) {
+EBISBCore::ioSpaceLoad(Address address, TreatAsByteOrdinal) {
     return 0;
 }
 void
-MEGA2560SBCore::ioSpaceStore(Address address, ByteOrdinal value) {
+EBISBCore::ioSpaceStore(Address address, ByteOrdinal value) {
     // nothing to do here right now
 }
 Ordinal
-MEGA2560SBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
+EBISBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
     // right now there is nothing to do here
     return 0;
 }
 ShortOrdinal
-MEGA2560SBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
+EBISBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
     switch (address) {
         case 2:
             Serial.flush();
@@ -112,7 +112,7 @@ MEGA2560SBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
 }
 
 void
-MEGA2560SBCore::ioSpaceStore(Address address, ShortOrdinal value) {
+EBISBCore::ioSpaceStore(Address address, ShortOrdinal value) {
     switch (address) {
         case 2:
             Serial.flush();
@@ -125,27 +125,27 @@ MEGA2560SBCore::ioSpaceStore(Address address, ShortOrdinal value) {
     }
 }
 void
-MEGA2560SBCore::ioSpaceStore(Address address, Ordinal value) {
+EBISBCore::ioSpaceStore(Address address, Ordinal value) {
     // nothing to do right now
 }
 ByteOrdinal
-MEGA2560SBCore::doIACLoad(Address address, TreatAsByteOrdinal ordinal) {
+EBISBCore::doIACLoad(Address address, TreatAsByteOrdinal ordinal) {
     return 0;
 }
 ShortOrdinal
-MEGA2560SBCore::doIACLoad(Address address, TreatAsShortOrdinal ordinal) {
+EBISBCore::doIACLoad(Address address, TreatAsShortOrdinal ordinal) {
     return 0;
 }
 void
-MEGA2560SBCore::doIACStore(Address address, ByteOrdinal value) {
+EBISBCore::doIACStore(Address address, ByteOrdinal value) {
     // do nothing
 }
 void
-MEGA2560SBCore::doIACStore(Address address, ShortOrdinal value) {
+EBISBCore::doIACStore(Address address, ShortOrdinal value) {
     // do nothing
 }
 Ordinal
-MEGA2560SBCore::doIACLoad(Address address, TreatAsOrdinal) {
+EBISBCore::doIACLoad(Address address, TreatAsOrdinal) {
     switch (address) {
         case HaltRegisterOffset:
             haltExecution();
@@ -161,7 +161,7 @@ MEGA2560SBCore::doIACLoad(Address address, TreatAsOrdinal) {
     return 0;
 }
 void
-MEGA2560SBCore::doIACStore(Address address, Ordinal value) {
+EBISBCore::doIACStore(Address address, Ordinal value) {
     switch (address) {
         case HaltRegisterOffset:
             haltExecution();
@@ -176,7 +176,7 @@ MEGA2560SBCore::doIACStore(Address address, Ordinal value) {
     }
 }
 Ordinal
-MEGA2560SBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
+EBISBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
 #if 0
     return getCacheLine(address, memoryImage_).get(address, thingy);
 #else
@@ -184,7 +184,7 @@ MEGA2560SBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
 #endif
 }
 ShortOrdinal
-MEGA2560SBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
+EBISBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
 #if 0
     return getCacheLine(address, memoryImage_).get(address, thingy);
 #else
@@ -192,7 +192,7 @@ MEGA2560SBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
 #endif
 }
 ByteOrdinal
-MEGA2560SBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
+EBISBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
 #if 0
     return getCacheLine(address, memoryImage_).get(address, thingy);
 #else
@@ -200,33 +200,33 @@ MEGA2560SBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
 #endif
 }
 void
-MEGA2560SBCore::doRAMStore(Address address, ByteOrdinal value) {
+EBISBCore::doRAMStore(Address address, ByteOrdinal value) {
 #if 0
     getCacheLine(address, memoryImage_).set(address, value);
 #endif
 }
 void
-MEGA2560SBCore::doRAMStore(Address address, ShortOrdinal value) {
+EBISBCore::doRAMStore(Address address, ShortOrdinal value) {
 #if 0
     getCacheLine(address, memoryImage_).set(address, value);
 #endif
 }
 void
-MEGA2560SBCore::doRAMStore(Address address, Ordinal value) {
+EBISBCore::doRAMStore(Address address, Ordinal value) {
 #if 0
     getCacheLine(address, memoryImage_).set(address, value);
 #endif
 }
 bool
-MEGA2560SBCore::inRAMArea(Address target) noexcept{
+EBISBCore::inRAMArea(Address target) noexcept{
     // since the ram starts at address zero, there is no need to worry about shifting the offset
     return target >= RamStart && target < RamSize;
 }
 Address
-MEGA2560SBCore::toRAMOffset(Address target) noexcept{
+EBISBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
-MEGA2560SBCore::MEGA2560SBCore() : Parent() { }
+EBISBCore::EBISBCore() : Parent() { }
 
 
 #endif

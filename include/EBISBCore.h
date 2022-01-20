@@ -24,35 +24,29 @@
 // Created by jwscoggins on 8/21/21.
 //
 
-#ifndef SIM3_MEGA2560SBCORE_H
-#define SIM3_MEGA2560SBCORE_H
-#ifdef ARDUINO_AVR_MEGA2560
+#ifndef SIM3_EBISBCORE_H
+#define SIM3_EBISBCORE_H
+#ifdef EBI_COMMUNICATION
 #include <Arduino.h>
-#include <SPI.h>
-//#include <SdFat.h>
 #include "Types.h"
 #include "SBCoreArduino.h"
-//#include "MemoryMappedFileThing.h"
-#include "PSRAMChip.h"
-#include "CacheLine.h"
-//#define USE_PSRAM_CHIP
 
 /**
  * @brief a version of the ArduinoSBCore meant for the grand central m4
  */
-class MEGA2560SBCore : public SBCoreArduino {
+class EBISBCore : public SBCoreArduino {
 public:
-    static constexpr auto SDCardPin = 4;
-    static constexpr auto PSRAMPin = 2;
-public:
-    static constexpr Address RamSize = 8_MB;
+#ifdef BUS24
+    static constexpr Address RamSize = 16_MB;
+#else
+    static constexpr Address RamSize = 4096_MB - 1;
+#endif
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
 public:
     using Parent = SBCoreArduino;
-    //using Cache = ::Cache<MemoryCell32, 64, 16>;
-    MEGA2560SBCore();
-    ~MEGA2560SBCore() override = default;
+    EBISBCore();
+    ~EBISBCore() override = default;
     void begin() override;
 protected:
     ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal ordinal) override;
@@ -75,20 +69,9 @@ protected:
     void doRAMStore(Address address, Ordinal value) override;
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
-private:
-    //auto& getCacheLine(Address target, MemoryThing& thing) noexcept { return theCache_.getCacheLine(target, thing); }
-private:
-#ifndef USE_PSRAM_CHIP
-    //using RAM = MemoryMappedFileThing;
-#else
-    //using RAM = PSRAMChip<PSRAMPin, 5_MHz>;
-#endif
-private:
-    //Cache theCache_;
-    //RAM memoryImage_;
 };
 
-using SBCore = MEGA2560SBCore;
+using SBCore = EBISBCore;
 #endif
-#endif //SIM3_MEGA2560SBCORE_H
+#endif //SIM3_EBISBCORE_H
 
