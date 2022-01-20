@@ -29,8 +29,8 @@
 #include <SPI.h>
 #include "Types.h"
 #include "Mega2560SBCore.h"
-#include <SdFat.h>
-SdFat SD;
+//#include <SdFat.h>
+//SdFat SD;
 
 void
 MEGA2560SBCore::begin() {
@@ -38,6 +38,7 @@ MEGA2560SBCore::begin() {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
     SPI.begin();
+#if 0
     while (!SD.begin(SDCardPin)) {
         Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
@@ -78,6 +79,7 @@ MEGA2560SBCore::begin() {
         // okay also clear out the cache lines since the transfer buffer is shared with the cache
         theCache_.clear();
     }
+#endif
 }
 
 
@@ -175,27 +177,45 @@ MEGA2560SBCore::doIACStore(Address address, Ordinal value) {
 }
 Ordinal
 MEGA2560SBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
+#if 0
     return getCacheLine(address, memoryImage_).get(address, thingy);
+#else
+    return 0;
+#endif
 }
 ShortOrdinal
 MEGA2560SBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
+#if 0
     return getCacheLine(address, memoryImage_).get(address, thingy);
+#else
+    return 0;
+#endif
 }
 ByteOrdinal
 MEGA2560SBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
+#if 0
     return getCacheLine(address, memoryImage_).get(address, thingy);
+#else
+    return 0;
+#endif
 }
 void
 MEGA2560SBCore::doRAMStore(Address address, ByteOrdinal value) {
+#if 0
     getCacheLine(address, memoryImage_).set(address, value);
+#endif
 }
 void
 MEGA2560SBCore::doRAMStore(Address address, ShortOrdinal value) {
+#if 0
     getCacheLine(address, memoryImage_).set(address, value);
+#endif
 }
 void
 MEGA2560SBCore::doRAMStore(Address address, Ordinal value) {
+#if 0
     getCacheLine(address, memoryImage_).set(address, value);
+#endif
 }
 bool
 MEGA2560SBCore::inRAMArea(Address target) noexcept{
@@ -206,14 +226,7 @@ Address
 MEGA2560SBCore::toRAMOffset(Address target) noexcept{
     return target & RamMask;
 }
-MEGA2560SBCore::MEGA2560SBCore() : Parent(),
-memoryImage_(
-#ifndef USE_PSRAM_CHIP
-0,64_MB, 64_MB,"live.bin", FILE_WRITE
-#else
-0
-#endif
-) {}
+MEGA2560SBCore::MEGA2560SBCore() : Parent() { }
 
 
 #endif

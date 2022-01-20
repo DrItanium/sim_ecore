@@ -1,5 +1,5 @@
-// sim3
-// Copyright (c) 2021, Joshua Scoggins
+// sime_core
+// Copyright (c) 2021-2022, Joshua Scoggins
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 #ifdef ARDUINO_AVR_MEGA2560
 #include <Arduino.h>
 #include <SPI.h>
-#include <SdFat.h>
+//#include <SdFat.h>
 #include "Types.h"
 #include "SBCoreArduino.h"
 #include "MemoryMappedFileThing.h"
@@ -50,7 +50,7 @@ public:
     static constexpr Address RamMask = RamSize - 1;
 public:
     using Parent = SBCoreArduino;
-    using Cache = ::Cache<MemoryCell32, 64, 16>;
+    //using Cache = ::Cache<MemoryCell32, 64, 16>;
     MEGA2560SBCore();
     ~MEGA2560SBCore() override = default;
     void begin() override;
@@ -76,16 +76,16 @@ protected:
     bool inRAMArea(Address target) noexcept override;
     Address toRAMOffset(Address target) noexcept override;
 private:
-    auto& getCacheLine(Address target, MemoryThing& thing) noexcept { return theCache_.getCacheLine(target, thing); }
+    //auto& getCacheLine(Address target, MemoryThing& thing) noexcept { return theCache_.getCacheLine(target, thing); }
 private:
 #ifndef USE_PSRAM_CHIP
-    using RAM = MemoryMappedFileThing;
+    //using RAM = MemoryMappedFileThing;
 #else
-    using RAM = PSRAMChip<PSRAMPin, 5_MHz>;
+    //using RAM = PSRAMChip<PSRAMPin, 5_MHz>;
 #endif
 private:
-    Cache theCache_;
-    RAM memoryImage_;
+    //Cache theCache_;
+    //RAM memoryImage_;
 };
 
 using SBCore = MEGA2560SBCore;
