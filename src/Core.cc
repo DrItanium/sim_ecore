@@ -451,47 +451,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 getRegister(instruction.getSrcDest(false)).setInteger(src2 + 1);
             }();
             break;
+            // just like with the others, intel encoded the mask for cmpo operations into the opcode itself
+            // we can just extract it
         case Opcode::cmpobg:
-            cmpobx(instruction, 0b001);
-            break;
         case Opcode::cmpobe:
-            cmpobx(instruction, 0b010);
-            break;
         case Opcode::cmpobge:
-            cmpobx(instruction, 0b011);
-            break;
         case Opcode::cmpobl:
-            cmpobx(instruction, 0b100);
-            break;
         case Opcode::cmpobne:
-            cmpobx(instruction, 0b101);
-            break;
         case Opcode::cmpoble:
-            cmpobx(instruction, 0b110);
+            cmpobx(instruction, (static_cast<byte>(theOpcode) >> 4) & 0b111);
             break;
+
+            // just like with the others, intel encoded the mask for cmpi operations into the opcode itself
+            // we can just extract it
         case Opcode::cmpibno:
-            cmpibx(instruction, 0b000);
-            break;
         case Opcode::cmpibg:
-            cmpibx(instruction, 0b001);
-            break;
         case Opcode::cmpibe:
-            cmpibx(instruction, 0b010);
-            break;
         case Opcode::cmpibge:
-            cmpibx(instruction, 0b011);
-            break;
         case Opcode::cmpibl:
-            cmpibx(instruction, 0b100);
-            break;
         case Opcode::cmpibne:
-            cmpibx(instruction, 0b101);
-            break;
         case Opcode::cmpible:
-            cmpibx(instruction, 0b110);
-            break;
         case Opcode::cmpibo:
-            cmpibx(instruction, 0b111);
+            cmpibx(instruction, (static_cast<byte>(theOpcode) >> 4) & 0b111);
             break;
         case Opcode::concmpi:
             [this, &instruction]() {
