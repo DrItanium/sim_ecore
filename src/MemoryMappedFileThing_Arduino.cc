@@ -3,6 +3,7 @@
 //
 
 #ifdef ARDUINO
+#ifndef I960_CPU_REPLACEMENT_CORE
 #include "MemoryMappedFileThing.h"
 extern SdFat SD;
 void
@@ -40,5 +41,5 @@ MemoryMappedFileThing::blockWrite(Address baseAddress, byte *buf, size_t amount)
     return backingStorage_.write(buf, amount);
 
 }
-
+#endif
 #endif

@@ -6,6 +6,7 @@
 #define SIM3_MEMORYMAPPEDFILETHING_H
 #ifdef ARDUINO
 #include <Arduino.h>
+#ifndef I960_CPU_REPLACEMENT_CORE
 #include <SdFat.h>
 #include "MemoryThing.h"
 class MemoryMappedFileThing : public MemoryThing {
@@ -25,6 +26,7 @@ private:
     Address fileSize_;
     File backingStorage_;
 };
+#endif
 #elif defined(DESKTOP_BUILD)
 /// @todo implement here
 #endif
