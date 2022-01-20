@@ -72,19 +72,10 @@ Core::getRegister(RegisterIndex targetIndex) {
         return getLocals().getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getRegister(static_cast<uint8_t>(targetIndex));
-    } else
-#ifdef DESKTOP_BUILD
-        if (isLiteral(targetIndex)) {
-        throw "Literals cannot be modified";
     } else {
-        throw "Illegal register requested";
-    }
-#else
-    {
         static Register badRegister(-1);
         return badRegister;
     }
-#endif
 }
 
 DoubleRegister&
@@ -93,19 +84,10 @@ Core::getDoubleRegister(RegisterIndex targetIndex) {
         return getLocals().getDoubleRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getDoubleRegister(static_cast<int>(targetIndex));
-    } else
-#ifdef DESKTOP_BUILD
-        if (isLiteral(targetIndex)) {
-        throw "Literals cannot be modified";
     } else {
-        throw "Illegal register requested";
-    }
-#else
-    {
         static DoubleRegister badRegister(-1);
         return badRegister;
     }
-#endif
 }
 
 
@@ -115,19 +97,10 @@ Core::getTripleRegister(RegisterIndex targetIndex) {
         return getLocals().getTripleRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getTripleRegister(static_cast<int>(targetIndex));
-    } else
-#ifdef DESKTOP_BUILD
-        if (isLiteral(targetIndex)) {
-        throw "Literals cannot be modified";
     } else {
-        throw "Illegal register requested";
-    }
-#else
-    {
         static TripleRegister badRegister(-1);
         return badRegister;
     }
-#endif
 }
 
 QuadRegister&
@@ -136,19 +109,10 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
         return getLocals().getQuadRegister(static_cast<int>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getQuadRegister(static_cast<int>(targetIndex));
-    } else
-#ifdef DESKTOP_BUILD
-        if (isLiteral(targetIndex)) {
-        throw "Literals cannot be modified";
     } else {
-        throw "Illegal register requested";
-    }
-#else
-    {
         static QuadRegister badRegister(-1);
         return badRegister;
     }
-#endif
 }
 
 const Register&
@@ -160,12 +124,8 @@ Core::getRegister(RegisterIndex targetIndex) const {
     } else if (isLiteral(targetIndex)) {
         return OrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-#ifdef DESKTOP_BUILD
-        throw "Illegal register requested";
-#else
         static Register badRegister(-1);
         return badRegister;
-#endif
     }
 }
 
@@ -179,12 +139,8 @@ Core::getDoubleRegister(RegisterIndex targetIndex) const {
         /// @todo implement double register literal support, according to the docs it is allowed
         return LongOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-#ifdef DESKTOP_BUILD
-        throw "Illegal register requested";
-#else
         static DoubleRegister badRegister(-1);
         return badRegister;
-#endif
     }
 }
 
@@ -195,15 +151,10 @@ Core::getTripleRegister(RegisterIndex targetIndex) const {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getTripleRegister(static_cast<uint8_t>(targetIndex));
     } else if (isLiteral(targetIndex)) {
-        /// @todo implement double register literal support, according to the docs it is allowed
         return TripleOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-#ifdef DESKTOP_BUILD
-        throw "Illegal register requested";
-#else
         static TripleRegister badRegister(-1);
         return badRegister;
-#endif
     }
 }
 
@@ -214,15 +165,10 @@ Core::getQuadRegister(RegisterIndex targetIndex) const {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getQuadRegister(static_cast<uint8_t>(targetIndex));
     } else if (isLiteral(targetIndex)) {
-        /// @todo implement double register literal support, according to the docs it is allowed
         return QuadOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-#ifdef DESKTOP_BUILD
-        throw "Illegal register requested";
-#else
         static QuadRegister badRegister(-1);
         return badRegister;
-#endif
     }
 }
 
