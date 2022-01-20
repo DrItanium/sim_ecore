@@ -356,7 +356,6 @@ private:
     /**
      * @brief Number of register frames allocated "on-chip", shouldn't be too large as performance will suffer
      */
-    static constexpr Ordinal NumRegisterFrames = 32;
     [[nodiscard]] RegisterFrame& getLocals() noexcept;
     [[nodiscard]] const RegisterFrame& getLocals() const noexcept;
     [[nodiscard]] LocalRegisterPack& getNextPack() noexcept;
@@ -383,6 +382,7 @@ protected:
     Ordinal salign_;
     Ordinal c_;
     Ordinal currentFrameIndex_ = 0;
+    static constexpr Ordinal NumRegisterFrames = 4;
     LocalRegisterPack frames[NumRegisterFrames];
 };
 #endif //SIM3_CORE_H

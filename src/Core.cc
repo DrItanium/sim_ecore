@@ -360,6 +360,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             generateFault(FaultType::Constraint_Range);
         }
     };
+    auto testOp = [this, &instruction](byte code) {
+        getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(code) ? 1 : 0);
+    };
     switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
         case Opcode::b:
@@ -423,47 +426,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
             // COBR Format
         case Opcode::testno:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b000>() ? 1 : 0);
-            }();
+            testOp(0b000);
             break;
         case Opcode::testg:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b001>() ? 1 : 0);
-
-            }();
+            testOp(0b001);
             break;
         case Opcode::teste:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b010>() ? 1 : 0);
-
-            }();
+            testOp(0b010);
             break;
         case Opcode::testge:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b011>() ? 1 : 0);
-
-            }();
+            testOp(0b011);
             break;
         case Opcode::testl:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b100>() ? 1 : 0);
-            }();
+            testOp(0b100);
             break;
         case Opcode::testne:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b101>() ? 1 : 0);
-            }();
+            testOp(0b101);
             break;
         case Opcode::testle:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b110>() ? 1 : 0);
-            }();
+            testOp(0b110);
             break;
         case Opcode::testo:
-            [this, &instruction]() {
-                getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs<0b111>() ? 1 : 0);
-            }();
+            testOp(0b111);
             break;
         case Opcode::bbc:
             // branch if bit is clear

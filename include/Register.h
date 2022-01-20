@@ -230,14 +230,13 @@ X(name ## Mask , field ## Mask, bool);
 #undef Y
 #undef X
 public:
-    template<uint8_t value>
-    constexpr bool conditionCodeIs() const noexcept {
-        if constexpr ((value & 0b111) == 0b000) {
+    constexpr bool conditionCodeIs(uint8_t value) const noexcept {
+        if ((value & 0b111) == 0b000) {
             return (getConditionCode() & (value & 0b111)) == 0;
         } else {
             return (getConditionCode() & (value & 0b111)) != 0;
         }
-    };
+    }
     /**
      * Reads and modifies contents of this object
      */
