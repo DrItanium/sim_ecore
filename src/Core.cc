@@ -346,26 +346,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 generateFault(FaultType::Constraint_Range);
             }
             break;
+            // like with the branch instructions, intel stashed the mask directly into the opcode itself
+            // so do the same thing (except for 0b000 because that has a special meaning)
         case Opcode::faultg:
-            condFault(0b001);
-            break;
         case Opcode::faulte:
-            condFault(0b010);
-            break;
         case Opcode::faultge:
-            condFault(0b011);
-            break;
         case Opcode::faultl:
-            condFault(0b100);
-            break;
         case Opcode::faultne:
-            condFault(0b101);
-            break;
         case Opcode::faultle:
-            condFault(0b110);
-            break;
         case Opcode::faulto:
-            condFault(0b111);
+            condFault((static_cast<uint8_t>(theOpcode) >> 4) & 0b111);
             break;
             // COBR Format
         case Opcode::testno:
