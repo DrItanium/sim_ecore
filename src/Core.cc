@@ -44,26 +44,24 @@ Core::cycle() noexcept {
         ip_.setOrdinal(ip_.getOrdinal() + advanceIPBy);
     }
 }
-
-void
-Core::cmpi(Integer src1, Integer src2) noexcept {
+template<typename T>
+byte
+compareGeneric(T src1, T src2) noexcept {
     if (src1 < src2) {
-        ac_.setConditionCode(0b100);
+        return 0b100;
     } else if (src1 == src2) {
-        ac_.setConditionCode(0b010);
+        return 0b010;
     } else {
-        ac_.setConditionCode(0b001);
+        return 0b001;
     }
 }
 void
+Core::cmpi(Integer src1, Integer src2) noexcept {
+    ac_.setConditionCode(compareGeneric(src1, src2));
+}
+void
 Core::cmpo(Ordinal src1, Ordinal src2) noexcept {
-    if (src1 < src2) {
-        ac_.setConditionCode(0b100);
-    } else if (src1 == src2) {
-        ac_.setConditionCode(0b010);
-    } else {
-        ac_.setConditionCode(0b001);
-    }
+    ac_.setConditionCode(compareGeneric(src1, src2));
 }
 
 Register&
