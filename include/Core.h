@@ -499,6 +499,8 @@ private:
     Ordinal scaledValueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
     Integer scaledValueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
     void restoreStandardFrame() noexcept;
+    void fmark(const Instruction& inst) noexcept;
+    void mark(const Instruction& inst) noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

@@ -736,29 +736,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             flushreg();
             break;
         case Opcode::fmark:
-            [this]() {
-                // Generates a breakpoint trace-event. This instruction causes a breakpoint trace-event to be generated, regardless of the
-                // setting of the breakpoint trace mode flag (to be implemented), providing the trace-enable bit (bit 0) of the process
-                // controls is set.
-
-                // if pc.te == 1 then raiseFault(BreakpointTraceFault)
-                /// @todo implement
-                if (pc_.getTraceEnable()) {
-                    generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
-                }
-            }();
+            fmark(instruction);
             break;
         case Opcode::mark:
-            [this, &instruction]() {
-                // Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
-                // The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
-                // controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
-                if (pc_.getTraceEnable() && tc_.getBreakpointTraceMode()) {
-                    generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
-                }
-                // if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
-                /// @todo implement
-            }();
+            mark(instruction);
             break;
 
         case Opcode::modac:
@@ -1540,4 +1521,28 @@ Core::enterCall(Address newFP) noexcept {
 
 Core::~Core() {
     // default impl
+}
+void
+Core::mark(const Instruction& inst) noexcept {
+// Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
+// The breakpoint trace mode is enabled if the trace-enable bit (bit 0) of the process
+// controls and the breakpoint-trace mode bit (bit 7) of the trace controls have been zet
+    if (pc_.getTraceEnable() && tc_.getBreakpointTraceMode()) {
+        generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
+    }
+// if pc.te == 1 && breakpoint_trace_flag then raise trace breakpoint fault
+/// @todo implement
+}
+void
+Core::fmark(const Instruction &) noexcept {
+
+// Generates a breakpoint trace-event. This instruction causes a breakpoint trace-event to be generated, regardless of the
+// setting of the breakpoint trace mode flag (to be implemented), providing the trace-enable bit (bit 0) of the process
+// controls is set.
+
+// if pc.te == 1 then raiseFault(BreakpointTraceFault)
+/// @todo implement
+    if (pc_.getTraceEnable()) {
+        generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
+    }
 }
