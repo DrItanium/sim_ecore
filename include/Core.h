@@ -480,7 +480,9 @@ private:
         }
         setDestinationFromSrcDest(inst, result, TreatAsOrdinal{});
     }
-
+private:
+    void bbc(const Instruction& inst) noexcept;
+    void bbs(const Instruction& inst) noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

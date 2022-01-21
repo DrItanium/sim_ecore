@@ -96,6 +96,22 @@ namespace {
     DoubleRegister BadRegisterDouble(-1);
     TripleRegister BadRegisterTriple(-1);
     QuadRegister BadRegisterQuad(-1);
+    constexpr Ordinal bitPositions[32] {
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
+            X(0), X(4), X(8), X(12),
+            X(16), X(20), X(24), X(28)
+#undef X
+#undef Z
+    };
+    constexpr Ordinal reverseBitPositions[32] {
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
+            X(28), X(24), X(20), X(16),
+            X(12), X(8), X(4), X(0),
+#undef X
+#undef Z
+    };
 }
 
 Register&
@@ -307,31 +323,54 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
     }
 };
 void
+Core::bbc(const Instruction& instruction) noexcept {
+    auto targetRegister = instruction.getSrc1();
+    auto& bpReg = getSourceRegister(targetRegister);
+    auto bpOrd = bpReg.getOrdinal();
+    auto masked = bpOrd & 0b11111;
+    auto srcIndex = instruction.getSrc2();
+    const auto& srcReg = getSourceRegister(srcIndex);
+    auto src = srcReg.getOrdinal();
+    auto bitpos = bitPositions[masked];
+    if ((bitpos & src) == 0) {
+        // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
+        ac_.setConditionCode(0b000);
+        // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+        // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+        auto displacement = instruction.getDisplacement();
+        ip_.setInteger(ip_.getInteger() + displacement);
+        advanceIPBy = 0;
+    } else {
+        ac_.setConditionCode(0b010);
+    }
+}
+void
+Core::bbs(const Instruction& instruction) noexcept {
+    auto masked = valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111;
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto bitpos = bitPositions[masked];
+    if ((bitpos & src) != 0) {
+        ac_.setConditionCode(0b010);
+        // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+        // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+        auto displacement = instruction.getDisplacement();
+        ip_.setInteger(ip_.getInteger() + displacement);
+        advanceIPBy = 0;
+    } else {
+        ac_.setConditionCode(0b000);
+    }
+
+}
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("IP: 0x");
     Serial.println(ip_.getOrdinal(), HEX);
 #endif
 #endif
-    static constexpr Ordinal bitPositions[32] {
-#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
-#define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
-            X(0), X(4), X(8), X(12),
-            X(16), X(20), X(24), X(28)
-#undef X
-#undef Z
-    };
-    static constexpr Ordinal reverseBitPositions[32] {
-#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
-#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
-            X(28), X(24), X(20), X(16),
-            X(12), X(8), X(4), X(0),
-#undef X
-#undef Z
-    };
     auto condBranch = [this, &instruction](uint8_t mask) {
         if ((ac_.getConditionCode()& mask) != 0) {
             ipRelativeBranch(instruction.getDisplacement()) ;
@@ -344,27 +383,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     };
     auto testOp = [this, &instruction](byte code) {
         getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(code) ? 1 : 0);
-    };
-    auto bbc = [this, &instruction]() {
-        auto targetRegister = instruction.getSrc1();
-        auto& bpReg = getSourceRegister(targetRegister);
-        auto bpOrd = bpReg.getOrdinal();
-        auto masked = bpOrd & 0b11111;
-        auto srcIndex = instruction.getSrc2();
-        const auto& srcReg = getSourceRegister(srcIndex);
-        auto src = srcReg.getOrdinal();
-        auto bitpos = bitPositions[masked];
-        if ((bitpos & src) == 0) {
-            // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
-            ac_.setConditionCode(0b000);
-            // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
-            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-            auto displacement = instruction.getDisplacement();
-            ip_.setInteger(ip_.getInteger() + displacement);
-            advanceIPBy = 0;
-        } else {
-            ac_.setConditionCode(0b010);
-        }
     };
     auto theOpcode = instruction.identifyOpcode();
     switch (theOpcode) {
@@ -422,29 +440,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::bbc:
             // branch if bit is clear
-            bbc();
+            bbc(instruction);
             break;
         case Opcode::bbs:
-            [this, &instruction]() {
-                auto targetRegister = instruction.getSrc1();
-                auto& bpReg = getSourceRegister(targetRegister);
-                auto bpOrd = bpReg.getOrdinal();
-                auto masked = bpOrd & 0b11111;
-                auto srcIndex = instruction.getSrc2();
-                const auto& srcReg = getSourceRegister(srcIndex);
-                auto src = srcReg.getOrdinal();
-                auto bitpos = bitPositions[masked];
-                if ((bitpos & src) != 0) {
-                    ac_.setConditionCode(0b010);
-                    // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
-                    // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-                    auto displacement = instruction.getDisplacement();
-                    ip_.setInteger(ip_.getInteger() + displacement);
-                    advanceIPBy = 0;
-                } else {
-                    ac_.setConditionCode(0b000);
-                }
-            }();
+            bbs(instruction);
             break;
         case Opcode::cmpo:
             cmpo(instruction);
