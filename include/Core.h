@@ -338,6 +338,9 @@ private:
         advanceIPBy = 0;
         ip_.setInteger(ip_.getInteger() + displacement);
     }
+    void ipRelativeBranch(const Instruction& inst) noexcept {
+        ipRelativeBranch(inst.getDisplacement());
+    }
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
     void cmpi(Integer src1, Integer src2) noexcept;

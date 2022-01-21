@@ -368,7 +368,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #endif
     auto condBranch = [this, &instruction](uint8_t mask) {
         if ((ac_.getConditionCode()& mask) != 0) {
-            ipRelativeBranch(instruction.getDisplacement()) ;
+            ipRelativeBranch(instruction);
         }
     };
     auto condFault = [this](uint8_t mask) {
@@ -383,17 +383,17 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     switch (theOpcode) {
         // CTRL Format opcodes
         case Opcode::b:
-            ipRelativeBranch(instruction.getDisplacement()) ;
+            ipRelativeBranch(instruction);
             break;
         case Opcode::bal:
             setDestination(RegisterIndex::Global14, ip_.getOrdinal() + 4, TreatAsOrdinal{});
-            ipRelativeBranch(instruction.getDisplacement()) ;
+            ipRelativeBranch(instruction);
             break;
             // branch instruction opcodes are 0x100-0x170, we shift right by four and then mask the lowest three bits to get the mask
             // intel encoded the mask directly into the encoding :)
         case Opcode::bno:
             if (ac_.getConditionCode() == 0) {
-                ipRelativeBranch(instruction.getDisplacement()) ;
+                ipRelativeBranch(instruction);
             }
             break;
         case Opcode::bg:
