@@ -108,6 +108,7 @@ public:
             return makeFullOpcode(majorOpcode);
         }
     }
+    [[nodiscard]] constexpr uint8_t getEmbeddedMask() const noexcept { return getMajorOpcode() & 0b111; }
     [[nodiscard]] constexpr auto identifyOpcode() const noexcept { return static_cast<Opcode>(getOpcode()); }
     [[nodiscard]] constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
     [[nodiscard]] constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getOpcode()); }

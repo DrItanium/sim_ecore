@@ -339,7 +339,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::bne:
         case Opcode::ble:
         case Opcode::bo:
-            condBranch((static_cast<uint8_t>(theOpcode) >> 4) & 0b111);
+            condBranch(instruction.getEmbeddedMask());
             break;
         case Opcode::faultno:
             if (ac_.getConditionCode() == 0) {
@@ -355,7 +355,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::faultne:
         case Opcode::faultle:
         case Opcode::faulto:
-            condFault((static_cast<uint8_t>(theOpcode) >> 4) & 0b111);
+            condFault(instruction.getEmbeddedMask());
             break;
             // COBR Format
             // just like with fault and branch, test has the mask embedded in the opcode, so extract it out
@@ -367,7 +367,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::testne:
         case Opcode::testle:
         case Opcode::testo:
-            testOp((static_cast<uint8_t>(theOpcode) >> 4) & 0b111);
+            testOp(instruction.getEmbeddedMask());
             break;
         case Opcode::bbc:
             // branch if bit is clear
@@ -459,7 +459,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::cmpobl:
         case Opcode::cmpobne:
         case Opcode::cmpoble:
-            cmpobx(instruction, (static_cast<byte>(theOpcode) >> 4) & 0b111);
+            cmpobx(instruction, instruction.getEmbeddedMask());
             break;
 
             // just like with the others, intel encoded the mask for cmpi operations into the opcode itself
@@ -472,7 +472,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::cmpibne:
         case Opcode::cmpible:
         case Opcode::cmpibo:
-            cmpibx(instruction, (static_cast<byte>(theOpcode) >> 4) & 0b111);
+            cmpibx(instruction, instruction.getEmbeddedMask());
             break;
         case Opcode::concmpi:
             [this, &instruction]() {
