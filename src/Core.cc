@@ -325,13 +325,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestination(RegisterIndex::Global14, ip_.getOrdinal() + 4, TreatAsOrdinal{});
             ipRelativeBranch(instruction.getDisplacement()) ;
             break;
+            // branch instruction opcodes are 0x100-0x170, we shift right by four and then mask the lowest three bits to get the mask
+            // intel encoded the mask directly into the encoding :)
         case Opcode::bno:
             if (ac_.getConditionCode() == 0) {
                 ipRelativeBranch(instruction.getDisplacement()) ;
             }
             break;
-            // branch instruction opcodes are 0x100-0x170, we shift right by four and then mask the lowest three bits to get the mask
-            // intel encoded the mask directly into the encoding :)
         case Opcode::bg:
         case Opcode::be:
         case Opcode::bge:
@@ -873,7 +873,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
                 // The initial value from memory is stored in dst (internally src/dst).
                 syncf();
-                auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force alignment to word boundary
                 auto temp = atomicLoad(addr);
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 atomicStore(addr, temp + src);
@@ -886,7 +886,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
                 // value from memory is stored in src/dest
                 syncf();
-                auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force alignment to word boundary
+                auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force alignment to word boundary
                 auto temp = atomicLoad(addr);
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto mask = getSourceRegister(instruction.getSrc2()).getOrdinal();
@@ -1061,7 +1061,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
                 // with condition code assignments and forced alignments
 
-                auto address = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // force word alignment
+                auto address = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force word alignment
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 // load basically takes care of accessing different registers and such even memory mapped ones
                 dest.setOrdinal(load(address));
@@ -1074,7 +1074,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 // load from memory and then store to another address in a synchronous fashion
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal(); // source address
-                auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFFC; // align
+                auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // align
                 Register temp(load(src));
                 synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
@@ -1084,7 +1084,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::synmovl:
             [this, &instruction]() {
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal(); // source address
-                auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF8; // align
+                auto addr = getSourceRegister(instruction.getSrc1()).getDoubleWordAligned(); // align
                 DoubleRegister temp(loadLong(src));
                 synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
@@ -1094,7 +1094,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::synmovq:
             [this, &instruction]() {
                 auto src  = getSourceRegister(instruction.getSrc2()).getOrdinal(); // source address
-                auto addr = getSourceRegister(instruction.getSrc1()).getOrdinal() & 0xFFFF'FFF0; // align
+                auto addr = getSourceRegister(instruction.getSrc1()).getQuadWordAligned(); // align
                 QuadRegister temp = loadQuad(src);
 #ifdef EMULATOR_TRACE
 #ifdef ARDUINO

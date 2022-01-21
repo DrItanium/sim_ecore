@@ -30,15 +30,16 @@
 union Register {
 public:
     constexpr explicit Register(Ordinal value = 0) noexcept : ord_(value) { }
-    constexpr bool getMostSignificantBit() const noexcept { return ord_ & 0x8000'0000; }
-    constexpr auto getOrdinal() const noexcept {
-        return ord_;
-    }
-    constexpr auto getInteger() const noexcept { return integer_; }
-    constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
-    constexpr auto getShortInteger(int which = 0) const noexcept { return sints_[which&0b01]; }
-    constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
-    constexpr auto getByteInteger(int which = 0) const noexcept { return bints_[which&0b11]; }
+    [[nodiscard]] constexpr bool getMostSignificantBit() const noexcept { return ord_ & 0x8000'0000; }
+    [[nodiscard]] constexpr auto getOrdinal() const noexcept { return ord_; }
+    [[nodiscard]] constexpr auto getWordAligned() const noexcept { return getOrdinal() & 0xFFFF'FFFC; }
+    [[nodiscard]] constexpr auto getDoubleWordAligned() const noexcept { return getOrdinal() & 0xFFFF'FFF8; }
+    [[nodiscard]] constexpr auto getQuadWordAligned() const noexcept { return getOrdinal() & 0xFFFF'FFF0; }
+    [[nodiscard]] constexpr auto getInteger() const noexcept { return integer_; }
+    [[nodiscard]] constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
+    [[nodiscard]] constexpr auto getShortInteger(int which = 0) const noexcept { return sints_[which&0b01]; }
+    [[nodiscard]] constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
+    [[nodiscard]] constexpr auto getByteInteger(int which = 0) const noexcept { return bints_[which&0b11]; }
     void setOrdinal(Ordinal value) noexcept {
         ord_ = value;
     }
