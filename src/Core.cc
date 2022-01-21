@@ -1400,21 +1400,22 @@ Core::calls(const Instruction& instruction) noexcept {
     }
 }
 void
+Core::restoreStandardFrame() noexcept {
+    exitCall();
+    auto returnValue = getRIP().getOrdinal();
+    ip_.setOrdinal(returnValue);
+    advanceIPBy = 0; // we already computed ahead of time where we will return to
+}
+void
 Core::ret() noexcept {
     syncf();
     PreviousFramePointer pfp(getPFP());
-    auto restoreStandardFrame = [this]() {
-        exitCall();
-        auto returnValue = getRIP().getOrdinal();
-        ip_.setOrdinal(returnValue);
-        advanceIPBy = 0; // we already computed ahead of time where we will return to
-    };
     switch (pfp.getReturnType()) {
         case 0b000:
             restoreStandardFrame();
             break;
         case 0b001:
-            [this, &restoreStandardFrame]() {
+            [this]() {
                 auto fpOrd = getFramePointerValue();
                 auto x = load(fpOrd - 16);
                 auto y = load(fpOrd - 12);
@@ -1426,7 +1427,7 @@ Core::ret() noexcept {
             }();
             break;
         case 0b010:
-            [this, &restoreStandardFrame]() {
+            [this]() {
                 if (pc_.inSupervisorMode()) {
                     pc_.setTraceEnable(false);
                     pc_.setExecutionMode(false);
@@ -1435,7 +1436,7 @@ Core::ret() noexcept {
             }();
             break;
         case 0b011:
-            [this, &restoreStandardFrame]() {
+            [this]() {
                 if (pc_.inSupervisorMode())  {
                     pc_.setTraceEnable(true);
                     pc_.setExecutionMode(false);
@@ -1444,7 +1445,7 @@ Core::ret() noexcept {
             }();
             break;
         case 0b111: // interrupt return
-            [this,&restoreStandardFrame]() {
+            [this]() {
                 auto fpOrd = getFramePointerValue();
                 auto x = load(fpOrd - 16);
                 auto y = load(fpOrd - 12);
