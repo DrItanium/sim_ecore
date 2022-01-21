@@ -600,14 +600,30 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::logicalXor:
             logicalOpGeneric<LogicalOp::Xor>(instruction);
             break;
-        case Opcode::logicalXnor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc2()).getOrdinal() ^ getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
-        case Opcode::logicalNor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc2()).getOrdinal() | getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
-        case Opcode::logicalNand: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc2()).getOrdinal() & getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
-        case Opcode::logicalNot: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
-        case Opcode::andnot: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getSourceRegister(instruction.getSrc2()).getOrdinal() & ~getSourceRegister(instruction.getSrc1()).getOrdinal()); }(); break;
-        case Opcode::notand: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~getSourceRegister(instruction.getSrc2()).getOrdinal() & getSourceRegister(instruction.getSrc1()).getOrdinal()); }(); break;
-        case Opcode::ornot: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(getRegister(instruction.getSrc2()).getOrdinal() | ~getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
-        case Opcode::notor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~getRegister(instruction.getSrc2()).getOrdinal() | getRegister(instruction.getSrc1()).getOrdinal()); }(); break;
+        case Opcode::logicalXnor:
+            logicalOpGeneric<LogicalOp::Xnor>(instruction);
+            break;
+        case Opcode::logicalNor:
+            logicalOpGeneric<LogicalOp::Nor>(instruction);
+            break;
+        case Opcode::logicalNand:
+            logicalOpGeneric<LogicalOp::Nand>(instruction);
+            break;
+        case Opcode::logicalNot:
+            logicalOpGeneric<LogicalOp::Not>(instruction);
+            break;
+        case Opcode::andnot:
+            logicalOpGeneric<LogicalOp::AndNot>(instruction);
+            break;
+        case Opcode::notand:
+            logicalOpGeneric<LogicalOp::NotAnd>(instruction);
+            break;
+        case Opcode::ornot:
+            logicalOpGeneric<LogicalOp::OrNot>(instruction);
+            break;
+        case Opcode::notor:
+            logicalOpGeneric<LogicalOp::NotOr>(instruction);
+            break;
         case Opcode::remi:
             [this, &instruction]() {
                 auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});

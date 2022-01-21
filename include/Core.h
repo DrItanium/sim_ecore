@@ -421,6 +421,10 @@ private:
         Xnor,
         Nor,
         Nand,
+        AndNot,
+        NotAnd,
+        OrNot,
+        NotOr,
     };
     template<LogicalOp op>
     void logicalOpGeneric(const Instruction& inst) noexcept {
@@ -435,6 +439,18 @@ private:
             case LogicalOp::Xnor: result = ~(src2 ^ src1); break;
             case LogicalOp::Nor: result = ~(src2 | src1); break;
             case LogicalOp::Nand: result = ~(src2 & src1); break;
+            case LogicalOp::AndNot:
+                result = src2 & ~src1;
+                break;
+            case LogicalOp::NotAnd:
+                result = ~src2 & src1;
+                break;
+            case LogicalOp::OrNot:
+                result = src2 | ~src1;
+                break;
+            case LogicalOp::NotOr:
+                result = ~src2 | src1;
+                break;
         }
         setDestinationFromSrcDest(inst, result, TreatAsOrdinal{});
     }
