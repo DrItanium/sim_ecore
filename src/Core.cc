@@ -659,9 +659,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             arithmeticGeneric<ArithmeticOperation::Rotate, TreatAsOrdinal>(instruction);
             break;
         case Opcode::mov:
-            setDestination(instruction.getSrcDest(false),
-                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                           TreatAsOrdinal {});
+            setDestinationFromSrcDest(instruction,
+                                      valueFromSrc1Register(instruction, TreatAsOrdinal{}),
+                                      TreatAsOrdinal {});
             break;
         case Opcode::movl:
             [this, &instruction]() {
@@ -686,10 +686,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::alterbit:
             [this, &instruction]() {
-                auto bitpos = bitPositions[getRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                if (ac_.getConditionCode() & 0b010) {
+                auto bitpos = bitPositions[valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111];
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+                if (auto& dest = destinationFromSrcDest(instruction); ac_.getConditionCode() & 0b010) {
                     dest.setOrdinal(src | bitpos);
                 } else {
                     dest.setOrdinal(src & ~bitpos);
