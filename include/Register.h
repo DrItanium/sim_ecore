@@ -388,19 +388,19 @@ union RegisterFrame {
     } {
 
     }
-    const Register& getRegister(int index) const noexcept { return gprs[index & 0b1111]; }
+    [[nodiscard]] const Register& getRegister(int index) const noexcept { return gprs[index & 0b1111]; }
     Register& getRegister(int index) noexcept { return gprs[index & 0b1111]; }
-    const DoubleRegister& getDoubleRegister(int index) const noexcept { return dprs[(index >> 1) & 0b111]; }
+    [[nodiscard]] const DoubleRegister& getDoubleRegister(int index) const noexcept { return dprs[(index >> 1) & 0b111]; }
     DoubleRegister& getDoubleRegister(int index) noexcept { return dprs[(index >> 1) & 0b111]; }
-    const TripleRegister& getTripleRegister(int index) const noexcept { return tprs[(index >> 2) & 0b11]; }
+    [[nodiscard]] const TripleRegister& getTripleRegister(int index) const noexcept { return tprs[(index >> 2) & 0b11]; }
     TripleRegister& getTripleRegister(int index) noexcept { return tprs[(index >> 2) & 0b11]; }
-    const QuadRegister& getQuadRegister(int index) const noexcept { return qprs[(index >> 2) & 0b11]; }
+    [[nodiscard]] const QuadRegister& getQuadRegister(int index) const noexcept { return qprs[(index >> 2) & 0b11]; }
     QuadRegister& getQuadRegister(int index) noexcept { return qprs[(index >> 2) & 0b11]; }
 
-    constexpr auto getNumRegisters() const noexcept { return 16; }
-    constexpr auto getNumDoubleRegisters() const noexcept { return 8; }
-    constexpr auto getNumTripleRegisters () const noexcept { return 4; }
-    constexpr auto getNumQuadRegisters () const noexcept { return 4; }
+    [[nodiscard]] constexpr auto getNumRegisters() const noexcept { return 16; }
+    [[nodiscard]] constexpr auto getNumDoubleRegisters() const noexcept { return 8; }
+    [[nodiscard]] constexpr auto getNumTripleRegisters () const noexcept { return 4; }
+    [[nodiscard]] constexpr auto getNumQuadRegisters () const noexcept { return 4; }
 
     Register gprs[16];
     DoubleRegister dprs[sizeof(gprs)/sizeof(DoubleRegister)];
