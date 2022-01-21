@@ -1291,8 +1291,8 @@ Core::flushreg() noexcept {
 }
 void
 Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {
-    auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
-    auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
+    auto src1 = valueFromSrc1Register(instruction, TreatAsInteger{});
+    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
     cmpi(src1, src2);
     if ((mask & ac_.getConditionCode()) != 0) {
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
