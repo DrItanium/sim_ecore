@@ -925,13 +925,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getOrdinal());
             break;
         case Opcode::stob:
-            [this, &instruction]() {
-                auto addr = computeMemoryAddress(instruction);
-                auto theIndex = instruction.getSrcDest(true);
-                auto& srcReg = getSourceRegister(theIndex);
-                auto src = srcReg.getByteOrdinal(0);
-                storeByte(addr, src);
-            }();
+            storeByte(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getByteOrdinal(0));
             break;
         case Opcode::stos:
             [this, &instruction]() {
