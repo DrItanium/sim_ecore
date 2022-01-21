@@ -85,17 +85,17 @@ public:
      * @brief return the major opcode as an 8-bit quantity
      * @return The contents of the major opcode field without any modification
      */
-    constexpr uint8_t getMajorOpcode() const noexcept {
+    [[nodiscard]] constexpr uint8_t getMajorOpcode() const noexcept {
         return opcode;
     }
     /**
      * @brief Get the extra four bits used in REG format instructions
      * @return The extra four bits that make up a reg opcode
      */
-    constexpr uint8_t getMinorOpcode() const noexcept {
+    [[nodiscard]] constexpr uint8_t getMinorOpcode() const noexcept {
         return reg.opcodeExt;
     }
-    constexpr FullOpcode getOpcode() const noexcept {
+    [[nodiscard]] constexpr FullOpcode getOpcode() const noexcept {
         // The opcode is divided into two parts, the major opcode (8-bits) and the minor opcode (4-bits). The minor opcode only shows up in
         // reg format instructions. The intel manuals treat the REG instructions as coming _after_ all other instructions despite being
         // in the middle of the major opcode space. Thus we will do the same thing for simplicity. We should only pay for what we need.
@@ -108,12 +108,12 @@ public:
             return makeFullOpcode(majorOpcode);
         }
     }
-    constexpr auto identifyOpcode() const noexcept { return static_cast<Opcode>(getOpcode()); }
-    constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
-    constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getOpcode()); }
-    constexpr auto isCOBRFormat() const noexcept { return ::isCOBRFormat(getOpcode()); }
-    constexpr auto isCTRLFormat() const noexcept { return ::isCTRLFormat(getOpcode()); }
-    constexpr Integer getDisplacement() const noexcept {
+    [[nodiscard]] constexpr auto identifyOpcode() const noexcept { return static_cast<Opcode>(getOpcode()); }
+    [[nodiscard]] constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
+    [[nodiscard]] constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getOpcode()); }
+    [[nodiscard]] constexpr auto isCOBRFormat() const noexcept { return ::isCOBRFormat(getOpcode()); }
+    [[nodiscard]] constexpr auto isCTRLFormat() const noexcept { return ::isCTRLFormat(getOpcode()); }
+    [[nodiscard]] constexpr Integer getDisplacement() const noexcept {
         if (isCOBRFormat()) {
             return cobr.displacement;
         } else if (isCTRLFormat()) {
@@ -125,7 +125,7 @@ public:
             return -1;
         }
     }
-    constexpr RegisterIndex getSrc1(bool ignoreM1 = false) const noexcept {
+    [[nodiscard]] constexpr RegisterIndex getSrc1(bool ignoreM1 = false) const noexcept {
         if (isREGFormat()) {
             return makeRegisterIndex(reg.src1, reg.m1);
         } else if (isCOBRFormat()) {
@@ -138,7 +138,7 @@ public:
             return RegisterIndex::Bad;
         }
     }
-    constexpr RegisterIndex getSrc2() const noexcept {
+    [[nodiscard]] constexpr RegisterIndex getSrc2() const noexcept {
         if (isREGFormat()) {
             return makeRegisterIndex(reg.src2, reg.m2);
         } else if (isCOBRFormat()) {
@@ -147,7 +147,7 @@ public:
             return RegisterIndex::Bad;
         }
     }
-    constexpr RegisterIndex getSrcDest(bool treatAsSource) const noexcept {
+    [[nodiscard]] constexpr RegisterIndex getSrcDest(bool treatAsSource) const noexcept {
         if (isREGFormat()) {
             return makeRegisterIndex(reg.srcDest, treatAsSource ? reg.m3 : 0);
         } else if (isMEMFormat()) {
@@ -156,14 +156,14 @@ public:
             return RegisterIndex::Bad;
         }
     }
-    constexpr Ordinal getOffset() const noexcept {
+    [[nodiscard]] constexpr Ordinal getOffset() const noexcept {
         if (isMEMAFormat()) {
             return mema.offset;
         } else {
             return 0xFFFF'FFFF;
         }
     }
-    constexpr RegisterIndex getABase() const noexcept {
+    [[nodiscard]] constexpr RegisterIndex getABase() const noexcept {
         if (isMEMFormat()) {
             return makeRegister(mem.abase);
         } else {
@@ -171,7 +171,7 @@ public:
         }
     }
 
-    constexpr MEMFormatMode getMemFormatMode() const noexcept {
+    [[nodiscard]] constexpr MEMFormatMode getMemFormatMode() const noexcept {
         if (isMEMAFormat()) {
             return mema.mode == 0 ? MEMFormatMode::MEMA_AbsoluteOffset : MEMFormatMode::MEMA_RegisterIndirectWithOffset;
         } else if (isMEMBFormat()) {
@@ -180,31 +180,31 @@ public:
             return MEMFormatMode::Bad;
         }
     }
-    constexpr RegisterIndex getIndex() const noexcept {
+    [[nodiscard]] constexpr RegisterIndex getIndex() const noexcept {
         if (isMEMBFormat()) {
             return makeRegister(memb.index);
         } else {
             return RegisterIndex::Bad;
         }
     }
-    constexpr uint8_t getScale() const noexcept {
+    [[nodiscard]] constexpr uint8_t getScale() const noexcept {
         if (isMEMBFormat()) {
             return memb.scale; // this is already setup for proper shifting
         } else {
             return 0;
         }
     }
-    constexpr auto isDoubleWide() const noexcept {
+    [[nodiscard]] constexpr auto isDoubleWide() const noexcept {
         // if it is not a MEM instruction then we still get Bad out which
         // is legal and returns false
         return isDoubleWideInstruction(getMemFormatMode());
     }
 
 private:
-    constexpr Ordinal isMEMAFormat() const noexcept {
+    [[nodiscard]] constexpr bool isMEMAFormat() const noexcept {
         return isMEMFormat() && ((mem.modeMajor & 1u) == 0);
     }
-    constexpr Ordinal isMEMBFormat() const noexcept {
+    [[nodiscard]] constexpr bool isMEMBFormat() const noexcept {
         return isMEMFormat() && ((mem.modeMajor & 1u) != 0);
     }
 private:
