@@ -77,31 +77,31 @@ private:
 class PreviousFramePointer {
 public:
     explicit PreviousFramePointer(Register& targetRegister) : reg_(targetRegister) {}
-    constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.getOrdinal() & 0b1000); }
+    [[nodiscard]] constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.getOrdinal() & 0b1000); }
     void enablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() | 0b1000); }
     void disablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() & ~static_cast<Ordinal>(0b1000)); }
     void setPrereturnTraceFlag(bool value) const noexcept {
         value ? enablePrereturnTraceFlag() : disablePrereturnTraceFlag();
     }
-    constexpr Ordinal getReturnType() const noexcept { return reg_.getOrdinal() & 0b111; }
-    void setReturnType(Ordinal value) noexcept { reg_.setOrdinal((reg_.getOrdinal() & ~0b111) | (value & 0b111)); }
-    constexpr Ordinal getAddress() const noexcept {
+    [[nodiscard]] constexpr Ordinal getReturnType() const noexcept { return reg_.getOrdinal() & 0b111; }
+    [[nodiscard]] constexpr Ordinal getAddress() const noexcept {
         // according to the i960Sx manual, the lowest 6 bits are ignored but the lowest 4 bits are always confirmed
         return reg_.getOrdinal() & ~0b1'111;
     }
+    [[nodiscard]] constexpr auto getWhole() const noexcept { return reg_.getOrdinal(); }
+    void setWhole(Ordinal value) noexcept { reg_.setOrdinal(value); }
+    void setReturnType(Ordinal value) noexcept { reg_.setOrdinal((reg_.getOrdinal() & ~0b111) | (value & 0b111)); }
     void setAddress(Ordinal value) noexcept {
         auto lowerBits = reg_.getOrdinal() & 0b1'111;
         reg_.setOrdinal((value & ~0b1'111) | lowerBits);
     }
-    constexpr auto getWhole() const noexcept { return reg_.getOrdinal(); }
-    void setWhole(Ordinal value) noexcept { reg_.setOrdinal(value); }
 private:
     Register& reg_;
 };
 union TraceControls {
 public:
     constexpr explicit TraceControls(Ordinal value = 0) noexcept : ord_(value) { }
-    constexpr auto getValue() const noexcept { return ord_; }
+    [[nodiscard]] constexpr auto getValue() const noexcept { return ord_; }
     void setValue(Ordinal value) noexcept { ord_ = value; }
 #define X(name, field, type) \
 constexpr type get ## name () const noexcept { return field ; } \
@@ -148,10 +148,10 @@ static_assert (sizeof(TraceControls) == sizeof(Ordinal), "ArithmeticControls mus
 union ProcessControls {
 public:
     constexpr explicit ProcessControls(Ordinal value = 0) noexcept : ord_(value) { }
-    constexpr auto getValue() const noexcept { return ord_; }
+    [[nodiscard]] constexpr auto getValue() const noexcept { return ord_; }
+    [[nodiscard]] constexpr bool inSupervisorMode() const noexcept { return getExecutionMode(); }
+    [[nodiscard]] constexpr bool inUserMode() const noexcept { return !getExecutionMode(); }
     void setValue(Ordinal value) noexcept { ord_ = value; }
-    constexpr bool inSupervisorMode() const noexcept { return getExecutionMode(); }
-    constexpr bool inUserMode() const noexcept { return !getExecutionMode(); }
 
 #define X(name, field, type) \
 constexpr type get ## name () const noexcept { return field ; } \
@@ -189,9 +189,9 @@ static_assert (sizeof(ProcessControls) == sizeof(Ordinal), "ArithmeticControls m
 union ArithmeticControls {
 public:
     constexpr explicit ArithmeticControls(Ordinal value = 0) noexcept : ord_(value) { }
-    constexpr auto getValue() const noexcept { return ord_; }
-    constexpr bool getOverflowBit() const noexcept { return getConditionCode() & 0b001; }
-    constexpr bool getCarryBit() const noexcept { return getConditionCode() & 0b001; }
+    [[nodiscard]] constexpr auto getValue() const noexcept { return ord_; }
+    [[nodiscard]] constexpr bool getOverflowBit() const noexcept { return getConditionCode() & 0b001; }
+    [[nodiscard]] constexpr bool getCarryBit() const noexcept { return getConditionCode() & 0b001; }
     void setCarryBit(bool value) noexcept {
         if (value) {
             setConditionCode(getConditionCode() | 0b010);
@@ -231,7 +231,7 @@ X(name ## Mask , field ## Mask, bool);
 #undef Y
 #undef X
 public:
-    constexpr bool conditionCodeIs(uint8_t value) const noexcept {
+    [[nodiscard]] constexpr bool conditionCodeIs(uint8_t value) const noexcept {
         if ((value & 0b111) == 0b000) {
             return (getConditionCode() & (value & 0b111)) == 0;
         } else {
