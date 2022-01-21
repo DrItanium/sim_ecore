@@ -258,9 +258,9 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
         // also make sure that we jump ahead by eight bytes instead of four
         advanceIPBy += 4;
     }
-    switch (const auto &abaseRegister = getAbaseRegister(instruction),
-                &indexRegister = getIndexRegister(instruction);
-            instruction.getMemFormatMode()) {
+    const auto& abaseRegister = getAbaseRegister(instruction);
+    const auto& indexRegister = getIndexRegister(instruction);
+    switch (instruction.getMemFormatMode()) {
         case MEMFormatMode::MEMA_AbsoluteOffset:
             return instruction.getOffset();
         case MEMFormatMode::MEMA_RegisterIndirectWithOffset:
