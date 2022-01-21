@@ -645,26 +645,21 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::rotate:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                auto len = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                dest.setOrdinal(rotate(src, len));
-            }();
+            setDestination(instruction.getSrcDest(false),
+                           rotate(getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}),
+                                  getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{})),
+                           TreatAsOrdinal {});
             break;
         case Opcode::mov:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto srcValue = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                dest.setOrdinal(srcValue);
-            }();
+            setDestination(instruction.getSrcDest(false),
+                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
+                           TreatAsOrdinal {});
             break;
         case Opcode::movl:
             [this, &instruction]() {
                 auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                const auto& src = getSourceDoubleRegister(instruction.getSrc1());
-                auto srcValue = src.getLongOrdinal();
-                dest.setLongOrdinal(srcValue);
+                auto value = getSourceDoubleRegister(instruction.getSrc1()).getLongOrdinal();
+                dest.setLongOrdinal(value);
             }();
             break;
         case Opcode::movt:
