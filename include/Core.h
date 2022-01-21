@@ -413,6 +413,32 @@ private:
                                   valueFromSrc1Register(instruction, T{}),
                                   T{});
     }
+    enum class LogicalOp : byte {
+        And,
+        Or,
+        Not,
+        Xor,
+        Xnor,
+        Nor,
+        Nand,
+    };
+    template<LogicalOp op>
+    void logicalOpGeneric(const Instruction& inst) noexcept {
+        Ordinal result = 0;
+        auto src2 = valueFromSrc2Register(inst, TreatAsOrdinal{});
+        auto src1 = valueFromSrc1Register(inst, TreatAsOrdinal{});
+        switch (op) {
+            case LogicalOp::And: result = src2 & src1; break;
+            case LogicalOp::Or: result = src2 | src1; break;
+            case LogicalOp::Not: result = ~src1; break;
+            case LogicalOp::Xor: result = src2 ^ src1; break;
+            case LogicalOp::Xnor: result = ~(src2 ^ src1); break;
+            case LogicalOp::Nor: result = ~(src2 | src1); break;
+            case LogicalOp::Nand: result = ~(src2 & src1); break;
+        }
+        setDestinationFromSrcDest(inst, result, TreatAsOrdinal{});
+    }
+
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

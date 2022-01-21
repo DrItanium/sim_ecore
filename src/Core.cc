@@ -592,22 +592,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::logicalAnd:
-            setDestination(instruction.getSrcDest(false),
-                           getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) &
-                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                           TreatAsOrdinal{});
+            logicalOpGeneric<LogicalOp::And>(instruction);
             break;
         case Opcode::logicalOr:
-            setDestination(instruction.getSrcDest(false),
-                           getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) |
-                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                           TreatAsOrdinal{});
+            logicalOpGeneric<LogicalOp::Or>(instruction);
             break;
         case Opcode::logicalXor:
-            setDestination(instruction.getSrcDest(false),
-                           getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}) ^
-                           getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                           TreatAsOrdinal{});
+            logicalOpGeneric<LogicalOp::Xor>(instruction);
             break;
         case Opcode::logicalXnor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc2()).getOrdinal() ^ getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
         case Opcode::logicalNor: [this, &instruction]() { getRegister(instruction.getSrcDest(false)).setOrdinal(~(getSourceRegister(instruction.getSrc2()).getOrdinal() | getSourceRegister(instruction.getSrc1()).getOrdinal())); }(); break;
