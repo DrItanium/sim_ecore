@@ -384,34 +384,50 @@ private:
     void ret() noexcept;
     [[nodiscard]] Ordinal properFramePointerAddress() const noexcept;
 private:
+    enum class ArithmeticOperation : byte {
+        Add,
+        Subtract,
+        Multiply,
+        Divide,
+    };
+    template<ArithmeticOperation op, typename T>
+    void arithmeticGeneric(const Instruction& instruction) noexcept {
+        using K = typename T::UnderlyingType;
+        K result = static_cast<K>(0);
+        auto src2 = valueFromSrc2Register(instruction, T{});
+        auto src1 = valueFromSrc1Register(instruction, T{});
+        switch (op) {
+            case ArithmeticOperation::Add:
+                result = src2 + src1;
+                break;
+            case ArithmeticOperation::Subtract:
+                result = src2 - src1;
+                break;
+            case ArithmeticOperation::Multiply:
+                result = src2 * src1;
+                break;
+            case ArithmeticOperation::Divide:
+                /// @todo check denominator and do proper handling
+                result = src2 / src1;
+                break;
+        }
+        setDestinationFromSrcDest(instruction, result, T{});
+    }
     template<typename T>
     void addGeneric(const Instruction& instruction) noexcept {
-        setDestinationFromSrcDest(instruction,
-                                  valueFromSrc2Register(instruction, T{}) +
-                                  valueFromSrc1Register(instruction, T{}),
-                                  T{});
+        arithmeticGeneric<ArithmeticOperation::Add, T>(instruction);
     }
     template<typename T>
     void subGeneric(const Instruction& instruction) noexcept {
-        setDestinationFromSrcDest(instruction,
-                                  valueFromSrc2Register(instruction, T{}) -
-                                  valueFromSrc1Register(instruction, T{}),
-                                  T{});
+        arithmeticGeneric<ArithmeticOperation::Subtract, T>(instruction);
     }
     template<typename T>
     void mulGeneric(const Instruction& instruction) noexcept {
-        setDestinationFromSrcDest(instruction,
-                                  valueFromSrc2Register(instruction, T{}) *
-                                  valueFromSrc1Register(instruction, T{}),
-                                  T{});
+        arithmeticGeneric<ArithmeticOperation::Multiply, T>(instruction);
     }
     template<typename T>
     void divGeneric(const Instruction& instruction) noexcept {
-        /// @todo check denominator and do proper handling
-        setDestinationFromSrcDest(instruction,
-                                  valueFromSrc2Register(instruction, T{}) /
-                                  valueFromSrc1Register(instruction, T{}),
-                                  T{});
+        arithmeticGeneric<ArithmeticOperation::Divide, T>(instruction);
     }
     enum class LogicalOp : byte {
         And,

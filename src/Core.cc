@@ -560,10 +560,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
             // REG format
         case Opcode::addi:
-            addGeneric<TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Add, TreatAsInteger>(instruction);
             break;
         case Opcode::addo:
-            addGeneric<TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Add, TreatAsOrdinal>(instruction);
             break;
         case Opcode::subi:
             subGeneric<TreatAsInteger>(instruction);
