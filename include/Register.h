@@ -281,6 +281,9 @@ static_assert (sizeof(ArithmeticControls) == sizeof(Ordinal), "ArithmeticControl
 constexpr Ordinal modify(Ordinal mask, Ordinal src, Ordinal srcDest) noexcept {
     return (src & mask) | (srcDest & ~mask);
 }
+constexpr Ordinal rotate(Ordinal src, Ordinal length) noexcept {
+    return (src << length)  | (src >> ((-length) & 31u));
+}
 
 
 
@@ -309,12 +312,14 @@ private:
     LongReal lreal_;
 #endif
 };
+static_assert(sizeof(Register) * 2 == sizeof(DoubleRegister), "Register is not half the size of DoubleRegister ");
+
 
 union TripleRegister {
 public:
     constexpr explicit TripleRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0) noexcept : parts_{a, b, c, 0}{ }
-    constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which % 3]; } // very expensive!
-    void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which % 3] = value; }
+    constexpr auto getOrdinal(byte which = 0) const noexcept { return parts_[which % 3]; } // very expensive!
+    void setOrdinal(Ordinal value, byte which = 0) noexcept { parts_[which % 3] = value; }
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
 void setExtendedReal(LongReal value) noexcept { lreal_ = value; }
@@ -325,6 +330,8 @@ private:
     ExtendedReal lreal_;
 #endif
 };
+// not a false statement or a copy paste error
+static_assert(sizeof(Register) * 4 == sizeof(TripleRegister), "Register is not a fourth the size of TripleRegister");
 
 union QuadRegister {
 public:
@@ -345,6 +352,8 @@ private:
     ExtendedReal lreal_;
 #endif
 };
+
+static_assert(sizeof(Register) * 4 == sizeof(QuadRegister), "Register is not a fourth the size of QuadRegister");
 
 union RegisterFrame {
     RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),

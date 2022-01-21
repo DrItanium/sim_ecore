@@ -646,13 +646,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::rotate:
             [this, &instruction]() {
-                auto rotateOperation = [](Ordinal src, Ordinal length)  {
-                    return (src << length)  | (src >> ((-length) & 31u));
-                };
                 auto& dest = getRegister(instruction.getSrcDest(false));
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 auto len = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                dest.setOrdinal(rotateOperation(src, len));
+                dest.setOrdinal(rotate(src, len));
             }();
             break;
         case Opcode::mov:
