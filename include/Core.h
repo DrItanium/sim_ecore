@@ -383,6 +383,36 @@ private:
     void calls(const Instruction& instruction) noexcept;
     void ret() noexcept;
     [[nodiscard]] Ordinal properFramePointerAddress() const noexcept;
+private:
+    template<typename T>
+    void addGeneric(const Instruction& instruction) noexcept {
+        setDestinationFromSrcDest(instruction,
+                                  valueFromSrc2Register(instruction, T{}) +
+                                  valueFromSrc1Register(instruction, T{}),
+                                  T{});
+    }
+    template<typename T>
+    void subGeneric(const Instruction& instruction) noexcept {
+        setDestinationFromSrcDest(instruction,
+                                  valueFromSrc2Register(instruction, T{}) -
+                                  valueFromSrc1Register(instruction, T{}),
+                                  T{});
+    }
+    template<typename T>
+    void mulGeneric(const Instruction& instruction) noexcept {
+        setDestinationFromSrcDest(instruction,
+                                  valueFromSrc2Register(instruction, T{}) *
+                                  valueFromSrc1Register(instruction, T{}),
+                                  T{});
+    }
+    template<typename T>
+    void divGeneric(const Instruction& instruction) noexcept {
+        /// @todo check denominator and do proper handling
+        setDestinationFromSrcDest(instruction,
+                                  valueFromSrc2Register(instruction, T{}) /
+                                  valueFromSrc1Register(instruction, T{}),
+                                  T{});
+    }
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

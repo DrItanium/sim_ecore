@@ -341,6 +341,27 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     auto testOp = [this, &instruction](byte code) {
         getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(code) ? 1 : 0);
     };
+    auto bbc = [this, &instruction]() {
+        auto targetRegister = instruction.getSrc1();
+        auto& bpReg = getSourceRegister(targetRegister);
+        auto bpOrd = bpReg.getOrdinal();
+        auto masked = bpOrd & 0b11111;
+        auto srcIndex = instruction.getSrc2();
+        const auto& srcReg = getSourceRegister(srcIndex);
+        auto src = srcReg.getOrdinal();
+        auto bitpos = bitPositions[masked];
+        if ((bitpos & src) == 0) {
+            // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
+            ac_.setConditionCode(0b000);
+            // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
+            // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
+            auto displacement = instruction.getDisplacement();
+            ip_.setInteger(ip_.getInteger() + displacement);
+            advanceIPBy = 0;
+        } else {
+            ac_.setConditionCode(0b010);
+        }
+    };
     auto theOpcode = instruction.identifyOpcode();
     switch (theOpcode) {
         // CTRL Format opcodes
@@ -397,27 +418,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::bbc:
             // branch if bit is clear
-            [this, &instruction]() {
-                auto targetRegister = instruction.getSrc1();
-                auto& bpReg = getSourceRegister(targetRegister);
-                auto bpOrd = bpReg.getOrdinal();
-                auto masked = bpOrd & 0b11111;
-                auto srcIndex = instruction.getSrc2();
-                const auto& srcReg = getSourceRegister(srcIndex);
-                auto src = srcReg.getOrdinal();
-                auto bitpos = bitPositions[masked];
-                if ((bitpos & src) == 0) {
-                    // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
-                    ac_.setConditionCode(0b000);
-                    // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
-                    // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-                    auto displacement = instruction.getDisplacement();
-                    ip_.setInteger(ip_.getInteger() + displacement);
-                    advanceIPBy = 0;
-                } else {
-                    ac_.setConditionCode(0b010);
-                }
-            }();
+            bbc();
             break;
         case Opcode::bbs:
             [this, &instruction]() {
@@ -559,56 +560,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
             // REG format
         case Opcode::addi:
-            [this, &instruction]() {
-                auto src1 = getSourceRegister(instruction.getSrc1()).getInteger();
-                auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
-                setDestinationFromSrcDest(instruction, src2 + src1, TreatAsInteger{});
-            }( );
+            addGeneric<TreatAsInteger>(instruction);
             break;
         case Opcode::addo:
-            [this, &instruction]() {
-                auto src1 = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                setDestinationFromSrcDest(instruction, src2 + src1, TreatAsOrdinal{});
-            }();
+            addGeneric<TreatAsOrdinal>(instruction);
             break;
         case Opcode::subi:
-            [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setInteger(
-                        getSourceRegister(instruction.getSrc2()).getInteger() - getSourceRegister(instruction.getSrc1()).getInteger());
-            }();
+            subGeneric<TreatAsInteger>(instruction);
             break;
         case Opcode::subo:
-            [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setOrdinal(
-                        getSourceRegister(instruction.getSrc2()).getOrdinal() - getSourceRegister(instruction.getSrc1()).getOrdinal());
-            }();
+            subGeneric<TreatAsOrdinal>(instruction);
             break;
         case Opcode::muli:
-            [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setInteger(
-                        getSourceRegister(instruction.getSrc2()).getInteger() * getSourceRegister(instruction.getSrc1()).getInteger());
-            }();
+            mulGeneric<TreatAsInteger>(instruction);
             break;
         case Opcode::mulo:
-            [this, &instruction]() {
-                getRegister(instruction.getSrcDest(false)).setOrdinal(
-                        getSourceRegister(instruction.getSrc2()).getOrdinal() * getSourceRegister(instruction.getSrc1()).getOrdinal());
-            }();
+            mulGeneric<TreatAsOrdinal>(instruction);
             break;
         case Opcode::divo:
-            [this, &instruction]() {
-                /// @todo check denominator and do proper handling
-                getRegister(instruction.getSrcDest(false)).setOrdinal(
-                        getSourceRegister(instruction.getSrc2()).getOrdinal() / getSourceRegister(instruction.getSrc1()).getOrdinal());
-            }();
+            divGeneric<TreatAsOrdinal>(instruction);
             break;
         case Opcode::divi:
-            [this, &instruction]() {
-                /// @todo check denominator and do proper handling
-                getRegister(instruction.getSrcDest(false)).setInteger(
-                        getSourceRegister(instruction.getSrc2()).getInteger() / getSourceRegister(instruction.getSrc1()).getInteger());
-            }();
+            divGeneric<TreatAsInteger>(instruction);
             break;
         case Opcode::notbit:
             [this, &instruction]() {
