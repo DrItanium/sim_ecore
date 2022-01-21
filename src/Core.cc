@@ -25,6 +25,22 @@
 #ifdef ARDUINO
 #include <Arduino.h>
 #endif
+Register&
+Core::destinationFromSrcDest(const Instruction& instruction) noexcept {
+    return getRegister(instruction.getSrcDest(false));
+}
+const Register&
+Core::sourceFromSrcDest(const Instruction& instruction) const noexcept {
+    return getRegister(instruction.getSrcDest(true));
+}
+void
+Core::setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal) {
+    destinationFromSrcDest(instruction).setOrdinal(value);
+}
+void
+Core::setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger) {
+    destinationFromSrcDest(instruction).setInteger(value);
+}
 void
 Core::syncf() noexcept {
     if (ac_.getNoImpreciseFaults()) {
@@ -243,7 +259,7 @@ Core::lda(const Instruction &inst) noexcept {
 #endif
 #endif
     // compute the effective address (memory address) and store it in destination
-    auto& dest = getRegister(inst.getSrcDest(false));
+    auto& dest = destinationFromSrcDest(inst);
     auto addr = computeMemoryAddress(inst);
 #ifdef EMULATOR_TRACE
 #ifdef ARDUINO
@@ -425,28 +441,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 cmpo(getSourceRegister(instruction.getSrc1()).getOrdinal(), src2);
-                getRegister(instruction.getSrcDest(false)).setOrdinal(src2 - 1);
+                setDestinationFromSrcDest(instruction, src2 - 1, TreatAsOrdinal{});
             }();
             break;
         case Opcode::cmpdeci:
             [this, &instruction]() {
                 auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
                 cmpi(getSourceRegister(instruction.getSrc1()).getInteger(), src2);
-                getRegister(instruction.getSrcDest(false)).setInteger(src2 - 1);
+                setDestinationFromSrcDest(instruction, src2 - 1, TreatAsInteger{});
             }();
             break;
         case Opcode::cmpinco:
             [this, &instruction]() {
                 auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 cmpo(getSourceRegister(instruction.getSrc1()).getOrdinal(), src2);
-                getRegister(instruction.getSrcDest(false)).setOrdinal(src2 + 1);
+                setDestinationFromSrcDest(instruction, src2 + 1, TreatAsOrdinal{});
             }();
             break;
         case Opcode::cmpinci:
             [this, &instruction]() {
                 auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
                 cmpi(getSourceRegister(instruction.getSrc1()).getInteger(), src2);
-                getRegister(instruction.getSrcDest(false)).setInteger(src2 + 1);
+                setDestinationFromSrcDest(instruction, src2 + 1, TreatAsInteger{});
             }();
             break;
             // just like with the others, intel encoded the mask for cmpo operations into the opcode itself
@@ -492,9 +508,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
             // MEM Format
         case Opcode::ldob:
-            setDestination(instruction.getSrcDest(false),
-                           loadByte(computeMemoryAddress(instruction)),
-                           TreatAsOrdinal {});
+            setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::bx:
             [this, &instruction]() {
@@ -506,23 +520,19 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::balx:
             [this, &instruction]() {
                 auto address = computeMemoryAddress(instruction);
-                setDestination(instruction.getSrcDest(false), ip_.getOrdinal() + advanceIPBy, TreatAsOrdinal{});
+                setDestinationFromSrcDest(instruction, ip_.getOrdinal() + advanceIPBy, TreatAsOrdinal{});
                 ip_.setOrdinal(address);
                 advanceIPBy = 0;
             }();
             break;
         case Opcode::ldos:
-            setDestination(instruction.getSrcDest(false),
-                           loadShort(computeMemoryAddress(instruction)),
-                           TreatAsOrdinal{});
+            setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::lda:
             lda(instruction);
             break;
         case Opcode::ld:
-            setDestination(instruction.getSrcDest(false),
-                           load(computeMemoryAddress(instruction)),
-                           TreatAsOrdinal {});
+            setDestinationFromSrcDest(instruction, load(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::ldl:
             getDoubleRegister(instruction.getSrcDest(false)).setLongOrdinal( loadLong(computeMemoryAddress(instruction)) );
@@ -540,17 +550,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             [this, &instruction]() {
                 auto src1 = getSourceRegister(instruction.getSrc1()).getInteger();
                 auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
-                getRegister(instruction.getSrcDest(false)).setInteger(src2 + src1);
+                setDestinationFromSrcDest(instruction, src2 + src1, TreatAsInteger{});
             }( );
             break;
         case Opcode::addo:
             [this, &instruction]() {
                 auto src1 = getSourceRegister(instruction.getSrc1()).getOrdinal();
                 auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                auto destIndex = instruction.getSrcDest(false);
-                auto& dest = getRegister(destIndex);
-                auto result = src2 + src1;
-                dest.setOrdinal(result);
+                setDestinationFromSrcDest(instruction, src2 + src1, TreatAsOrdinal{});
             }();
             break;
         case Opcode::subi:
@@ -631,7 +638,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
                 // taken from the i960Sx manual
                 //dest.setInteger(src2 - ((src2 / src1) * src1));
-                setDestination(instruction.getSrcDest(false), src2 % src1, TreatAsInteger{});
+                setDestinationFromSrcDest(instruction, src2 % src1, TreatAsInteger{});
             }();
             break;
         case Opcode::remo:
@@ -640,8 +647,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
                 // taken from the i960Sx manual
                 //auto result = src2 - ((src2 / src1) * src1);
-                auto result = src2 % src1;
-                setDestination(instruction.getSrcDest(false), result, TreatAsOrdinal{});
+                setDestinationFromSrcDest(instruction, src2 % src1, TreatAsOrdinal {});
             }();
             break;
         case Opcode::rotate:
@@ -781,10 +787,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::modify:
             [this, &instruction]() {
                 // this is my encode operation but expanded out
-                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto& dest = destinationFromSrcDest(instruction);
                 auto mask = getRegister(instruction.getSrc1()).getOrdinal();
                 auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal((src & mask) | (dest.getOrdinal() & ~mask));
+                dest.setOrdinal(modify(mask, src, dest.getOrdinal()));
             }();
             break;
         case Opcode::call:
@@ -801,10 +807,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::shli:
             [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
                 auto len = getSourceRegister(instruction.getSrc1()).getInteger();
                 auto src = getSourceRegister(instruction.getSrc2()).getInteger();
-                dest.setInteger(src << len);
+                setDestinationFromSrcDest(instruction, src << len, TreatAsInteger{});
             }();
             break;
         case Opcode::scanbyte:
@@ -944,11 +949,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::st:
-            [this, &instruction]() {
-                auto addr = computeMemoryAddress(instruction);
-                auto src = getSourceRegister(instruction.getSrcDest(true)).getOrdinal();
-                store(addr, src);
-            }();
+            store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getOrdinal());
             break;
         case Opcode::stob:
             [this, &instruction]() {
