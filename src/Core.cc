@@ -1255,11 +1255,9 @@ Core::storeShort(Address destination, ShortOrdinal value) {
 }
 void
 Core::shro(const Instruction &inst) noexcept {
-    auto& dest = getRegister(inst.getSrcDest(false));
-    auto len = getSourceRegister(inst.getSrc1()).getOrdinal();
-    /// @todo implement "speed" optimization by only getting src if we need it
-    auto src = getSourceRegister(inst.getSrc2()).getOrdinal();
-    if (len < 32) {
+    auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
+    if (auto& dest = destinationFromSrcDest(inst); len < 32) {
+        auto src = valueFromSrc2Register(inst, TreatAsOrdinal{});
         dest.setOrdinal(src >> len);
     } else {
         dest.setOrdinal(0);
@@ -1268,10 +1266,9 @@ Core::shro(const Instruction &inst) noexcept {
 
 void
 Core::shlo(const Instruction &inst) noexcept {
-    auto& dest = getRegister(inst.getSrcDest(false));
-    auto len = getSourceRegister(inst.getSrc1()).getOrdinal();
-    auto src = getSourceRegister(inst.getSrc2()).getOrdinal();
-    if (len < 32) {
+    auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
+    if (auto& dest = destinationFromSrcDest(inst); len < 32) {
+        auto src = valueFromSrc2Register(inst, TreatAsOrdinal{});
         dest.setOrdinal(src << len);
     } else {
         dest.setOrdinal(0);
