@@ -490,6 +490,8 @@ private:
 private:
     void bbc(const Instruction& inst) noexcept;
     void bbs(const Instruction& inst) noexcept;
+    const Register& getAbaseRegister(const Instruction& inst) const noexcept;
+    const Register& getIndexRegister(const Instruction& inst) const noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
