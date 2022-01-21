@@ -252,33 +252,58 @@ Core::getIndexRegister(const Instruction& inst) const noexcept {
     return getSourceRegister(inst.getIndex());
 }
 Ordinal
+Core::valueFromAbaseRegister(const Instruction& inst, TreatAsOrdinal) const noexcept {
+    return getAbaseRegister(inst).getOrdinal();
+}
+Integer
+Core::valueFromAbaseRegister(const Instruction& inst, TreatAsInteger) const noexcept {
+    return getAbaseRegister(inst).getInteger();
+}
+Ordinal
+Core::valueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept {
+    return getIndexRegister(inst).getOrdinal();
+}
+Integer
+Core::valueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept {
+    return getIndexRegister(inst).getInteger();
+}
+Ordinal
+Core::scaledValueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept {
+    return valueFromIndexRegister(inst, TreatAsOrdinal{}) << inst.getScale();
+}
+Integer
+Core::scaledValueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept {
+    return valueFromIndexRegister(inst, TreatAsInteger{}) << inst.getScale();
+}
+Ordinal
 Core::computeMemoryAddress(const Instruction &instruction) noexcept {
     // assume we are looking at a correct style instruction :)
     if (instruction.isDoubleWide()) {
         // also make sure that we jump ahead by eight bytes instead of four
         advanceIPBy += 4;
     }
-    const auto& abaseRegister = getAbaseRegister(instruction);
-    const auto& indexRegister = getIndexRegister(instruction);
     switch (instruction.getMemFormatMode()) {
         case MEMFormatMode::MEMA_AbsoluteOffset:
             return instruction.getOffset();
         case MEMFormatMode::MEMA_RegisterIndirectWithOffset:
-            return instruction.getOffset() + abaseRegister.getOrdinal();
+            return instruction.getOffset() + valueFromAbaseRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_RegisterIndirect:
-            return abaseRegister.getOrdinal();
+            return valueFromAbaseRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_RegisterIndirectWithIndex:
-            return abaseRegister.getOrdinal() + (indexRegister.getOrdinal() << instruction.getScale());
+            return valueFromAbaseRegister(instruction, TreatAsOrdinal{}) + scaledValueFromIndexRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_IPWithDisplacement:
             return static_cast<Ordinal>(ip_.getInteger() + instruction.getDisplacement() + 8);
         case MEMFormatMode::MEMB_AbsoluteDisplacement:
             return instruction.getDisplacement(); // this will return the optional displacement
         case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement:
-            return static_cast<Ordinal>(abaseRegister.getInteger() + instruction.getDisplacement());
+            return static_cast<Ordinal>(valueFromAbaseRegister(instruction, TreatAsInteger{}) + instruction.getDisplacement());
         case MEMFormatMode::MEMB_IndexWithDisplacement:
-            return static_cast<Ordinal>((indexRegister.getInteger() << instruction.getScale()) + instruction.getDisplacement());
+            return static_cast<Ordinal>(scaledValueFromIndexRegister(instruction, TreatAsInteger{}) + instruction.getDisplacement());
         case MEMFormatMode::MEMB_RegisterIndirectWithIndexAndDisplacement:
-            return static_cast<Ordinal>(abaseRegister.getInteger() + (indexRegister.getInteger() << instruction.getScale()) + instruction.getDisplacement());
+            return static_cast<Ordinal>(
+                    valueFromAbaseRegister(instruction, TreatAsInteger{}) +
+                    scaledValueFromIndexRegister(instruction, TreatAsInteger{}) +
+                    instruction.getDisplacement());
         default:
             return -1;
     }

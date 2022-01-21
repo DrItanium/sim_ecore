@@ -492,6 +492,13 @@ private:
     void bbs(const Instruction& inst) noexcept;
     const Register& getAbaseRegister(const Instruction& inst) const noexcept;
     const Register& getIndexRegister(const Instruction& inst) const noexcept;
+    Ordinal valueFromAbaseRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
+    Integer valueFromAbaseRegister(const Instruction& inst, TreatAsInteger) const noexcept;
+    Ordinal valueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
+    Integer valueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
+    Ordinal scaledValueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
+    Integer scaledValueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
+
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
