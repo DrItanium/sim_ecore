@@ -57,20 +57,23 @@ template<MEMFormatMode mode>
 constexpr auto isDoubleWideInstruction_v = isDoubleWideInstruction(mode);
 
 
-constexpr FullOpcode makeFullOpcode(uint8_t baseOpcode, uint8_t secondaryOpcode = 0) noexcept {
+constexpr FullOpcode makeFullOpcode(uint8_t majorOpcode) noexcept {
+    return static_cast<FullOpcode>(majorOpcode);
+}
+constexpr FullOpcode makeFullOpcode(uint8_t baseOpcode, uint8_t secondaryOpcode) noexcept {
     return (static_cast<FullOpcode>(baseOpcode) << 4) | (static_cast<FullOpcode>(secondaryOpcode & 0x0F));
 }
-constexpr auto isCTRLFormat(FullOpcode opcode) noexcept {
-    return opcode < 0x200;
+constexpr auto isCTRLFormat(uint8_t opcode) noexcept {
+    return opcode < 0x20;
 }
-constexpr auto isCOBRFormat(FullOpcode opcode) noexcept {
-    return opcode >= 0x200 && opcode < 0x580;
+constexpr auto isCOBRFormat(uint8_t opcode) noexcept {
+    return opcode >= 0x20 && opcode < 0x58;
 }
-constexpr auto isREGFormat(FullOpcode opcode) noexcept {
-    return opcode >= 0x580 && opcode < 0x800;
+constexpr auto isREGFormat(uint8_t opcode) noexcept {
+    return opcode >= 0x58 && opcode < 0x80;
 }
-constexpr auto isMEMFormat(FullOpcode opcode) noexcept {
-    return opcode >= 0x800;
+constexpr auto isMEMFormat(uint8_t opcode) noexcept {
+    return opcode >= 0x80;
 }
 // based off of the i960 instruction set
 union Instruction {
@@ -78,19 +81,32 @@ public:
     constexpr Instruction(Ordinal lower, Ordinal upper) noexcept : parts{lower, upper} { }
     constexpr explicit Instruction(LongOrdinal value = 0) noexcept : wholeValue_(value) { }
     constexpr auto getHalf(int offset) const noexcept { return parts[offset & 1]; }
+    /**
+     * @brief return the major opcode as an 8-bit quantity
+     * @return The contents of the major opcode field without any modification
+     */
+    constexpr uint8_t getMajorOpcode() const noexcept {
+        return opcode;
+    }
+    /**
+     * @brief Get the extra four bits used in REG format instructions
+     * @return The extra four bits that make up a reg opcode
+     */
+    constexpr uint8_t getMinorOpcode() const noexcept {
+        return reg.opcodeExt;
+    }
     constexpr FullOpcode getOpcode() const noexcept {
-        // by default the opcode is only 8-bits wide...except for REG format instructions, they are 12-bits instead
-        // so to make everything much simpler, we should just make a 16-bit opcode in all cases.
-        // The normal opcode bits are mapped in the same place on all forms so we should just shift it right by 4 bits
-        // so 0x11 => 0x110. This maintains sanity in all cases with a tad amount of overhead
-        FullOpcode normalOpcode = makeFullOpcode(opcode);
-        // okay now we need to figure out what kind of operation we are actually looking at.
-        // Fortunately, the classes are range based :D
-        // We only need to modify the opcode if it is a reg format instruction
-        if (::isREGFormat(normalOpcode)) {
-            normalOpcode |= reg.opcodeExt;
+        // The opcode is divided into two parts, the major opcode (8-bits) and the minor opcode (4-bits). The minor opcode only shows up in
+        // reg format instructions. The intel manuals treat the REG instructions as coming _after_ all other instructions despite being
+        // in the middle of the major opcode space. Thus we will do the same thing for simplicity. We should only pay for what we need.
+
+        // For consistency, we will still be returning a 16-bit quantity but the reg format instructions will be the only ones that
+        // are 12-bits long.
+        if (auto majorOpcode = getMajorOpcode(); ::isREGFormat(majorOpcode)) {
+            return makeFullOpcode(majorOpcode, getMinorOpcode());
+        } else {
+            return makeFullOpcode(majorOpcode);
         }
-        return normalOpcode;
     }
     constexpr auto identifyOpcode() const noexcept { return static_cast<Opcode>(getOpcode()); }
     constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
