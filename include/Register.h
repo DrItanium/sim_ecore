@@ -299,7 +299,13 @@ public:
     }
     void setLongInteger(LongInteger value) noexcept { lint_ = value; }
     void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b01] = value; }
-
+    /**
+     * @brief Copy the contents of another double register to this one
+     * @param other The other double register to get contents from
+     */
+    void copy(const DoubleRegister& other) noexcept {
+        lord_ = other.lord_;
+    }
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getLongReal() const noexcept { return lreal_; }
 void setLongReal(LongReal value) noexcept { lreal_ = value; }
@@ -320,6 +326,15 @@ public:
     constexpr explicit TripleRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0) noexcept : parts_{a, b, c, 0}{ }
     constexpr auto getOrdinal(byte which = 0) const noexcept { return parts_[which % 3]; } // very expensive!
     void setOrdinal(Ordinal value, byte which = 0) noexcept { parts_[which % 3] = value; }
+    /**
+     * @brief Copy the contents of another triple register into this one
+     * @param src The source triple register to take from
+     */
+    void copy(const TripleRegister& src) noexcept  {
+        parts_[0] = src.parts_[0];
+        parts_[1] = src.parts_[1];
+        parts_[2] = src.parts_[2];
+    }
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
 void setExtendedReal(LongReal value) noexcept { lreal_ = value; }
@@ -341,6 +356,16 @@ public:
     void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b11] = value; }
     constexpr auto getHalf(int which = 0) const noexcept { return halves_[which & 0b01];}
     void setHalf(LongOrdinal value, int which = 0) noexcept { halves_[which & 0b01] = value; }
+    /**
+     * @brief Copy the contents of a provided quad register into this one
+     * @param src The source to copy from
+     */
+    void copy(const QuadRegister& src) noexcept {
+        parts_[0] = src.parts_[0];
+        parts_[1] = src.parts_[1];
+        parts_[2] = src.parts_[2];
+        parts_[3] = src.parts_[3];
+    }
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
 void setExtendedReal(LongReal value) noexcept { lreal_ = value; }

@@ -658,27 +658,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::movl:
             [this, &instruction]() {
                 auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                auto value = getSourceDoubleRegister(instruction.getSrc1()).getLongOrdinal();
-                dest.setLongOrdinal(value);
+                const auto& src = getSourceDoubleRegister(instruction.getSrc1());
+                dest.copy(src);
             }();
             break;
         case Opcode::movt:
             [this, &instruction]() {
                 auto& dest = getTripleRegister(instruction.getSrcDest(false));
                 const auto& src = getTripleRegister(instruction.getSrc1());
-                dest.setOrdinal(src.getOrdinal(0), 0);
-                dest.setOrdinal(src.getOrdinal(1), 1);
-                dest.setOrdinal(src.getOrdinal(2), 2);
+                dest.copy(src);
             }();
             break;
         case Opcode::movq:
             [this, &instruction]() {
                 auto& dest = getQuadRegister(instruction.getSrcDest(false));
                 const auto& src = getQuadRegister(instruction.getSrc1());
-                dest.setOrdinal(src.getOrdinal(0), 0);
-                dest.setOrdinal(src.getOrdinal(1), 1);
-                dest.setOrdinal(src.getOrdinal(2), 2);
-                dest.setOrdinal(src.getOrdinal(3), 3);
+                dest.copy(src);
             }();
             break;
         case Opcode::alterbit:
