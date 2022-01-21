@@ -398,6 +398,8 @@ private:
         Divide,
         Remainder,
         Rotate,
+        ShiftLeft,
+        ShiftRight,
     };
     template<ArithmeticOperation op, typename T>
     void arithmeticGeneric(const Instruction& instruction) noexcept {
@@ -426,6 +428,30 @@ private:
                 break;
             case ArithmeticOperation::Rotate:
                 result = rotate(src2, src1);
+                break;
+            case ArithmeticOperation::ShiftLeft:
+                result = src2 << src1;
+                break;
+            case ArithmeticOperation::ShiftRight:
+                /*
+                 * // shift right integer implementation from the i960 manual
+                 * if (src >= 0) {
+                 *  if (len < 32) {
+                 *      dest <- src/2^len
+                 *  } else {
+                 *      dest <- 0
+                 *  }
+                 * }else {
+                 *  if (len < 32) {
+                 *      dest <- (src - 2^len + 1)/2^len;
+                 *  } else {
+                 *      dest <- -1;
+                 *   }
+                 * }
+                 *
+                 */
+                /// @todo perhaps implement the extra logic if necessary on shri
+                result = src2 >> src1;
                 break;
         }
         setDestinationFromSrcDest(instruction, result, T{});

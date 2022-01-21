@@ -788,11 +788,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             shro(instruction);
             break;
         case Opcode::shli:
-            [this, &instruction]() {
-                auto len = getSourceRegister(instruction.getSrc1()).getInteger();
-                auto src = getSourceRegister(instruction.getSrc2()).getInteger();
-                setDestinationFromSrcDest(instruction, src << len, TreatAsInteger{});
-            }();
+            arithmeticGeneric<ArithmeticOperation::ShiftLeft, TreatAsInteger>(instruction);
             break;
         case Opcode::scanbyte:
             [this, &instruction]() {
@@ -937,22 +933,19 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stl:
             [this, &instruction]() {
                 auto src = getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal();
-                auto address = computeMemoryAddress(instruction);
-                storeLong(address, src);
+                storeLong(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::stt:
             [this, &instruction]() {
                 auto& src = getTripleRegister(instruction.getSrcDest(true));
-                auto address = computeMemoryAddress(instruction);
-                store(address, src);
+                store(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::stq:
             [this, &instruction]() {
                 auto& src = getQuadRegister(instruction.getSrcDest(true));
-                auto addr = computeMemoryAddress(instruction);
-                store(addr, src);
+                store(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::stib:
@@ -970,36 +963,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::shri:
-            [this, &instruction]() {
-                /*
-                 * if (src >= 0) {
-                 *  if (len < 32) {
-                 *      dest <- src/2^len
-                 *  } else {
-                 *      dest <- 0
-                 *  }
-                 * }else {
-                 *  if (len < 32) {
-                 *      dest <- (src - 2^len + 1)/2^len;
-                 *  } else {
-                 *      dest <- -1;
-                 *   }
-                 * }
-                 *
-                 */
-                auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
-                auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
-                /// @todo perhaps implement the extra logic if necessary
-                setDestinationFromSrcDest(instruction, src >> len, TreatAsInteger{});
-            }();
+            arithmeticGeneric<ArithmeticOperation::ShiftRight, TreatAsInteger>(instruction);
             break;
         case Opcode::shrdi:
             [this, &instruction]() {
                 // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
                 auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
-                if (len < 32) {
+                if (auto& dest = destinationFromSrcDest(instruction); len < 32) {
+                    auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
                     /// @todo fix this dependency on implementation defined behavior with the divide
                     dest.setInteger(src / bitPositions[len]);
                 } else {
