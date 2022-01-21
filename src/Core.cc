@@ -288,10 +288,14 @@ Core::lda(const Instruction &inst) noexcept {
 #endif
 }
 void
-Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
+Core::cmpo(const Instruction& instruction) noexcept {
     auto src1 = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     cmpo(src1, src2);
+}
+void
+Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
+    cmpo(instruction);
     if ((mask & ac_.getConditionCode()) != 0) {
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
         // in the future (the HX uses those two bits as "S2" so that will be a fun future change...).
@@ -443,12 +447,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::cmpo:
-            cmpo(getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{}),
-                 getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}));
+            cmpo(instruction);
             break;
         case Opcode::cmpi:
-            cmpi(getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{}),
-                 getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{}));
+            cmpi(instruction);
             break;
         case Opcode::cmpdeco:
             [this, &instruction]() {
@@ -1290,10 +1292,14 @@ Core::flushreg() noexcept {
     }
 }
 void
-Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {
+Core::cmpi(const Instruction& instruction) noexcept {
     auto src1 = valueFromSrc1Register(instruction, TreatAsInteger{});
     auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
     cmpi(src1, src2);
+}
+void
+Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {
+    cmpi(instruction);
     if ((mask & ac_.getConditionCode()) != 0) {
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
         // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
