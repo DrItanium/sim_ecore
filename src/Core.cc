@@ -324,13 +324,8 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::bbc(const Instruction& instruction) noexcept {
-    auto targetRegister = instruction.getSrc1();
-    auto& bpReg = getSourceRegister(targetRegister);
-    auto bpOrd = bpReg.getOrdinal();
-    auto masked = bpOrd & 0b11111;
-    auto srcIndex = instruction.getSrc2();
-    const auto& srcReg = getSourceRegister(srcIndex);
-    auto src = srcReg.getOrdinal();
+    auto masked = valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111;
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     auto bitpos = bitPositions[masked];
     if ((bitpos & src) == 0) {
         // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
