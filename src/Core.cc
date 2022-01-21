@@ -468,15 +468,15 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::cmpinco:
             [this, &instruction]() {
-                auto src2 = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                cmpo(getSourceRegister(instruction.getSrc1()).getOrdinal(), src2);
+                auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+                cmpo(instruction);
                 setDestinationFromSrcDest(instruction, src2 + 1, TreatAsOrdinal{});
             }();
             break;
         case Opcode::cmpinci:
             [this, &instruction]() {
-                auto src2 = getSourceRegister(instruction.getSrc2()).getInteger();
-                cmpi(getSourceRegister(instruction.getSrc1()).getInteger(), src2);
+                auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
+                cmpi(instruction);
                 setDestinationFromSrcDest(instruction, src2 + 1, TreatAsInteger{});
             }();
             break;
