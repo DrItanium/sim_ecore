@@ -331,9 +331,9 @@ public:
      * @param src The source triple register to take from
      */
     void copy(const TripleRegister& src) noexcept  {
-        parts_[0] = src.parts_[0];
-        parts_[1] = src.parts_[1];
-        parts_[2] = src.parts_[2];
+        for (byte i = 0;i < 3; ++i) {
+            parts_[i] = src.parts_[i];
+        }
     }
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
@@ -361,10 +361,9 @@ public:
      * @param src The source to copy from
      */
     void copy(const QuadRegister& src) noexcept {
-        parts_[0] = src.parts_[0];
-        parts_[1] = src.parts_[1];
-        parts_[2] = src.parts_[2];
-        parts_[3] = src.parts_[3];
+        for (byte i = 0;i < 4; ++i) {
+            parts_[i] = src.parts_[i];
+        }
     }
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
