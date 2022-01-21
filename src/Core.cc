@@ -624,10 +624,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             arithmeticGeneric<ArithmeticOperation::Remainder, TreatAsOrdinal>(instruction);
             break;
         case Opcode::rotate:
-            setDestination(instruction.getSrcDest(false),
-                           rotate(getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{}),
-                                  getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{})),
-                           TreatAsOrdinal {});
+            arithmeticGeneric<ArithmeticOperation::Rotate, TreatAsOrdinal>(instruction);
             break;
         case Opcode::mov:
             setDestination(instruction.getSrcDest(false),
@@ -687,8 +684,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::emul:
             [this, &instruction]() {
-                auto src2 = static_cast<LongOrdinal>(getSourceRegister(instruction.getSrc2()).getOrdinal());
-                auto src1 = static_cast<LongOrdinal>(getSourceRegister(instruction.getSrc1()).getOrdinal());
+                auto src2 = static_cast<LongOrdinal>(valueFromSrc2Register(instruction, TreatAsOrdinal{}));
+                auto src1 = static_cast<LongOrdinal>(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
                 auto& dest = getDoubleRegister(instruction.getSrcDest(false));
                 // taken from the manual
                 dest.setLongOrdinal(src2 * src1);

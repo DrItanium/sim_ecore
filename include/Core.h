@@ -397,6 +397,7 @@ private:
         Multiply,
         Divide,
         Remainder,
+        Rotate,
     };
     template<ArithmeticOperation op, typename T>
     void arithmeticGeneric(const Instruction& instruction) noexcept {
@@ -422,6 +423,9 @@ private:
                 // taken from the i960Sx manual
                 //auto result = src2 - ((src2 / src1) * src1);
                 result = src2 % src1;
+                break;
+            case ArithmeticOperation::Rotate:
+                result = rotate(src2, src1);
                 break;
         }
         setDestinationFromSrcDest(instruction, result, T{});
