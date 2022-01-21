@@ -735,9 +735,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 
         case Opcode::modac:
             [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto mask = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                auto& dest = destinationFromSrcDest(instruction);
+                auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
                 dest.setOrdinal(ac_.modify(mask, src));
             }( );
             break;
