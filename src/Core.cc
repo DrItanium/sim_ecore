@@ -1338,12 +1338,8 @@ Core::getLocals() const noexcept {
     return frames[currentFrameIndex_].getUnderlyingFrame();
 }
 void
-Core::setFramePointer(Ordinal value, TreatAsOrdinal) noexcept {
+Core::setFramePointer(Ordinal value) noexcept {
     getFramePointer().setOrdinal(value);
-}
-void
-Core::setFramePointer(Integer value, TreatAsInteger) noexcept {
-    getFramePointer().setInteger(value);
 }
 void
 Core::call(const Instruction& instruction) noexcept {
@@ -1351,14 +1347,14 @@ Core::call(const Instruction& instruction) noexcept {
     // wait for any uncompleted instructions to finish
     auto spPos = getStackPointer().getOrdinal();
     auto temp = (spPos + c_) & ~c_; // round to next boundary
-    auto fp = getFramePointerValue(TreatAsOrdinal{});
+    auto fp = getFramePointerValue();
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip);
     enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
     getPFP().setOrdinal(fp);
-    setFramePointer(temp, TreatAsOrdinal{});
+    setFramePointer(temp);
     getStackPointer().setOrdinal(temp + 64);
     advanceIPBy = 0; // we already know where we are going so do not jump ahead
 }
@@ -1366,7 +1362,7 @@ void
 Core::callx(const Instruction& instruction) noexcept {
 // wait for any uncompleted instructions to finish
     auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
-    auto fp = getFramePointerValue(TreatAsOrdinal{});
+    auto fp = getFramePointerValue();
     auto memAddr = computeMemoryAddress(instruction);
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip); // we need to save the result correctly
@@ -1374,7 +1370,7 @@ Core::callx(const Instruction& instruction) noexcept {
     enterCall(temp);
     ip_.setOrdinal(memAddr);
     getPFP().setOrdinal(fp);
-    setFramePointer(temp, TreatAsOrdinal{});
+    setFramePointer(temp);
     getStackPointer().setOrdinal(temp + 64);
     advanceIPBy = 0; // we already know where we are going so do not jump ahead
 
@@ -1407,9 +1403,9 @@ Core::calls(const Instruction& instruction) noexcept {
         enterCall(temp);
         /// @todo expand pfp and fp to accurately model how this works
         PreviousFramePointer pfp(getPFP());
-        pfp.setAddress(getFramePointerValue(TreatAsOrdinal{}));
+        pfp.setAddress(getFramePointerValue());
         pfp.setReturnType(tempRRR);
-        setFramePointer(temp, TreatAsOrdinal{});
+        setFramePointer(temp);
         getStackPointer().setOrdinal(temp + 64);
         // we do not want to jump ahead on calls
         advanceIPBy = 0;
@@ -1431,7 +1427,7 @@ Core::ret() noexcept {
             break;
         case 0b001:
             [this, &restoreStandardFrame]() {
-                auto fpOrd = getFramePointerValue(TreatAsOrdinal{});
+                auto fpOrd = getFramePointerValue();
                 auto x = load(fpOrd - 16);
                 auto y = load(fpOrd - 12);
                 restoreStandardFrame();
@@ -1461,7 +1457,7 @@ Core::ret() noexcept {
             break;
         case 0b111: // interrupt return
             [this,&restoreStandardFrame]() {
-                auto fpOrd = getFramePointerValue(TreatAsOrdinal{});
+                auto fpOrd = getFramePointerValue();
                 auto x = load(fpOrd - 16);
                 auto y = load(fpOrd - 12);
                 restoreStandardFrame();
@@ -1478,18 +1474,14 @@ Core::ret() noexcept {
     }
 }
 Ordinal
-Core::getFramePointerValue(TreatAsOrdinal) const noexcept {
+Core::getFramePointerValue() const noexcept {
     return getFramePointer().getOrdinal();
-}
-Integer
-Core::getFramePointerValue(TreatAsInteger) const noexcept {
-    return getFramePointer().getInteger();
 }
 Ordinal
 Core::properFramePointerAddress() const noexcept {
     // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
     // we have to use the "c_" parameter for this
-    return getFramePointerValue(TreatAsOrdinal{}) & (~c_);
+    return getFramePointerValue() & (~c_);
 }
 Core::LocalRegisterPack&
 Core::getNextPack() noexcept {
@@ -1509,7 +1501,7 @@ Core::exitCall() noexcept {
     Serial.println(properFramePointerAddress(), HEX);
 #endif
 #endif
-    setFramePointer(getPFP().getOrdinal(), TreatAsOrdinal{});
+    setFramePointer(getPFP().getOrdinal());
 #ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("NEW FP: 0x");

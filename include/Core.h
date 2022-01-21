@@ -67,7 +67,7 @@ public:
     public:
         LocalRegisterPack() = default;
         RegisterFrame& getUnderlyingFrame() noexcept { return underlyingFrame; }
-        const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
+        [[nodiscard]] const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
         /**
          * @brief Relinquish ownership of the current register pack without saving the contents
          */
@@ -147,6 +147,7 @@ public:
         bool valid_ = false;
     };
 public:
+    /// @todo figure out a better way to handle literals instead of having very large lookup tables
     static constexpr Register OrdinalLiterals[32] {
 #define X(base) Register(base + 0), Register(base + 1), Register(base + 2), Register(base + 3)
             X(0),
@@ -326,10 +327,8 @@ protected:
     virtual void resetExecutionStatus() noexcept = 0;
     LocalRegisterPack& getCurrentPack() noexcept { return frames[currentFrameIndex_]; }
 private:
-    void setFramePointer(Ordinal value, TreatAsOrdinal) noexcept;
-    void setFramePointer(Integer value, TreatAsInteger) noexcept;
-    [[nodiscard]] Ordinal getFramePointerValue(TreatAsOrdinal) const noexcept;
-    [[nodiscard]] Integer getFramePointerValue(TreatAsInteger) const noexcept;
+    void setFramePointer(Ordinal value) noexcept;
+    [[nodiscard]] Ordinal getFramePointerValue() const noexcept;
     void lda(const Instruction& inst) noexcept;
     void shro(const Instruction& inst) noexcept;
     void shlo(const Instruction& inst) noexcept;
