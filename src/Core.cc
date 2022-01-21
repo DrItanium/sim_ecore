@@ -866,23 +866,20 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::addc:
             [this, &instruction]() {
-                auto& src1 = getSourceRegister(instruction.getSrc1());
-                auto& src2 = getSourceRegister(instruction.getSrc2());
-                union {
-                    LongOrdinal value = 0;
-                    Ordinal halves[2];
-                } result;
-                result.value = static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0);
+                auto& src1 = sourceFromSrc1(instruction);
+                auto& src2 = sourceFromSrc2(instruction);
+                DoubleRegister result;
+                result.setLongOrdinal(static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0));
                 // the result will be larger than 32-bits so we have to keep that in mind
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setOrdinal(result.halves[0]);
+                auto& dest = destinationFromSrcDest(instruction);
+                dest.setOrdinal(result.getOrdinal(0));
                 // do computation here
                 ac_.setConditionCode(0);
                 if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
                     // set the overflow bit in ac
                     ac_.setOverflowBit(true);
                 }
-                ac_.setCarryBit(result.halves[1] != 0);
+                ac_.setCarryBit(result.getOrdinal(1) != 0);
 
                 // set the carry out bit
             }();
