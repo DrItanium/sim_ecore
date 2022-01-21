@@ -326,6 +326,10 @@ protected:
     virtual void resetExecutionStatus() noexcept = 0;
     LocalRegisterPack& getCurrentPack() noexcept { return frames[currentFrameIndex_]; }
 private:
+    void setFramePointer(Ordinal value, TreatAsOrdinal) noexcept;
+    void setFramePointer(Integer value, TreatAsInteger) noexcept;
+    [[nodiscard]] Ordinal getFramePointerValue(TreatAsOrdinal) const noexcept;
+    [[nodiscard]] Integer getFramePointerValue(TreatAsInteger) const noexcept;
     void lda(const Instruction& inst) noexcept;
     void shro(const Instruction& inst) noexcept;
     void shlo(const Instruction& inst) noexcept;

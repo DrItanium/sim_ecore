@@ -1053,11 +1053,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // for synchronization. It also allows access to internal memory mapped items.
                 // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
                 // with condition code assignments and forced alignments
-
-                auto address = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force word alignment
-                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto address = sourceFromSrc1(instruction).getWordAligned(); // force word alignment
                 // load basically takes care of accessing different registers and such even memory mapped ones
-                dest.setOrdinal(load(address));
+                setDestinationFromSrcDest(instruction, load(address), TreatAsOrdinal{});
                 // there is a _fail_ condition where a bad access condition will result in 0b000
                 /// @todo implement support for bad access conditions
                 ac_.setConditionCode(0b010);
@@ -1066,8 +1064,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::synmov:
             [this, &instruction]() {
                 // load from memory and then store to another address in a synchronous fashion
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal(); // source address
-                auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // align
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+                auto addr = sourceFromSrc1(instruction).getWordAligned(); // align
                 Register temp(load(src));
                 synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
@@ -1076,8 +1074,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::synmovl:
             [this, &instruction]() {
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal(); // source address
-                auto addr = getSourceRegister(instruction.getSrc1()).getDoubleWordAligned(); // align
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
+                auto addr = sourceFromSrc1(instruction).getDoubleWordAligned(); // align
                 DoubleRegister temp(loadLong(src));
                 synchronizedStore(addr, temp);
                 /// @todo figure out how to support bad access conditions
@@ -1086,8 +1084,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::synmovq:
             [this, &instruction]() {
-                auto src  = getSourceRegister(instruction.getSrc2()).getOrdinal(); // source address
-                auto addr = getSourceRegister(instruction.getSrc1()).getQuadWordAligned(); // align
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
+                auto addr = sourceFromSrc1(instruction).getQuadWordAligned(); // align
                 QuadRegister temp = loadQuad(src);
 #ifdef EMULATOR_TRACE
 #ifdef ARDUINO
@@ -1108,7 +1106,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::modpc:
             [this, &instruction]() {
                 auto mask = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto& dest = destinationFromSrcDest(instruction);
                 if (mask != 0) {
                     if (!pc_.inSupervisorMode()) {
                         generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
@@ -1127,10 +1125,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::modtc:
             [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto mask = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal(tc_.modify(mask, src));
+                auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+                setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
             }( );
             break;
         case Opcode::setbit:
@@ -1341,19 +1338,27 @@ Core::getLocals() const noexcept {
     return frames[currentFrameIndex_].getUnderlyingFrame();
 }
 void
+Core::setFramePointer(Ordinal value, TreatAsOrdinal) noexcept {
+    getFramePointer().setOrdinal(value);
+}
+void
+Core::setFramePointer(Integer value, TreatAsInteger) noexcept {
+    getFramePointer().setInteger(value);
+}
+void
 Core::call(const Instruction& instruction) noexcept {
     /// @todo implement
     // wait for any uncompleted instructions to finish
     auto spPos = getStackPointer().getOrdinal();
     auto temp = (spPos + c_) & ~c_; // round to next boundary
-    auto fp = getFramePointer().getOrdinal();
+    auto fp = getFramePointerValue(TreatAsOrdinal{});
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip);
     enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
     getPFP().setOrdinal(fp);
-    getFramePointer().setOrdinal(temp);
+    setFramePointer(temp, TreatAsOrdinal{});
     getStackPointer().setOrdinal(temp + 64);
     advanceIPBy = 0; // we already know where we are going so do not jump ahead
 }
@@ -1361,7 +1366,7 @@ void
 Core::callx(const Instruction& instruction) noexcept {
 // wait for any uncompleted instructions to finish
     auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
-    auto fp = getFramePointer().getOrdinal();
+    auto fp = getFramePointerValue(TreatAsOrdinal{});
     auto memAddr = computeMemoryAddress(instruction);
     auto rip = ip_.getOrdinal() + advanceIPBy;
     getRIP().setOrdinal(rip); // we need to save the result correctly
@@ -1369,7 +1374,7 @@ Core::callx(const Instruction& instruction) noexcept {
     enterCall(temp);
     ip_.setOrdinal(memAddr);
     getPFP().setOrdinal(fp);
-    getFramePointer().setOrdinal(temp);
+    setFramePointer(temp, TreatAsOrdinal{});
     getStackPointer().setOrdinal(temp + 64);
     advanceIPBy = 0; // we already know where we are going so do not jump ahead
 
@@ -1402,9 +1407,9 @@ Core::calls(const Instruction& instruction) noexcept {
         enterCall(temp);
         /// @todo expand pfp and fp to accurately model how this works
         PreviousFramePointer pfp(getPFP());
-        pfp.setAddress(getFramePointer().getOrdinal());
+        pfp.setAddress(getFramePointerValue(TreatAsOrdinal{}));
         pfp.setReturnType(tempRRR);
-        getFramePointer().setOrdinal(temp);
+        setFramePointer(temp, TreatAsOrdinal{});
         getStackPointer().setOrdinal(temp + 64);
         // we do not want to jump ahead on calls
         advanceIPBy = 0;
@@ -1426,9 +1431,9 @@ Core::ret() noexcept {
             break;
         case 0b001:
             [this, &restoreStandardFrame]() {
-                auto& fp = getFramePointer();
-                auto x = load(fp.getOrdinal() - 16);
-                auto y = load(fp.getOrdinal() - 12);
+                auto fpOrd = getFramePointerValue(TreatAsOrdinal{});
+                auto x = load(fpOrd - 16);
+                auto y = load(fpOrd - 12);
                 restoreStandardFrame();
                 ac_.setValue(y);
                 if (pc_.inSupervisorMode()) {
@@ -1456,9 +1461,9 @@ Core::ret() noexcept {
             break;
         case 0b111: // interrupt return
             [this,&restoreStandardFrame]() {
-                auto& fp = getFramePointer();
-                auto x = load(fp.getOrdinal() - 16);
-                auto y = load(fp.getOrdinal() - 12);
+                auto fpOrd = getFramePointerValue(TreatAsOrdinal{});
+                auto x = load(fpOrd - 16);
+                auto y = load(fpOrd - 12);
                 restoreStandardFrame();
                 ac_.setValue(y);
                 if (pc_.inSupervisorMode()) {
@@ -1473,10 +1478,18 @@ Core::ret() noexcept {
     }
 }
 Ordinal
+Core::getFramePointerValue(TreatAsOrdinal) const noexcept {
+    return getFramePointer().getOrdinal();
+}
+Integer
+Core::getFramePointerValue(TreatAsInteger) const noexcept {
+    return getFramePointer().getInteger();
+}
+Ordinal
 Core::properFramePointerAddress() const noexcept {
     // we have to remember that a given number of bits needs to be ignored when dealing with the frame pointer
     // we have to use the "c_" parameter for this
-    return getFramePointer().getOrdinal() & (~c_);
+    return getFramePointerValue(TreatAsOrdinal{}) & (~c_);
 }
 Core::LocalRegisterPack&
 Core::getNextPack() noexcept {
@@ -1496,7 +1509,7 @@ Core::exitCall() noexcept {
     Serial.println(properFramePointerAddress(), HEX);
 #endif
 #endif
-    getFramePointer().setOrdinal(getPFP().getOrdinal());
+    setFramePointer(getPFP().getOrdinal(), TreatAsOrdinal{});
 #ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("NEW FP: 0x");
