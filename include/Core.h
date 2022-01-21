@@ -393,6 +393,7 @@ private:
         Subtract,
         Multiply,
         Divide,
+        Remainder,
     };
     template<ArithmeticOperation op, typename T>
     void arithmeticGeneric(const Instruction& instruction) noexcept {
@@ -413,6 +414,11 @@ private:
             case ArithmeticOperation::Divide:
                 /// @todo check denominator and do proper handling
                 result = src2 / src1;
+                break;
+            case ArithmeticOperation::Remainder:
+                // taken from the i960Sx manual
+                //auto result = src2 - ((src2 / src1) * src1);
+                result = src2 % src1;
                 break;
         }
         setDestinationFromSrcDest(instruction, result, T{});

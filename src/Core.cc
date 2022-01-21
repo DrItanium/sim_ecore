@@ -526,11 +526,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::bx:
-            [this, &instruction]() {
-                auto memoryAddress = computeMemoryAddress(instruction);
-                ip_.setOrdinal(memoryAddress);
-                advanceIPBy = 0;
-            }();
+            ip_.setOrdinal(computeMemoryAddress(instruction));
+            advanceIPBy = 0;
             break;
         case Opcode::balx:
             [this, &instruction]() {
@@ -627,22 +624,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             logicalOpGeneric<LogicalOp::NotOr>(instruction);
             break;
         case Opcode::remi:
-            [this, &instruction]() {
-                auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
-                auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
-                // taken from the i960Sx manual
-                //dest.setInteger(src2 - ((src2 / src1) * src1));
-                setDestinationFromSrcDest(instruction, src2 % src1, TreatAsInteger{});
-            }();
+            arithmeticGeneric<ArithmeticOperation::Remainder, TreatAsInteger>(instruction);
             break;
         case Opcode::remo:
-            [this, &instruction]() {
-                auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{});
-                auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
-                // taken from the i960Sx manual
-                //auto result = src2 - ((src2 / src1) * src1);
-                setDestinationFromSrcDest(instruction, src2 % src1, TreatAsOrdinal {});
-            }();
+            arithmeticGeneric<ArithmeticOperation::Remainder, TreatAsOrdinal>(instruction);
             break;
         case Opcode::rotate:
             setDestination(instruction.getSrcDest(false),
