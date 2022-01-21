@@ -488,7 +488,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::cmpobl:
         case Opcode::cmpobne:
         case Opcode::cmpoble:
-            cmpobx(instruction, instruction.getEmbeddedMask());
+            cmpobx(instruction);
             break;
 
             // just like with the others, intel encoded the mask for cmpi operations into the opcode itself
@@ -501,13 +501,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::cmpibne:
         case Opcode::cmpible:
         case Opcode::cmpibo:
-            cmpibx(instruction, instruction.getEmbeddedMask());
+            cmpibx(instruction);
             break;
         case Opcode::concmpi:
             [this, &instruction]() {
                 if ((ac_.getConditionCode() & 0b100) == 0) {
-                    auto src1 = getRegister(instruction.getSrc1()).getInteger();
-                    auto src2 = getRegister(instruction.getSrc2()).getInteger();
+                    auto src1 = valueFromSrc1Register(instruction, TreatAsInteger{});
+                    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
                     ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
                 }
             }();
@@ -515,8 +515,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::concmpo:
             [this, &instruction]() {
                 if ((ac_.getConditionCode() & 0b100) == 0) {
-                    auto src1 = getRegister(instruction.getSrc1()).getOrdinal();
-                    auto src2 = getRegister(instruction.getSrc2()).getOrdinal();
+                    auto src1 = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+                    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
                     ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
                 }
             }();

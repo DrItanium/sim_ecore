@@ -334,7 +334,6 @@ private:
     void shro(const Instruction& inst) noexcept;
     void shlo(const Instruction& inst) noexcept;
     void flushreg() noexcept;
-    void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;
     void ipRelativeBranch(Integer displacement) noexcept {
         advanceIPBy = 0;
         ip_.setInteger(ip_.getInteger() + displacement);
@@ -352,6 +351,9 @@ private:
     Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;
     Ordinal getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const;
     void cmpobx(const Instruction& instruction, uint8_t mask) noexcept;
+    void cmpobx(const Instruction& instruction) noexcept { cmpobx(instruction, instruction.getEmbeddedMask()); }
+    void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;
+    void cmpibx(const Instruction& instruction) noexcept { cmpibx(instruction, instruction.getEmbeddedMask()); }
 
     Register& destinationFromSrcDest(const Instruction& instruction) noexcept;
     const Register& sourceFromSrcDest(const Instruction& instruction) const noexcept;
