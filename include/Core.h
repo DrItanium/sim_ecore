@@ -250,6 +250,7 @@ protected:
         storeByte(destination, thing.out);
     }
     Ordinal atomicLoad(Address destination) {
+        /// @todo pull an atomic pin of some kind low (perhaps LOCK?)
         return load(destination);
     }
     LongOrdinal loadLong(Address destination) {
