@@ -63,6 +63,12 @@ void
 Core::cmpo(Ordinal src1, Ordinal src2) noexcept {
     ac_.setConditionCode(compareGeneric(src1, src2));
 }
+namespace {
+    Register BadRegister(-1);
+    DoubleRegister BadRegisterDouble(-1);
+    TripleRegister BadRegisterTriple(-1);
+    QuadRegister BadRegisterQuad(-1);
+}
 
 Register&
 Core::getRegister(RegisterIndex targetIndex) {
@@ -71,8 +77,7 @@ Core::getRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getRegister(static_cast<uint8_t>(targetIndex));
     } else {
-        static Register badRegister(-1);
-        return badRegister;
+        return BadRegister;
     }
 }
 
@@ -83,8 +88,7 @@ Core::getDoubleRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getDoubleRegister(static_cast<int>(targetIndex));
     } else {
-        static DoubleRegister badRegister(-1);
-        return badRegister;
+        return BadRegisterDouble;
     }
 }
 
@@ -96,8 +100,7 @@ Core::getTripleRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getTripleRegister(static_cast<int>(targetIndex));
     } else {
-        static TripleRegister badRegister(-1);
-        return badRegister;
+        return BadRegisterTriple;
     }
 }
 
@@ -108,8 +111,7 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getQuadRegister(static_cast<int>(targetIndex));
     } else {
-        static QuadRegister badRegister(-1);
-        return badRegister;
+        return BadRegisterQuad;
     }
 }
 
@@ -122,8 +124,7 @@ Core::getRegister(RegisterIndex targetIndex) const {
     } else if (isLiteral(targetIndex)) {
         return OrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-        static Register badRegister(-1);
-        return badRegister;
+        return BadRegister;
     }
 }
 
@@ -137,8 +138,7 @@ Core::getDoubleRegister(RegisterIndex targetIndex) const {
         /// @todo implement double register literal support, according to the docs it is allowed
         return LongOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-        static DoubleRegister badRegister(-1);
-        return badRegister;
+        return BadRegisterDouble;
     }
 }
 
@@ -151,8 +151,7 @@ Core::getTripleRegister(RegisterIndex targetIndex) const {
     } else if (isLiteral(targetIndex)) {
         return TripleOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-        static TripleRegister badRegister(-1);
-        return badRegister;
+        return BadRegisterTriple;
     }
 }
 
@@ -165,8 +164,7 @@ Core::getQuadRegister(RegisterIndex targetIndex) const {
     } else if (isLiteral(targetIndex)) {
         return QuadOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
-        static QuadRegister badRegister(-1);
-        return badRegister;
+        return BadRegisterQuad;
     }
 }
 
@@ -180,7 +178,7 @@ Core::loadInstruction(Address baseAddress) noexcept {
 
 void
 Core::saveRegisterFrame(const RegisterFrame &theFrame, Address baseAddress) noexcept {
-    for (int i = 0; i < 16; ++i, baseAddress += 4) {
+    for (byte i = 0; i < 16; ++i, baseAddress += 4) {
         store(baseAddress, theFrame.getRegister(i).getOrdinal());
     }
 }
