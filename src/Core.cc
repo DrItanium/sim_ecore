@@ -25,6 +25,18 @@
 #ifdef ARDUINO
 #include <Arduino.h>
 #endif
+Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).getOrdinal(); }
+Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).getInteger(); }
+Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).getOrdinal(); }
+Integer Core::valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc2(instruction).getInteger(); }
+const Register&
+Core::sourceFromSrc1(const Instruction& instruction) const noexcept {
+    return getSourceRegister(instruction.getSrc1());
+}
+const Register&
+Core::sourceFromSrc2(const Instruction& instruction) const noexcept {
+    return getSourceRegister(instruction.getSrc2());
+}
 Register&
 Core::destinationFromSrcDest(const Instruction& instruction) noexcept {
     return getRegister(instruction.getSrcDest(false));
@@ -277,8 +289,8 @@ Core::lda(const Instruction &inst) noexcept {
 }
 void
 Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
-    auto src1 = getSourceRegisterValue(instruction.getSrc1(), TreatAsOrdinal{});
-    auto src2 = getSourceRegisterValue(instruction.getSrc2(), TreatAsOrdinal{});
+    auto src1 = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     cmpo(src1, src2);
     if ((mask & ac_.getConditionCode()) != 0) {
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
@@ -867,7 +879,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto temp = atomicLoad(addr);
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 atomicStore(addr, temp + src);
-                getRegister(instruction.getSrcDest(false)).setOrdinal(temp);
+                setDestinationFromSrcDest(instruction, temp, TreatAsOrdinal{});
             }();
             break;
         case Opcode::atmod:
@@ -916,8 +928,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::subc:
             [this, &instruction]() {
-                auto& src1 = getSourceRegister(instruction.getSrc1());
-                auto& src2 = getSourceRegister(instruction.getSrc2());
+                auto& src1 = sourceFromSrc1(instruction);
+                auto& src2 = sourceFromSrc2(instruction);
                 union {
                     LongOrdinal value = 0;
                     Ordinal halves[2];
@@ -937,16 +949,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::ldib:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setInteger(loadByte(computeMemoryAddress(instruction)));
-            }();
+            setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsInteger {});
             break;
         case Opcode::ldis:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setInteger(loadShort(computeMemoryAddress(instruction)));
-            }();
+            setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger {});
             break;
         case Opcode::st:
             store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getOrdinal());
@@ -1020,19 +1026,20 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                  * }
                  *
                  */
-                auto src = getSourceRegisterValue(instruction.getSrc2(), TreatAsInteger{});
-                auto len = getSourceRegisterValue(instruction.getSrc1(), TreatAsInteger{});
+                auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
+                auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
                 /// @todo perhaps implement the extra logic if necessary
-                setDestination(instruction.getSrcDest(false), src >> len, TreatAsInteger{});
+                setDestinationFromSrcDest(instruction, src >> len, TreatAsInteger{});
             }();
             break;
         case Opcode::shrdi:
             [this, &instruction]() {
                 // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
                 auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = getSourceRegister(instruction.getSrc2()).getInteger();
-                auto len = getSourceRegister(instruction.getSrc1()).getInteger();
+                auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
+                auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
                 if (len < 32) {
+                    /// @todo fix this dependency on implementation defined behavior with the divide
                     dest.setInteger(src / bitPositions[len]);
                 } else {
                     dest.setInteger(0);

@@ -351,6 +351,12 @@ private:
     const Register& sourceFromSrcDest(const Instruction& instruction) const noexcept;
     void setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal);
     void setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger);
+    const Register& sourceFromSrc1(const Instruction& instruction) const noexcept;
+    const Register& sourceFromSrc2(const Instruction& instruction) const noexcept;
+    Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
+    Integer valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept;
+    Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
+    Integer valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
