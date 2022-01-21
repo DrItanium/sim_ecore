@@ -1037,13 +1037,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::modpc:
             [this, &instruction]() {
-                auto mask = getSourceRegister(instruction.getSrc1()).getOrdinal();
+                auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
                 auto& dest = destinationFromSrcDest(instruction);
                 if (mask != 0) {
                     if (!pc_.inSupervisorMode()) {
                         generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
                     } else {
-                        auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+                        auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
                         dest.setOrdinal(pc_.modify(mask, src));
                         ProcessControls tmp(dest.getOrdinal());
                         if (tmp.getPriority() > pc_.getPriority()) {
