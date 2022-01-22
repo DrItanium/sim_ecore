@@ -492,10 +492,10 @@ private:
     void balx(const Instruction& inst) noexcept;
     void bx(const Instruction& inst) noexcept;
     void notbit(const Instruction& inst) noexcept;
+    void condFault(const Instruction& inst) noexcept;
 protected:
     void condBranch(const Instruction& inst) noexcept;
     void absoluteBranch(Ordinal value) noexcept;
-public:
     virtual void processIACMessage(const IACMessage& message) noexcept = 0;
 protected:
     Register ip_; // start at address zero

@@ -360,20 +360,13 @@ Core::condBranch(const Instruction& inst) noexcept {
     }
 }
 void
+Core::condFault(const Instruction &inst) noexcept {
+    if (auto mask = inst.getEmbeddedMask(); (ac_.getConditionCode()& mask) != 0) {
+        generateFault(FaultType::Constraint_Range);
+    }
+}
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("ENTERING ");
-    Serial.println(__PRETTY_FUNCTION__);
-    Serial.print("IP: 0x");
-    Serial.println(ip_.getOrdinal(), HEX);
-#endif
-#endif
-    auto condFault = [this](uint8_t mask) {
-        if ((ac_.getConditionCode()& mask) != 0) {
-            generateFault(FaultType::Constraint_Range);
-        }
-    };
     auto testOp = [this, &instruction](byte code) {
         getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(code) ? 1 : 0);
     };
@@ -417,7 +410,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::faultne:
         case Opcode::faultle:
         case Opcode::faulto:
-            condFault(instruction.getEmbeddedMask());
+            condFault(instruction);
             break;
             // COBR Format
             // just like with fault and branch, test has the mask embedded in the opcode, so extract it out

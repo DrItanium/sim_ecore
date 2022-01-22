@@ -37,8 +37,8 @@ EBISBCore::begin() {
     Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
-    SPI.begin();
 #if 0
+    SPI.begin();
     while (!SD.begin(SDCardPin)) {
         Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
         delay(1000);
