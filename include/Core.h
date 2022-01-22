@@ -454,22 +454,6 @@ private:
         }
         setDestinationFromSrcDest(instruction, result, T{});
     }
-    template<typename T>
-    void addGeneric(const Instruction& instruction) noexcept {
-        arithmeticGeneric<ArithmeticOperation::Add, T>(instruction);
-    }
-    template<typename T>
-    void subGeneric(const Instruction& instruction) noexcept {
-        arithmeticGeneric<ArithmeticOperation::Subtract, T>(instruction);
-    }
-    template<typename T>
-    void mulGeneric(const Instruction& instruction) noexcept {
-        arithmeticGeneric<ArithmeticOperation::Multiply, T>(instruction);
-    }
-    template<typename T>
-    void divGeneric(const Instruction& instruction) noexcept {
-        arithmeticGeneric<ArithmeticOperation::Divide, T>(instruction);
-    }
     enum class LogicalOp : byte {
         And,
         Or,

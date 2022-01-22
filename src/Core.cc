@@ -549,22 +549,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             arithmeticGeneric<ArithmeticOperation::Add, TreatAsOrdinal>(instruction);
             break;
         case Opcode::subi:
-            subGeneric<TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Subtract, TreatAsInteger>(instruction);
             break;
         case Opcode::subo:
-            subGeneric<TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Subtract, TreatAsOrdinal>(instruction);
             break;
         case Opcode::muli:
-            mulGeneric<TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Multiply, TreatAsInteger>(instruction);
             break;
         case Opcode::mulo:
-            mulGeneric<TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Multiply, TreatAsOrdinal>(instruction);
             break;
         case Opcode::divo:
-            divGeneric<TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Divide, TreatAsOrdinal>(instruction);
             break;
         case Opcode::divi:
-            divGeneric<TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Divide, TreatAsInteger>(instruction);
             break;
         case Opcode::notbit:
             [this, &instruction]() {
