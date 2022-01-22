@@ -21,38 +21,5 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// The main for the arduino version of the simulator's main
-// Created by jwscoggins on 8/21/21.
-//
-#ifdef ARDUINO
-#include "Core.h"
 #include <Arduino.h>
-Core theCore;
-void setup() {
-    Serial.begin(115200);
-    while (!Serial);
-    theCore.begin();
-    Serial.println(F("INVOKING RUN!"));
-    theCore.run();
-    Serial.println(F("EMULATOR HALTED!"));
-}
-void loop() {
-    delay(1000);
-}
-#if __cplusplus >= 201402L
-#ifdef ARDUINO_AVR_MEGA2560
-
-void operator delete(void * ptr, size_t)
-{
-    ::operator delete(ptr);
-}
-
-
-void operator delete[](void * ptr, size_t)
-{
-    ::operator delete(ptr);
-}
-#endif
-#endif // end language is C++14 or greater
-#endif
-
+#include "Core.h"
