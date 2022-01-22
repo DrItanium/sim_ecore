@@ -207,12 +207,12 @@ protected:
     virtual Ordinal getSystemAddressTableBase() const noexcept = 0;
     virtual Ordinal getPRCBPtrBase() const noexcept = 0;
     virtual bool continueToExecute() const noexcept = 0;
-    virtual Ordinal getSystemProcedureTableBase() ;
-    virtual Ordinal getFaultProcedureTableBase() ;
-    virtual Ordinal getTraceTablePointer() ;
-    virtual Ordinal getInterruptTableBase() ;
-    virtual Ordinal getFaultTableBase() ;
-    virtual Ordinal getInterruptStackPointer();
+    Ordinal getSystemProcedureTableBase() ;
+    Ordinal getFaultProcedureTableBase() ;
+    Ordinal getTraceTablePointer() ;
+    Ordinal getInterruptTableBase() ;
+    Ordinal getFaultTableBase() ;
+    Ordinal getInterruptStackPointer();
     virtual void generateFault(FaultType fault);
     void storeLong(Address destination, LongOrdinal value) {
         DoubleRegister wrapper(value);
