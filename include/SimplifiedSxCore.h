@@ -32,9 +32,7 @@ protected:
     void boot() override;
     Ordinal getSystemAddressTableBase() const noexcept override;
     Ordinal getPRCBPtrBase() const noexcept override;
-    bool continueToExecute() const noexcept override;
     constexpr bool initialized() const noexcept { return initialized_; }
-    void resetExecutionStatus() noexcept override;
     void haltExecution() noexcept { executing_ = false; }
 protected:
     void processIACMessage(const IACMessage& message) noexcept override;

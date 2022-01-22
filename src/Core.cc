@@ -964,9 +964,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 }
 void
 Core::run() {
-    resetExecutionStatus();
     boot();
-    while(continueToExecute()) {
+    while(true) {
         cycle();
     }
 }

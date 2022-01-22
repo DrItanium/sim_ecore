@@ -99,14 +99,6 @@ Ordinal
 SimplifiedSxCore::getPRCBPtrBase() const noexcept {
     return prcbBase_;
 }
-bool
-SimplifiedSxCore::continueToExecute() const noexcept {
-    return executing_;
-}
-void
-SimplifiedSxCore::resetExecutionStatus() noexcept {
-    executing_ = true;
-}
 
 void
 SimplifiedSxCore::processIACMessage(const IACMessage &message) noexcept {

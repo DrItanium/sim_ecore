@@ -234,13 +234,12 @@ protected:
     virtual void boot() = 0;
     virtual Ordinal getSystemAddressTableBase() const noexcept = 0;
     virtual Ordinal getPRCBPtrBase() const noexcept = 0;
-    virtual bool continueToExecute() const noexcept = 0;
-    Ordinal getSystemProcedureTableBase() ;
-    Ordinal getFaultProcedureTableBase() ;
-    Ordinal getTraceTablePointer() ;
-    Ordinal getInterruptTableBase() ;
-    Ordinal getFaultTableBase() ;
-    Ordinal getInterruptStackPointer();
+    [[nodiscard]] Ordinal getSystemProcedureTableBase() ;
+    [[nodiscard]] Ordinal getFaultProcedureTableBase() ;
+    [[nodiscard]] Ordinal getTraceTablePointer() ;
+    [[nodiscard]] Ordinal getInterruptTableBase() ;
+    [[nodiscard]] Ordinal getFaultTableBase() ;
+    [[nodiscard]] Ordinal getInterruptStackPointer();
     virtual void generateFault(FaultType fault);
     void storeLong(Address destination, LongOrdinal value);
     void store(Address destination, const TripleRegister& reg);
@@ -290,7 +289,6 @@ private:
     void setRIP() noexcept;
 protected:
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
-    virtual void resetExecutionStatus() noexcept = 0;
     LocalRegisterPack& getCurrentPack() noexcept { return frames[currentFrameIndex_]; }
 protected:
     void setFramePointer(Ordinal value) noexcept;
