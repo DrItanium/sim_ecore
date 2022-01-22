@@ -28,8 +28,25 @@
 #include "Types.h"
 #include "Core.h"
 
-void pinMode(Core::Pinout pin, decltype(OUTPUT) direction) noexcept {
+void
+pinMode(Core::Pinout pin, decltype(OUTPUT) direction) noexcept {
     ::pinMode(static_cast<int>(pin), direction);
+}
+void
+digitalWrite(Core::Pinout pin, decltype(LOW) value) noexcept {
+    ::digitalWrite(static_cast<byte>(pin), value);
+}
+byte
+digitalRead(Core::Pinout p) noexcept {
+    return ::digitalRead(static_cast<byte>(p));
+}
+namespace {
+    inline void setupEBI() noexcept {
+        // full 64k space without bus keeper
+        XMCRB = 0b0000'0000;
+        // turn on the EBI
+        XMCRA |= _BV(SRE);
+    }
 }
 void
 Core::begin() noexcept {
@@ -46,6 +63,7 @@ Core::begin() noexcept {
     Serial.println(F("DONE!"));
     for (const auto& ebiPin : Core::EBIExtendedPins) {
         pinMode(ebiPin, OUTPUT);
+        digitalWrite(ebiPin, LOW);
     }
 
     pinMode(Pinout::Int0_, INPUT);

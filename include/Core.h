@@ -559,4 +559,7 @@ private:
     Ordinal systemAddressTableBase_ = 0;
     Ordinal prcbBase_ = 0;
 };
+void pinMode(Core::Pinout p, decltype(OUTPUT) direction) noexcept;
+void digitalWrite(Core::Pinout p, decltype(HIGH) value) noexcept;
+byte digitalRead(Core::Pinout p) noexcept;
 #endif //SIM3_CORE_H
