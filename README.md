@@ -12,8 +12,7 @@ It also required that I maintain basically two copies of my chipset design
 which really killed momentum for me. 
 
 Recently, I have been experimenting with the EBI/EMI of AVR processors and
-found it to be exceptionally powerful (especially on the 8515 and 162... or as
-I call them: Challenge Chips!). 
+found it to be exceptionally powerful.
 
 I came up with an idea to map the address and data lines of a real i960 to the
 EBI of a proper chipset MCU to greatly improve performance. However, you still
@@ -31,8 +30,8 @@ accessible over SPI and it could be easily done.
 
 The only problems I can see with this design is lack of program flash to store
 the emulator. Thus I have forked sim3 so I can make the design as tight as
-possible. My initial target is an ATmega8515 (8k flash, 512 byte SRAM) so the
-bus will actually only be 24-bits wide. 
+possible. My initial target is an Arduino Mega 2560 (256k flash, 8k SRAM) so the
+bus will be 32-bit wide.
 
 The only part that will be awkward is dealing with the EBI not mapping
 everything into RAM correctly. On SRAM, this isn't an issue but a FLASH chip

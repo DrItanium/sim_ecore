@@ -36,11 +36,7 @@
  */
 class EBISBCore : public SBCoreArduino {
 public:
-#ifdef BUS24
-    static constexpr Address RamSize = 16_MB;
-#else
     static constexpr Address RamSize = 4096_MB - 1;
-#endif
     static constexpr Address RamStart = 0x0000'0000;
     static constexpr Address RamMask = RamSize - 1;
 public:
