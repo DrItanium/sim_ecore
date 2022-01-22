@@ -83,14 +83,6 @@ compareGeneric(T src1, T src2) noexcept {
         return 0b001;
     }
 }
-void
-Core::cmpi(Integer src1, Integer src2) noexcept {
-    ac_.setConditionCode(compareGeneric(src1, src2));
-}
-void
-Core::cmpo(Ordinal src1, Ordinal src2) noexcept {
-    ac_.setConditionCode(compareGeneric(src1, src2));
-}
 namespace {
     Register BadRegister(-1);
     DoubleRegister BadRegisterDouble(-1);
@@ -339,7 +331,7 @@ void
 Core::cmpo(const Instruction& instruction) noexcept {
     auto src1 = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    cmpo(src1, src2);
+    ac_.setConditionCode(compareGeneric(src1, src2));
 }
 void
 Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
@@ -1209,7 +1201,7 @@ void
 Core::cmpi(const Instruction& instruction) noexcept {
     auto src1 = valueFromSrc1Register(instruction, TreatAsInteger{});
     auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
-    cmpi(src1, src2);
+    ac_.setConditionCode(compareGeneric(src1, src2));
 }
 void
 Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {

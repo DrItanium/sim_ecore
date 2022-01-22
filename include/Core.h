@@ -343,9 +343,7 @@ private:
     }
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
-    void cmpi(Integer src1, Integer src2) noexcept;
     void cmpi(const Instruction& instruction) noexcept;
-    void cmpo(Ordinal src1, Ordinal src2) noexcept;
     void cmpo(const Instruction& instruction) noexcept;
     void syncf() noexcept;
     void cycle() noexcept;
