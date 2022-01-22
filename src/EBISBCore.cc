@@ -61,18 +61,27 @@ Core::begin() noexcept {
     Serial.print(F("BRINGING I2C UP..."));
     Wire.begin();
     Serial.println(F("DONE!"));
+    Serial.print(F("Enabling EBI..."));
+    setupEBI();
+    Serial.println(F("DONE!"));
+    Serial.print(F("Setting up Extended EBI..."));
     for (const auto& ebiPin : Core::EBIExtendedPins) {
         pinMode(ebiPin, OUTPUT);
         digitalWrite(ebiPin, LOW);
     }
-
+    Serial.println(F("DONE!"));
+    Serial.print(F("Setting up Interrupt Pins..."));
     pinMode(Pinout::Int0_, INPUT);
     pinMode(Pinout::Int1_, INPUT);
     pinMode(Pinout::Int2_, INPUT);
     pinMode(Pinout::Int3_, INPUT);
+    Serial.println(F("DONE!"));
 
     /// @todo setup all of the mega2560 peripherals here
-
+    Serial.println(F("FORCE HANGING!!!"));
+    while (true) {
+        delay(1000);
+    }
 }
 
 void
