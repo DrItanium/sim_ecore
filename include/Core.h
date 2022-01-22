@@ -214,60 +214,15 @@ protected:
     Ordinal getFaultTableBase() ;
     Ordinal getInterruptStackPointer();
     virtual void generateFault(FaultType fault);
-    void storeLong(Address destination, LongOrdinal value) {
-        DoubleRegister wrapper(value);
-        store(destination + 0, wrapper.getOrdinal(0));
-        store(destination + 4, wrapper.getOrdinal(1));
-    }
-    void store(Address destination, const TripleRegister& reg) {
-        store(destination + 0, reg.getOrdinal(0));
-        store(destination + 4, reg.getOrdinal(1));
-        store(destination + 8, reg.getOrdinal(2));
-    }
-    void store(Address destination, const QuadRegister& reg) {
-        store(destination + 0, reg.getOrdinal(0));
-        store(destination + 4, reg.getOrdinal(1));
-        store(destination + 8, reg.getOrdinal(2));
-        store(destination + 12, reg.getOrdinal(3));
-    }
-    void storeShortInteger(Address destination, ShortInteger value) {
-        union {
-            ShortInteger in;
-            ShortOrdinal out;
-        } thing;
-        thing.in = value;
-        storeShort(destination, thing.out);
-    }
-    void storeByteInteger(Address destination, ByteInteger value) {
-        union {
-            ByteInteger in;
-            ByteOrdinal out;
-        } thing;
-        thing.in = value;
-        storeByte(destination, thing.out);
-    }
-    LongOrdinal loadLong(Address destination) {
-        auto lower = load(destination + 0);
-        auto upper = load(destination + 4);
-        auto outcome = DoubleRegister(lower, upper).getLongOrdinal();
-        return outcome;
-    }
-    void load(Address destination, TripleRegister& reg) noexcept {
-        reg.setOrdinal(load(destination + 0), 0);
-        reg.setOrdinal(load(destination + 4), 1);
-        reg.setOrdinal(load(destination + 8), 2);
-    }
-    void load(Address destination, QuadRegister& reg) noexcept {
-        reg.setOrdinal(load(destination + 0), 0);
-        reg.setOrdinal(load(destination + 4), 1);
-        reg.setOrdinal(load(destination + 8), 2);
-        reg.setOrdinal(load(destination + 12), 3);
-    }
-    QuadRegister loadQuad(Address destination) noexcept {
-        QuadRegister tmp;
-        load(destination, tmp);
-        return tmp;
-    }
+    void storeLong(Address destination, LongOrdinal value);
+    void store(Address destination, const TripleRegister& reg);
+    void store(Address destination, const QuadRegister& reg);
+    void storeShortInteger(Address destination, ShortInteger value);
+    void storeByteInteger(Address destination, ByteInteger value);
+    LongOrdinal loadLong(Address destination);
+    void load(Address destination, TripleRegister& reg) noexcept;
+    void load(Address destination, QuadRegister& reg) noexcept;
+    QuadRegister loadQuad(Address destination) noexcept;
     virtual void synchronizedStore(Address destination, const DoubleRegister& value) noexcept = 0;
     virtual void synchronizedStore(Address destination, const QuadRegister& value) noexcept = 0;
     virtual void synchronizedStore(Address destination, const Register& value) noexcept = 0;

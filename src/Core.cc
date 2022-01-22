@@ -1473,3 +1473,67 @@ void
 Core::unlockBus() noexcept {
     /// @todo implement this
 }
+
+void
+Core::storeLong(Address destination, LongOrdinal value) {
+    DoubleRegister wrapper(value);
+    store(destination + 0, wrapper.getOrdinal(0));
+    store(destination + 4, wrapper.getOrdinal(1));
+}
+void
+Core::store(Address destination, const TripleRegister& reg) {
+    store(destination + 0, reg.getOrdinal(0));
+    store(destination + 4, reg.getOrdinal(1));
+    store(destination + 8, reg.getOrdinal(2));
+}
+void
+Core::store(Address destination, const QuadRegister& reg) {
+    store(destination + 0, reg.getOrdinal(0));
+    store(destination + 4, reg.getOrdinal(1));
+    store(destination + 8, reg.getOrdinal(2));
+    store(destination + 12, reg.getOrdinal(3));
+}
+void
+Core::storeShortInteger(Address destination, ShortInteger value) {
+    union {
+        ShortInteger in;
+        ShortOrdinal out;
+    } thing;
+    thing.in = value;
+    storeShort(destination, thing.out);
+}
+void
+Core::storeByteInteger(Address destination, ByteInteger value) {
+    union {
+        ByteInteger in;
+        ByteOrdinal out;
+    } thing;
+    thing.in = value;
+    storeByte(destination, thing.out);
+}
+LongOrdinal
+Core::loadLong(Address destination) {
+    auto lower = load(destination + 0);
+    auto upper = load(destination + 4);
+    auto outcome = DoubleRegister(lower, upper).getLongOrdinal();
+    return outcome;
+}
+void
+Core::load(Address destination, TripleRegister& reg) noexcept {
+    reg.setOrdinal(load(destination + 0), 0);
+    reg.setOrdinal(load(destination + 4), 1);
+    reg.setOrdinal(load(destination + 8), 2);
+}
+void
+Core::load(Address destination, QuadRegister& reg) noexcept {
+    reg.setOrdinal(load(destination + 0), 0);
+    reg.setOrdinal(load(destination + 4), 1);
+    reg.setOrdinal(load(destination + 8), 2);
+    reg.setOrdinal(load(destination + 12), 3);
+}
+QuadRegister
+Core::loadQuad(Address destination) noexcept {
+    QuadRegister tmp;
+    load(destination, tmp);
+    return tmp;
+}
