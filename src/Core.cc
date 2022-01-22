@@ -334,9 +334,7 @@ Core::bbc(const Instruction& instruction) noexcept {
         ac_.setConditionCode(0b000);
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
         // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-        auto displacement = instruction.getDisplacement();
-        ip_.setInteger(ip_.getInteger() + displacement);
-        advanceIPBy = 0;
+        ipRelativeBranch(instruction);
     } else {
         ac_.setConditionCode(0b010);
     }
@@ -350,9 +348,7 @@ Core::bbs(const Instruction& instruction) noexcept {
         ac_.setConditionCode(0b010);
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
         // in the future (the HX uses those two bits as "S2" so that will be a fun future change...)
-        auto displacement = instruction.getDisplacement();
-        ip_.setInteger(ip_.getInteger() + displacement);
-        advanceIPBy = 0;
+        ipRelativeBranch(instruction);
     } else {
         ac_.setConditionCode(0b000);
     }
