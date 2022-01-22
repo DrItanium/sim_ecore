@@ -229,10 +229,10 @@ public:
     // Mega2560 pins
     enum class Pinout {
         // expose four controllable interrupts
-        i960_INT0_ = 19,
-        i960_INT1_ = 18,
-        i960_INT2_ = 2,
-        i960_INT3_ = 3,
+        Int0_ = 19,
+        Int1_ = 18,
+        Int2_ = 2,
+        Int3_ = 3,
         /**
          * @brief The real EBI_A15 is used to select which 32k window to write to in the EBI space. Thus we take A15 into our own hands when dealing with the external bus
          */
@@ -254,6 +254,25 @@ public:
         EBI_A30 = A14,
         EBI_A31 = A15,
     };
+    static constexpr Pinout EBIExtendedPins[] {
+            Pinout::EBI_A15 ,
+            Pinout::EBI_A16 ,
+            Pinout::EBI_A17 ,
+            Pinout::EBI_A18 ,
+            Pinout::EBI_A19 ,
+            Pinout::EBI_A20 ,
+            Pinout::EBI_A21 ,
+            Pinout::EBI_A22 ,
+            Pinout::EBI_A23 ,
+            Pinout::EBI_A24 ,
+            Pinout::EBI_A25 ,
+            Pinout::EBI_A26 ,
+            Pinout::EBI_A27 ,
+            Pinout::EBI_A28 ,
+            Pinout::EBI_A29 ,
+            Pinout::EBI_A30 ,
+            Pinout::EBI_A31 ,
+    };
 public:
     explicit Core(Ordinal salign = 4);
     ~Core() = default;
@@ -261,8 +280,8 @@ public:
     void boot();
     void cycle() noexcept;
 private:
-    Ordinal getSystemAddressTableBase() const noexcept;
-    Ordinal getPRCBPtrBase() const noexcept;
+    [[nodiscard]] Ordinal getSystemAddressTableBase() const noexcept;
+    [[nodiscard]] Ordinal getPRCBPtrBase() const noexcept;
     [[nodiscard]] Ordinal getSystemProcedureTableBase() ;
     [[nodiscard]] Ordinal getFaultProcedureTableBase() ;
     [[nodiscard]] Ordinal getTraceTablePointer() ;
@@ -275,18 +294,18 @@ private:
     void store(Address destination, const QuadRegister& reg);
     void storeShortInteger(Address destination, ShortInteger value);
     void storeByteInteger(Address destination, ByteInteger value);
-    LongOrdinal loadLong(Address destination);
+    [[nodiscard]] LongOrdinal loadLong(Address destination);
     void load(Address destination, TripleRegister& reg) noexcept;
     void load(Address destination, QuadRegister& reg) noexcept;
-    QuadRegister loadQuad(Address destination) noexcept;
+    [[nodiscard]] QuadRegister loadQuad(Address destination) noexcept;
     void synchronizedStore(Address destination, const DoubleRegister& value) noexcept;
     void synchronizedStore(Address destination, const QuadRegister& value) noexcept;
     void synchronizedStore(Address destination, const Register& value) noexcept;
-    ByteOrdinal loadByte(Address destination);
+    [[nodiscard]] ByteOrdinal loadByte(Address destination);
     void storeByte(Address destination, ByteOrdinal value);
-    ShortOrdinal loadShortAligned(Address destination);
+    [[nodiscard]] ShortOrdinal loadShortAligned(Address destination);
     void storeShortAligned(Address destination, ShortOrdinal value);
-    Ordinal loadAligned(Address destination);
+    [[nodiscard]] Ordinal loadAligned(Address destination);
     void storeAligned(Address destination, Ordinal value);
     [[nodiscard]] ShortOrdinal loadShort(Address destination) noexcept;
     void storeShort(Address destination, ShortOrdinal value);

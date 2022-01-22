@@ -28,6 +28,9 @@
 #include "Types.h"
 #include "Core.h"
 
+void pinMode(Core::Pinout pin, decltype(OUTPUT) direction) noexcept {
+    ::pinMode(static_cast<int>(pin), direction);
+}
 void
 Core::begin() noexcept {
     Serial.begin(115200);
@@ -41,7 +44,17 @@ Core::begin() noexcept {
     Serial.print(F("BRINGING I2C UP..."));
     Wire.begin();
     Serial.println(F("DONE!"));
+    for (const auto& ebiPin : Core::EBIExtendedPins) {
+        pinMode(ebiPin, OUTPUT);
+    }
+
+    pinMode(Pinout::Int0_, INPUT);
+    pinMode(Pinout::Int1_, INPUT);
+    pinMode(Pinout::Int2_, INPUT);
+    pinMode(Pinout::Int3_, INPUT);
+
     /// @todo setup all of the mega2560 peripherals here
+
 }
 
 void
