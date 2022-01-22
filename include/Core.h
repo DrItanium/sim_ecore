@@ -58,6 +58,34 @@ enum class FaultType : Ordinal {
     Type = 0x000A'0000,
     Type_Mismatch = Type | 0x01,
 };
+class IACMessage {
+public:
+    explicit IACMessage(const QuadRegister& qr) noexcept :
+            field0_(qr.getOrdinal(0)),
+            field3_(qr.getOrdinal(1)),
+            field4_(qr.getOrdinal(2)),
+            field5_(qr.getOrdinal(3)) { }
+    constexpr uint8_t getMessageType() const noexcept { return messageType_; }
+    constexpr uint8_t getField1() const noexcept { return field1_; }
+    constexpr uint16_t getField2() const noexcept { return field2_; }
+    constexpr uint32_t getField3() const noexcept { return field3_; }
+    constexpr uint32_t getField4() const noexcept { return field4_; }
+    constexpr uint32_t getField5() const noexcept { return field5_; }
+    constexpr uint32_t getField0() const noexcept { return field0_; }
+private:
+    union {
+        /// @todo revert this to do bit manipulation as the bitfield assumes little endian
+        uint32_t field0_;
+        struct {
+            uint16_t field2_;
+            uint8_t field1_;
+            uint8_t messageType_;
+        };
+    };
+    uint32_t field3_;
+    uint32_t field4_;
+    uint32_t field5_;
+};
 class Core {
 public:
     /**
@@ -223,9 +251,9 @@ protected:
     void load(Address destination, TripleRegister& reg) noexcept;
     void load(Address destination, QuadRegister& reg) noexcept;
     QuadRegister loadQuad(Address destination) noexcept;
-    virtual void synchronizedStore(Address destination, const DoubleRegister& value) noexcept = 0;
-    virtual void synchronizedStore(Address destination, const QuadRegister& value) noexcept = 0;
-    virtual void synchronizedStore(Address destination, const Register& value) noexcept = 0;
+    void synchronizedStore(Address destination, const DoubleRegister& value) noexcept;
+    void synchronizedStore(Address destination, const QuadRegister& value) noexcept;
+    void synchronizedStore(Address destination, const Register& value) noexcept;
     virtual ByteOrdinal loadByte(Address destination) = 0;
     virtual void storeByte(Address destination, ByteOrdinal value) = 0;
     virtual ShortOrdinal loadShortAligned(Address destination) = 0;
@@ -477,12 +505,15 @@ private:
     void synmovq(const Instruction& inst) noexcept;
     void lockBus() noexcept;
     void unlockBus() noexcept;
+    void synchronizeMemoryRequests() noexcept;
     Ordinal getNextCallFrameStart() noexcept;
     void balx(const Instruction& inst) noexcept;
     void bx(const Instruction& inst) noexcept;
 protected:
     void condBranch(const Instruction& inst) noexcept;
     void absoluteBranch(Ordinal value) noexcept;
+public:
+    virtual void processIACMessage(const IACMessage& message) noexcept = 0;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

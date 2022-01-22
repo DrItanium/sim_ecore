@@ -1545,3 +1545,29 @@ void
 Core::bx(const Instruction& inst) noexcept {
     absoluteBranch(computeMemoryAddress(inst));
 }
+void
+Core::synchronizeMemoryRequests() noexcept {
+
+}
+void Core::synchronizedStore(Address destination, const DoubleRegister& value) noexcept {
+    // there is a lookup for an interrupt control register, in the Sx manual, we are going to ignore that for now
+    synchronizeMemoryRequests();
+    storeLong(destination, value.getLongOrdinal());
+}
+void Core::synchronizedStore(Address destination, const QuadRegister& value) noexcept {
+    synchronizeMemoryRequests();
+    store(destination, value);
+    if (destination == 0xFF00'0010) {
+        IACMessage msg(value);
+        processIACMessage(msg);
+        // there are special IAC messages we need to handle here
+    } else {
+        // synchronized stores are always aligned but still go through the normal mechanisms
+        store(destination, value);
+    }
+}
+void Core::synchronizedStore(Address destination, const Register& value) noexcept {
+    // there is a lookup for an interrupt control register, in the Sx manual, we are going to ignore that for now
+    synchronizeMemoryRequests();
+    store(destination, value.getOrdinal());
+}
