@@ -505,7 +505,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::bx:
-            absoluteBranch(computeMemoryAddress(instruction));
+            bx(instruction);
             break;
         case Opcode::balx:
             balx(instruction);
@@ -1527,21 +1527,21 @@ Core::loadQuad(Address destination) noexcept {
 }
 void
 Core::ipRelativeBranch(const Instruction& inst) noexcept {
-    ipRelativeBranch(inst.getDisplacement());
-}
-void
-Core::ipRelativeBranch(Integer displacement) noexcept {
     advanceIPBy = 0;
-    ip_.setInteger(ip_.getInteger() + displacement);
+    ip_.setInteger(ip_.getInteger() + inst.getDisplacement());
 }
 void
 Core::absoluteBranch(Ordinal value) noexcept {
-    ip_.setOrdinal(value);
     advanceIPBy = 0; // we want to go to the exact position specified so do not advance
+    ip_.setOrdinal(value);
 }
 void
 Core::balx(const Instruction& inst) noexcept {
     auto address = computeMemoryAddress(inst);
     setDestinationFromSrcDest(inst, ip_.getOrdinal() + advanceIPBy, TreatAsOrdinal{});
     absoluteBranch(address);
+}
+void
+Core::bx(const Instruction& inst) noexcept {
+    absoluteBranch(computeMemoryAddress(inst));
 }

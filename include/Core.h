@@ -287,7 +287,6 @@ private:
     void shro(const Instruction& inst) noexcept;
     void shlo(const Instruction& inst) noexcept;
     void flushreg() noexcept;
-    void ipRelativeBranch(Integer displacement) noexcept;
     void ipRelativeBranch(const Instruction& inst) noexcept;
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
@@ -482,6 +481,7 @@ private:
     Ordinal getNextCallFrameStart() noexcept;
     void absoluteBranch(Ordinal value) noexcept;
     void balx(const Instruction& inst) noexcept;
+    void bx(const Instruction& inst) noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
