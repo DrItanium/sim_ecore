@@ -505,16 +505,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::bx:
-            ip_.setOrdinal(computeMemoryAddress(instruction));
-            advanceIPBy = 0;
+            absoluteBranch(computeMemoryAddress(instruction));
             break;
         case Opcode::balx:
-            [this, &instruction]() {
-                auto address = computeMemoryAddress(instruction);
-                setDestinationFromSrcDest(instruction, ip_.getOrdinal() + advanceIPBy, TreatAsOrdinal{});
-                ip_.setOrdinal(address);
-                advanceIPBy = 0;
-            }();
+            balx(instruction);
             break;
         case Opcode::ldos:
             setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal {});
@@ -1182,12 +1176,10 @@ Core::callx(const Instruction& instruction) noexcept {
     setRIP();
 /// @todo implement support for caching register frames
     enterCall(temp);
-    ip_.setOrdinal(memAddr);
+    absoluteBranch(memAddr);
     getPFP().setOrdinal(fp);
     setFramePointer(temp);
     getStackPointer().setOrdinal(temp + 64);
-    advanceIPBy = 0; // we already know where we are going so do not jump ahead
-
 }
 
 void
@@ -1201,7 +1193,7 @@ Core::calls(const Instruction& instruction) noexcept {
         auto procedureAddress = tempPE & ~0b11;
         // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
         setRIP();
-        ip_.setOrdinal(procedureAddress);
+        absoluteBranch(procedureAddress);
         Ordinal temp = 0;
         Ordinal tempRRR = 0;
         if ((type == 0b00) || pc_.inSupervisorMode()) {
@@ -1221,15 +1213,12 @@ Core::calls(const Instruction& instruction) noexcept {
         setFramePointer(temp);
         getStackPointer().setOrdinal(temp + 64);
         // we do not want to jump ahead on calls
-        advanceIPBy = 0;
     }
 }
 void
 Core::restoreStandardFrame() noexcept {
     exitCall();
-    auto returnValue = getRIP().getOrdinal();
-    ip_.setOrdinal(returnValue);
-    advanceIPBy = 0; // we already computed ahead of time where we will return to
+    absoluteBranch(getRIP().getOrdinal());
 }
 void
 Core::ret() noexcept {
@@ -1544,4 +1533,15 @@ void
 Core::ipRelativeBranch(Integer displacement) noexcept {
     advanceIPBy = 0;
     ip_.setInteger(ip_.getInteger() + displacement);
+}
+void
+Core::absoluteBranch(Ordinal value) noexcept {
+    ip_.setOrdinal(value);
+    advanceIPBy = 0; // we want to go to the exact position specified so do not advance
+}
+void
+Core::balx(const Instruction& inst) noexcept {
+    auto address = computeMemoryAddress(inst);
+    setDestinationFromSrcDest(inst, ip_.getOrdinal() + advanceIPBy, TreatAsOrdinal{});
+    absoluteBranch(address);
 }
