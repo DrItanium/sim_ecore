@@ -1153,15 +1153,17 @@ void
 Core::setFramePointer(Ordinal value) noexcept {
     getFramePointer().setOrdinal(value);
 }
+
+Ordinal
+Core::getNextCallFrameStart() noexcept {
+    return (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+}
 void
 Core::call(const Instruction& instruction) noexcept {
-    /// @todo implement
     // wait for any uncompleted instructions to finish
-    auto spPos = getStackPointer().getOrdinal();
-    auto temp = (spPos + c_) & ~c_; // round to next boundary
+    auto temp = getNextCallFrameStart();
     auto fp = getFramePointerValue();
-    auto rip = ip_.getOrdinal() + advanceIPBy;
-    getRIP().setOrdinal(rip);
+    setRIP(ip_.getOrdinal() + advanceIPBy);
     enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
@@ -1173,11 +1175,10 @@ Core::call(const Instruction& instruction) noexcept {
 void
 Core::callx(const Instruction& instruction) noexcept {
 // wait for any uncompleted instructions to finish
-    auto temp = (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+    auto temp = getNextCallFrameStart();
     auto fp = getFramePointerValue();
     auto memAddr = computeMemoryAddress(instruction);
-    auto rip = ip_.getOrdinal() + advanceIPBy;
-    getRIP().setOrdinal(rip); // we need to save the result correctly
+    setRIP(ip_.getOrdinal() + advanceIPBy);
 /// @todo implement support for caching register frames
     enterCall(temp);
     ip_.setOrdinal(memAddr);
@@ -1203,7 +1204,7 @@ Core::calls(const Instruction& instruction) noexcept {
         Ordinal temp = 0;
         Ordinal tempRRR = 0;
         if ((type == 0b00) || pc_.inSupervisorMode()) {
-            temp = (getStackPointer().getOrdinal() + c_) & ~c_;
+            temp = getNextCallFrameStart();
             tempRRR = 0;
         } else {
             temp = getSupervisorStackPointer();
@@ -1533,4 +1534,8 @@ Core::loadQuad(Address destination) noexcept {
     QuadRegister tmp;
     load(destination, tmp);
     return tmp;
+}
+void
+Core::setRIP(Ordinal value) noexcept {
+    getRIP().setOrdinal(value);
 }

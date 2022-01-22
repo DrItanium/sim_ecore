@@ -271,6 +271,8 @@ protected:
     const Register& getRIP() const noexcept {
         return getRegister(RegisterIndex::RIP);
     }
+private:
+    void setRIP(Ordinal value) noexcept;
 protected:
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
     virtual void resetExecutionStatus() noexcept = 0;
@@ -479,6 +481,7 @@ private:
     void lockBus() noexcept;
     void unlockBus() noexcept;
     void condBranch(const Instruction& inst) noexcept;
+    Ordinal getNextCallFrameStart() noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
