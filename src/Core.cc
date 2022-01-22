@@ -319,9 +319,7 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
         // in the future (the HX uses those two bits as "S2" so that will be a fun future change...).
         // I do not know why the Sx manual shows adding four while the hx manual does not
         // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
-        advanceIPBy = 0;
-        auto destination = ip_.getInteger() + instruction.getDisplacement();
-        ip_.setInteger(destination);
+        ipRelativeBranch(instruction);
     }
 };
 void
@@ -1136,8 +1134,7 @@ Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {
         // I do not know why the Sx manual shows adding four while the hx manual does not
         // because of this, I'm going to drop the +4  from both paths and only disable automatic incrementation if we are successful
         // this will fix an off by four problem I'm currently encountering
-        advanceIPBy = 0;
-        ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+        ipRelativeBranch(instruction);
     }
 }
 
@@ -1538,4 +1535,13 @@ Core::loadQuad(Address destination) noexcept {
     QuadRegister tmp;
     load(destination, tmp);
     return tmp;
+}
+void
+Core::ipRelativeBranch(const Instruction& inst) noexcept {
+    ipRelativeBranch(inst.getDisplacement());
+}
+void
+Core::ipRelativeBranch(Integer displacement) noexcept {
+    advanceIPBy = 0;
+    ip_.setInteger(ip_.getInteger() + displacement);
 }

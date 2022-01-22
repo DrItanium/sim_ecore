@@ -287,13 +287,8 @@ private:
     void shro(const Instruction& inst) noexcept;
     void shlo(const Instruction& inst) noexcept;
     void flushreg() noexcept;
-    void ipRelativeBranch(Integer displacement) noexcept {
-        advanceIPBy = 0;
-        ip_.setInteger(ip_.getInteger() + displacement);
-    }
-    void ipRelativeBranch(const Instruction& inst) noexcept {
-        ipRelativeBranch(inst.getDisplacement());
-    }
+    void ipRelativeBranch(Integer displacement) noexcept;
+    void ipRelativeBranch(const Instruction& inst) noexcept;
     Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
     void cmpi(const Instruction& instruction) noexcept;
