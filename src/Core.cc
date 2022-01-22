@@ -1475,19 +1475,29 @@ Core::fmark(const Instruction &) noexcept {
         generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
     }
 }
+namespace {
+    constexpr LongOrdinal addWithCarry(Ordinal src2, Ordinal src1, Ordinal carry) noexcept {
+        return static_cast<LongOrdinal>(src2) + static_cast<LongOrdinal>(src1) + carry;
+    }
+    constexpr LongOrdinal subtractWithCarry(Ordinal src2, Ordinal src1, Ordinal carry) noexcept {
+        return static_cast<LongOrdinal>(src2) - static_cast<LongOrdinal>(src1) - 1 + carry;
+    }
+    bool overflowDetected(const Register& src2, const Register& src1, const Register& dest) noexcept {
+        return (src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit());
+    }
+}
 void
 Core::addc(const Instruction &instruction) noexcept {
 
     auto& src1 = sourceFromSrc1(instruction);
     auto& src2 = sourceFromSrc2(instruction);
-    DoubleRegister result;
-    result.setLongOrdinal(static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0));
+    DoubleRegister result(addWithCarry(src2.getOrdinal(), src1.getOrdinal(), ac_.getCarryBit() ? 1 : 0));
     // the result will be larger than 32-bits so we have to keep that in mind
     auto& dest = destinationFromSrcDest(instruction);
     dest.setOrdinal(result.getOrdinal(0));
     // do computation here
     ac_.setConditionCode(0);
-    if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+    if (overflowDetected(src2, src1, dest)) {
         // set the overflow bit in ac
         ac_.setOverflowBit(true);
     }
@@ -1499,14 +1509,13 @@ void
 Core::subc(const Instruction &instruction) noexcept {
     auto& src1 = sourceFromSrc1(instruction);
     auto& src2 = sourceFromSrc2(instruction);
-    DoubleRegister result;
-    result.setLongOrdinal(static_cast<LongOrdinal>(src2.getOrdinal()) - static_cast<LongOrdinal>(src1.getOrdinal()) - 1 + (ac_.getCarryBit() ? 1 : 0));
+    DoubleRegister result(subtractWithCarry(src2.getOrdinal(), src1.getOrdinal(), ac_.getCarryBit() ? 1 : 0));
     // the result will be larger than 32-bits so we have to keep that in mind
     auto& dest = destinationFromSrcDest(instruction);
     dest.setOrdinal(result.getOrdinal(0));
     // do computation here
     ac_.setConditionCode(0);
-    if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+    if (overflowDetected(src2, src1, dest)) {
         // set the overflow bit in ac
         ac_.setOverflowBit(true);
     }
