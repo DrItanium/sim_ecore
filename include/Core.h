@@ -316,7 +316,7 @@ protected:
     void shlo(const Instruction& inst) noexcept;
     void flushreg() noexcept;
     void ipRelativeBranch(const Instruction& inst) noexcept;
-    void loadInstruction(Address baseAddress) noexcept;
+    Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
     void cmpi(const Instruction& instruction) noexcept;
     void cmpo(const Instruction& instruction) noexcept;
@@ -530,6 +530,5 @@ protected:
     Ordinal currentFrameIndex_ = 0;
     static constexpr Ordinal NumRegisterFrames = 4;
     LocalRegisterPack frames[NumRegisterFrames];
-    Instruction currentInstruction_;
 };
 #endif //SIM3_CORE_H
