@@ -25,9 +25,9 @@
 // Created by jwscoggins on 8/21/21.
 //
 #ifdef ARDUINO
-#include "SBCore.h"
+#include "Core.h"
 #include <Arduino.h>
-SBCore theCore;
+Core theCore;
 void setup() {
     Serial.begin(115200);
     while (!Serial);

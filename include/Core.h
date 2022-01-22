@@ -65,13 +65,13 @@ public:
             field3_(qr.getOrdinal(1)),
             field4_(qr.getOrdinal(2)),
             field5_(qr.getOrdinal(3)) { }
-    constexpr uint8_t getMessageType() const noexcept { return messageType_; }
-    constexpr uint8_t getField1() const noexcept { return field1_; }
-    constexpr uint16_t getField2() const noexcept { return field2_; }
-    constexpr uint32_t getField3() const noexcept { return field3_; }
-    constexpr uint32_t getField4() const noexcept { return field4_; }
-    constexpr uint32_t getField5() const noexcept { return field5_; }
-    constexpr uint32_t getField0() const noexcept { return field0_; }
+    [[nodiscard]] constexpr uint8_t getMessageType() const noexcept { return messageType_; }
+    [[nodiscard]] constexpr uint8_t getField1() const noexcept { return field1_; }
+    [[nodiscard]] constexpr uint16_t getField2() const noexcept { return field2_; }
+    [[nodiscard]] constexpr uint32_t getField3() const noexcept { return field3_; }
+    [[nodiscard]] constexpr uint32_t getField4() const noexcept { return field4_; }
+    [[nodiscard]] constexpr uint32_t getField5() const noexcept { return field5_; }
+    [[nodiscard]] constexpr uint32_t getField0() const noexcept { return field0_; }
 private:
     union {
         /// @todo revert this to do bit manipulation as the bitfield assumes little endian
@@ -88,6 +88,7 @@ private:
 };
 class Core {
 public:
+    static constexpr auto NumRegisterFrames = 4;
     /**
      * @brief The main node in a circular queue used to keep track of the on chip register entries
      */
@@ -227,20 +228,21 @@ public:
 public:
 public:
     explicit Core(Ordinal salign = 4);
-    virtual ~Core();
+    ~Core() = default;
+    void begin() noexcept;
 public:
     void run();
-protected:
-    virtual void boot() = 0;
-    virtual Ordinal getSystemAddressTableBase() const noexcept = 0;
-    virtual Ordinal getPRCBPtrBase() const noexcept = 0;
+private:
+    void boot();
+    Ordinal getSystemAddressTableBase() const noexcept;
+    Ordinal getPRCBPtrBase() const noexcept;
     [[nodiscard]] Ordinal getSystemProcedureTableBase() ;
     [[nodiscard]] Ordinal getFaultProcedureTableBase() ;
     [[nodiscard]] Ordinal getTraceTablePointer() ;
     [[nodiscard]] Ordinal getInterruptTableBase() ;
     [[nodiscard]] Ordinal getFaultTableBase() ;
     [[nodiscard]] Ordinal getInterruptStackPointer();
-    virtual void generateFault(FaultType fault);
+    void generateFault(FaultType fault);
     void storeLong(Address destination, LongOrdinal value);
     void store(Address destination, const TripleRegister& reg);
     void store(Address destination, const QuadRegister& reg);
@@ -253,14 +255,14 @@ protected:
     void synchronizedStore(Address destination, const DoubleRegister& value) noexcept;
     void synchronizedStore(Address destination, const QuadRegister& value) noexcept;
     void synchronizedStore(Address destination, const Register& value) noexcept;
-    virtual ByteOrdinal loadByte(Address destination) = 0;
-    virtual void storeByte(Address destination, ByteOrdinal value) = 0;
-    virtual ShortOrdinal loadShortAligned(Address destination) = 0;
-    virtual void storeShortAligned(Address destination, ShortOrdinal value) = 0;
-    virtual Ordinal loadAligned(Address destination) = 0;
-    virtual void storeAligned(Address destination, Ordinal value) = 0;
+    ByteOrdinal loadByte(Address destination);
+    void storeByte(Address destination, ByteOrdinal value);
+    ShortOrdinal loadShortAligned(Address destination);
+    void storeShortAligned(Address destination, ShortOrdinal value);
+    Ordinal loadAligned(Address destination);
+    void storeAligned(Address destination, Ordinal value);
     [[nodiscard]] ShortOrdinal loadShort(Address destination) noexcept;
-    virtual void storeShort(Address destination, ShortOrdinal value);
+    void storeShort(Address destination, ShortOrdinal value);
     [[nodiscard]] Ordinal load(Address destination);
     void store(Address destination, Ordinal value);
 
@@ -287,10 +289,8 @@ private:
      * @brief Compute the next instruction location and store it in RIP
      */
     void setRIP() noexcept;
-protected:
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
     LocalRegisterPack& getCurrentPack() noexcept { return frames[currentFrameIndex_]; }
-protected:
     void setFramePointer(Ordinal value) noexcept;
     [[nodiscard]] Ordinal getFramePointerValue() const noexcept;
     void lda(const Instruction& inst) noexcept;
@@ -327,8 +327,6 @@ private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
     Ordinal computeMemoryAddress(const Instruction& instruction) noexcept;
-//protected:
-    //void clearLocalRegisters() noexcept;
 private:
     /**
      * @brief Number of register frames allocated "on-chip", shouldn't be too large as performance will suffer
@@ -493,11 +491,12 @@ private:
     void bx(const Instruction& inst) noexcept;
     void notbit(const Instruction& inst) noexcept;
     void condFault(const Instruction& inst) noexcept;
-protected:
+private:
     void condBranch(const Instruction& inst) noexcept;
     void absoluteBranch(Ordinal value) noexcept;
-    virtual void processIACMessage(const IACMessage& message) noexcept = 0;
-protected:
+    void processIACMessage(const IACMessage& message) noexcept;
+    void boot0(Ordinal sat, Ordinal pcb, Ordinal startIP);
+private:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
     ProcessControls pc_;
@@ -511,7 +510,8 @@ protected:
     Ordinal salign_;
     Ordinal c_;
     Ordinal currentFrameIndex_ = 0;
-    static constexpr Ordinal NumRegisterFrames = 4;
     LocalRegisterPack frames[NumRegisterFrames];
+    Ordinal systemAddressTableBase_ = 0;
+    Ordinal prcbBase_ = 0;
 };
 #endif //SIM3_CORE_H

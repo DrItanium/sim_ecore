@@ -1,4 +1,5 @@
-// Copyright (c) 2021, Joshua Scoggins
+// sim_ecore
+// Copyright (c) 2021-2022, Joshua Scoggins
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -19,170 +20,109 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Created by jwscoggins on 8/21/21.
-//
 
-#ifdef EBI_COMMUNICATION
 #include <Arduino.h>
 
 #include <SPI.h>
 #include "Types.h"
-#include "EBISBCore.h"
-//#include <SdFat.h>
-//SdFat SD;
+#include "Core.h"
 
 void
-EBISBCore::begin() {
-    Serial.println(F("BRINGING UP HITAGI SBCORE EMULATOR!"));
+Core::begin() noexcept {
+    Serial.println(F("STARTING UP EAVR2e i960 Processor"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
-#if 0
     SPI.begin();
-    while (!SD.begin(SDCardPin)) {
-        Serial.println(F("NO SDCARD...WILL TRY AGAIN!"));
+    /// @todo setup all of the mega2560 peripherals here
+}
+
+void
+Core::generateFault(FaultType faultKind) {
+    Serial.print(F("FAULT GENERATED AT 0x"));
+    Serial.print(ip_.getOrdinal(), HEX);
+    Serial.println(F("! HALTING!!"));
+    while (true) {
         delay(1000);
     }
-    Serial.println(F("SDCARD UP!"));
-    if (auto theFile = SD.open("boot.sys", FILE_READ); !theFile) {
-        Serial.println(F("Could not open \"boot.sys\"! SD CARD may be corrupt?"));
-        while (true) { delay(1000); }
-    } else {
-        memoryImage_.begin();
-#ifndef USE_PSRAM_CHIP
-        Serial.println(F("SUCCESSFULLY OPENED \"live.bin\""));
-#endif
-        // now we copy from the pristine image over to the new one in blocks
-        Address size = theFile.size();
-        constexpr auto CacheSize = Cache::CacheSize;
-        auto* transferCache = theCache_.asTransferCache();
-#ifndef USE_PSRAM_CHIP
-        Serial.println(F("CONSTRUCTING NEW MEMORY IMAGE IN \"live.bin\""));
-#else
-        Serial.println(F("TRANSFERRING IMAGE TO PSRAM!"));
-#endif
-        for (Address i = 0; i < size; i += CacheSize) {
-            while (SD.card()->isBusy());
-            auto numRead = theFile.read(transferCache, CacheSize);
-            if (numRead < 0) {
-                SD.errorHalt();
-            }
-            // wait until the sd card is ready again to transfer
-            (void)memoryImage_.write(i, transferCache, numRead);
-            // wait until we are ready to
-            Serial.print(F("."));
+}
+void
+Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
+    systemAddressTableBase_ = sat;
+    prcbBase_ = pcb;
+    // skip the check words
+    absoluteBranch(startIP);
+    pc_.setPriority(31);
+    pc_.setState(true); // needs to be set as interrupted
+    auto thePointer = getInterruptStackPointer();
+    // also make sure that we set the target pack to zero
+    currentFrameIndex_ = 0;
+    // invalidate all cache entries forcefully
+    for (auto& a : frames) {
+        a.relinquishOwnership();
+        // at this point we want all of the locals to be cleared, this is the only time
+        for (auto& reg : a.getUnderlyingFrame().dprs) {
+            reg.setLongOrdinal(0);
         }
-        Serial.println(F("CONSTRUCTION COMPLETE!!!"));
-        // make a new copy of this file
-        theFile.close();
-        while (SD.card()->isBusy());
-        // okay also clear out the cache lines since the transfer buffer is shared with the cache
-        theCache_.clear();
     }
-#endif
-}
-
-
-
-ByteOrdinal
-EBISBCore::doIACLoad(Address address, TreatAsByteOrdinal ordinal) {
-    return 0;
-}
-ShortOrdinal
-EBISBCore::doIACLoad(Address address, TreatAsShortOrdinal ordinal) {
-    return 0;
+    setFramePointer(thePointer);
+    // we need to take ownership of the target frame on startup
+    // we want to take ownership and throw anything out just in case so make the lambda do nothing
+    getCurrentPack().takeOwnership(thePointer, [](const auto&, auto) noexcept { });
+    // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well, but you do!
+    getStackPointer().setOrdinal(thePointer + 64);
+    getPFP().setOrdinal(thePointer);
 }
 void
-EBISBCore::doIACStore(Address address, ByteOrdinal value) {
-    // do nothing
-}
-void
-EBISBCore::doIACStore(Address address, ShortOrdinal value) {
-    // do nothing
+Core::boot() {
+    auto q = loadQuad(0);
+    boot0(q.getOrdinal(0), q.getOrdinal(1), q.getOrdinal(3));
 }
 Ordinal
-EBISBCore::doIACLoad(Address address, TreatAsOrdinal) {
-    switch (address) {
-        case HaltRegisterOffset:
-            haltExecution();
+Core::getSystemAddressTableBase() const noexcept {
+    return systemAddressTableBase_;
+}
+Ordinal
+Core::getPRCBPtrBase() const noexcept {
+    return prcbBase_;
+}
+
+void
+Core::processIACMessage(const IACMessage &message) noexcept {
+    switch (message.getMessageType()) {
+        case 0x89: // purge instruction cache
+            // do nothing as we don't have an instruction cache
             break;
-        case ConsoleRegisterOffset:
-            return static_cast<Ordinal>(Serial.read());
-        case ConsoleFlushOffset:
-            Serial.flush();
+        case 0x93: // reinitialize processor
+            boot0(message.getField3(), message.getField4(), message.getField5());
+            break;
+        case 0x8F:
+            // set breakpoint register
+            break;
+        case 0x80:
+            // store system base
+            [this, &message]() {
+                // stores the current locations of the system address table and the prcb in a specified location in memory.
+                // The address of the system address table is stored in the word starting at the byte specified in field 3,
+                // and the address of the PRCB is stored in the next word in memory (field 3 address plus 4)
+                DoubleRegister pack(getSystemAddressTableBase(), getPRCBPtrBase());
+                storeLong(message.getField3(), pack.getLongOrdinal());
+            }();
+            break;
+        case 0x40: // interrupt
+            // Generates an interrupt request. The interrup vector is given in field 1 of the IAC message. The processor handles the
+            // interrupt request just as it does interrupts received from other sources. If the interrupt priority is higher than the prcessor's
+            // current priority, the processor services the interrupt immediately. Otherwise, it posts the interrup in the pending interrupts
+            // section of the interrupt table.
+            break;
+        case 0x41: // Test pending interrupts
+            // tests for pending interrupts. The processor checks the pending interrupt section of the interrupt
+            // table for a pending interrupt with a priority higher than the prcoessor's current priority. If a higher
+            // priority interrupt is found, it is serviced immediately. Otherwise, no action is taken
+
+            /// @todo implement this
             break;
         default:
             break;
-    }
-    return 0;
-}
-void
-EBISBCore::doIACStore(Address address, Ordinal value) {
-    switch (address) {
-        case HaltRegisterOffset:
-            haltExecution();
-            break;
-        case ConsoleRegisterOffset:
-            Serial.write(static_cast<char>(value));
-        case ConsoleFlushOffset:
-            Serial.flush();
-            break;
-        default:
-            break;
+
     }
 }
-Ordinal
-EBISBCore::doRAMLoad(Address address, TreatAsOrdinal thingy) {
-#if 0
-    return getCacheLine(address, memoryImage_).get(address, thingy);
-#else
-    return 0;
-#endif
-}
-ShortOrdinal
-EBISBCore::doRAMLoad(Address address, TreatAsShortOrdinal thingy) {
-#if 0
-    return getCacheLine(address, memoryImage_).get(address, thingy);
-#else
-    return 0;
-#endif
-}
-ByteOrdinal
-EBISBCore::doRAMLoad(Address address, TreatAsByteOrdinal thingy) {
-#if 0
-    return getCacheLine(address, memoryImage_).get(address, thingy);
-#else
-    return 0;
-#endif
-}
-void
-EBISBCore::doRAMStore(Address address, ByteOrdinal value) {
-#if 0
-    getCacheLine(address, memoryImage_).set(address, value);
-#endif
-}
-void
-EBISBCore::doRAMStore(Address address, ShortOrdinal value) {
-#if 0
-    getCacheLine(address, memoryImage_).set(address, value);
-#endif
-}
-void
-EBISBCore::doRAMStore(Address address, Ordinal value) {
-#if 0
-    getCacheLine(address, memoryImage_).set(address, value);
-#endif
-}
-bool
-EBISBCore::inRAMArea(Address target) noexcept{
-    // since the ram starts at address zero, there is no need to worry about shifting the offset
-    return target >= RamStart && target < RamSize;
-}
-Address
-EBISBCore::toRAMOffset(Address target) noexcept{
-    return target & RamMask;
-}
-EBISBCore::EBISBCore() : Parent() { }
-
-
-#endif

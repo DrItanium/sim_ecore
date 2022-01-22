@@ -1,5 +1,5 @@
-// sim3
-// Copyright (c) 2021, Joshua Scoggins
+// sim_ecore
+// Copyright (c) 2021-2022, Joshua Scoggins
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -22,9 +22,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Core.h"
-#ifdef ARDUINO
 #include <Arduino.h>
-#endif
 Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).getOrdinal(); }
 Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).getInteger(); }
 Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).getOrdinal(); }
@@ -230,14 +228,6 @@ Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcep
     }
 }
 
-void
-Core::generateFault(FaultType) {
-    /// @todo implement this at some point
-    // lookup fault information
-    // setup fault data frame
-    // call fault handler
-    // probably should exit or something here
-}
 const Register&
 Core::getAbaseRegister(const Instruction& inst) const noexcept {
     return getSourceRegister(inst.getABase());
@@ -1341,9 +1331,6 @@ Core::enterCall(Address newFP) noexcept {
 #endif
 }
 
-Core::~Core() {
-    // default impl
-}
 void
 Core::mark(const Instruction& inst) noexcept {
 // Generates a breakpoint trace-event if the breakpoint trace mode has been enabled.
