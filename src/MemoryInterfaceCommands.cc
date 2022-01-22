@@ -25,6 +25,15 @@
 #include "Core.h"
 #include "Types.h"
 
+/**
+ * @brief Defines the start of the internal cache memory connected on the EBI, this is used by the microcontroller itself for whatever it needs (lower 32k)
+ */
+constexpr size_t CacheMemoryWindowStart = (RAMEND + 1);
+/**
+ * @brief Defines the start of the window used to peer out into the external bus itself
+ */
+constexpr size_t BusMemoryWindowStart = 0x8000;
+
 ByteOrdinal
 Core::loadByte(Address destination) {
     return 0;
