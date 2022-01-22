@@ -524,6 +524,10 @@ private:
             ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
         }
     }
+    void synld(const Instruction& inst) noexcept;
+    void synmov(const Instruction& inst) noexcept;
+    void synmovl(const Instruction& inst) noexcept;
+    void synmovq(const Instruction& inst) noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

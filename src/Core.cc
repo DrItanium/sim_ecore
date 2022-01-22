@@ -901,61 +901,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::synld:
-            [this, &instruction]() {
-                // wait until another execution unit sets the condition codes to continue after requesting a load.
-                // In the case of this emulator, it really doesn't mean anything but I can see this being a synld followed by a wait
-                // for synchronization. It also allows access to internal memory mapped items.
-                // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
-                // with condition code assignments and forced alignments
-                auto address = sourceFromSrc1(instruction).getWordAligned(); // force word alignment
-                // load basically takes care of accessing different registers and such even memory mapped ones
-                setDestinationFromSrcDest(instruction, load(address), TreatAsOrdinal{});
-                // there is a _fail_ condition where a bad access condition will result in 0b000
-                /// @todo implement support for bad access conditions
-                ac_.setConditionCode(0b010);
-            }();
+            synld(instruction);
             break;
         case Opcode::synmov:
-            [this, &instruction]() {
-                // load from memory and then store to another address in a synchronous fashion
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                auto addr = sourceFromSrc1(instruction).getWordAligned(); // align
-                Register temp(load(src));
-                synchronizedStore(addr, temp);
-                /// @todo figure out how to support bad access conditions
-                ac_.setConditionCode(0b010);
-            }();
+            synmov(instruction);
             break;
         case Opcode::synmovl:
-            [this, &instruction]() {
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
-                auto addr = sourceFromSrc1(instruction).getDoubleWordAligned(); // align
-                DoubleRegister temp(loadLong(src));
-                synchronizedStore(addr, temp);
-                /// @todo figure out how to support bad access conditions
-                ac_.setConditionCode(0b010);
-            }();
+            synmovl(instruction);
             break;
         case Opcode::synmovq:
-            [this, &instruction]() {
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
-                auto addr = sourceFromSrc1(instruction).getQuadWordAligned(); // align
-                QuadRegister temp = loadQuad(src);
-#ifdef EMULATOR_TRACE
-                #ifdef ARDUINO
-                Serial.print("SRC ADDRESS: 0x");
-                Serial.println(src, HEX);
-                Serial.print("QUAD REGISTER CONTENTS: 0x");
-                Serial.print(temp.getOrdinal(3), HEX);
-                Serial.print(temp.getOrdinal(2), HEX);
-                Serial.print(temp.getOrdinal(1), HEX);
-                Serial.println(temp.getOrdinal(0), HEX);
-#endif
-#endif
-                synchronizedStore(addr, temp);
-                /// @todo figure out how to support bad access conditions
-                ac_.setConditionCode(0b010);
-            }();
+            synmovq(instruction);
             break;
         case Opcode::modpc:
             [this, &instruction]() {
@@ -1458,4 +1413,48 @@ Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCa
     }
     ac_.setCarryBit(result.getOrdinal(1) != 0);
     // set the carry out bit
+}
+void Core::synld(const Instruction& instruction) noexcept {
+    // wait until another execution unit sets the condition codes to continue after requesting a load.
+    // In the case of this emulator, it really doesn't mean anything but I can see this being a synld followed by a wait
+    // for synchronization. It also allows access to internal memory mapped items.
+    // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
+    // with condition code assignments and forced alignments
+    auto address = sourceFromSrc1(instruction).getWordAligned(); // force word alignment
+    // load basically takes care of accessing different registers and such even memory mapped ones
+    setDestinationFromSrcDest(instruction, load(address), TreatAsOrdinal{});
+    // there is a _fail_ condition where a bad access condition will result in 0b000
+    /// @todo implement support for bad access conditions
+    ac_.setConditionCode(0b010);
+
+}
+
+void
+Core::synmov(const Instruction &instruction) noexcept {
+    // load from memory and then store to another address in a synchronous fashion
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto addr = sourceFromSrc1(instruction).getWordAligned(); // align
+    Register temp(load(src));
+    synchronizedStore(addr, temp);
+    /// @todo figure out how to support bad access conditions
+    ac_.setConditionCode(0b010);
+}
+void
+Core::synmovl(const Instruction &instruction) noexcept {
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
+    auto addr = sourceFromSrc1(instruction).getDoubleWordAligned(); // align
+    DoubleRegister temp(loadLong(src));
+    synchronizedStore(addr, temp);
+    /// @todo figure out how to support bad access conditions
+    ac_.setConditionCode(0b010);
+}
+
+void
+Core::synmovq(const Instruction &instruction) noexcept {
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
+    auto addr = sourceFromSrc1(instruction).getQuadWordAligned(); // align
+    QuadRegister temp = loadQuad(src);
+    synchronizedStore(addr, temp);
+    /// @todo figure out how to support bad access conditions
+    ac_.setConditionCode(0b010);
 }
