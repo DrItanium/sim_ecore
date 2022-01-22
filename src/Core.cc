@@ -812,9 +812,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
                 // value from memory is stored in src/dest
                 syncf();
-                auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force alignment to word boundary
+                auto addr = sourceFromSrc1(instruction).getWordAligned(); // force alignment to word boundary
                 auto temp = atomicLoad(addr);
-                auto& dest = getRegister(instruction.getSrcDest(false));
+                auto& dest = destinationFromSrcDest(instruction);
                 auto mask = getSourceRegister(instruction.getSrc2()).getOrdinal();
                 atomicStore(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
                 dest.setOrdinal(temp);
@@ -822,8 +822,8 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::chkbit:
             [this, &instruction]() {
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+                auto bitpos = bitPositions[valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111];
                 ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
             }();
             break;
