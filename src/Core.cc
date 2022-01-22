@@ -500,22 +500,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             cmpibx(instruction);
             break;
         case Opcode::concmpi:
-            [this, &instruction]() {
-                if ((ac_.getConditionCode() & 0b100) == 0) {
-                    auto src1 = valueFromSrc1Register(instruction, TreatAsInteger{});
-                    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
-                    ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
-                }
-            }();
+            concmpGeneric<TreatAsInteger>(instruction);
             break;
         case Opcode::concmpo:
-            [this, &instruction]() {
-                if ((ac_.getConditionCode() & 0b100) == 0) {
-                    auto src1 = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-                    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                    ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
-                }
-            }();
+            concmpGeneric<TreatAsOrdinal>(instruction);
             break;
             // MEM Format
         case Opcode::ldob:

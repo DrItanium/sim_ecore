@@ -527,6 +527,14 @@ private:
     void mark(const Instruction& inst) noexcept;
     void addc(const Instruction& inst) noexcept;
     void subc(const Instruction& inst) noexcept;
+    template<typename T>
+    void concmpGeneric(const Instruction& instruction) noexcept {
+        if ((ac_.getConditionCode() & 0b100) == 0) {
+            auto src1 = valueFromSrc1Register(instruction, T{});
+            auto src2 = valueFromSrc2Register(instruction, T{});
+            ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
+        }
+    }
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
