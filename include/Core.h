@@ -219,9 +219,6 @@ protected:
         store(destination + 0, wrapper.getOrdinal(0));
         store(destination + 4, wrapper.getOrdinal(1));
     }
-    void atomicStore(Address destination, Ordinal value) {
-        store(destination, value);
-    }
     void store(Address destination, const TripleRegister& reg) {
         store(destination + 0, reg.getOrdinal(0));
         store(destination + 4, reg.getOrdinal(1));
@@ -248,10 +245,6 @@ protected:
         } thing;
         thing.in = value;
         storeByte(destination, thing.out);
-    }
-    Ordinal atomicLoad(Address destination) {
-        /// @todo pull an atomic pin of some kind low (perhaps LOCK?)
-        return load(destination);
     }
     LongOrdinal loadLong(Address destination) {
         auto lower = load(destination + 0);
@@ -528,6 +521,8 @@ private:
     void synmov(const Instruction& inst) noexcept;
     void synmovl(const Instruction& inst) noexcept;
     void synmovq(const Instruction& inst) noexcept;
+    void lockBus() noexcept;
+    void unlockBus() noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

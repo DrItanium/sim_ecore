@@ -800,9 +800,11 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // The initial value from memory is stored in dst (internally src/dst).
                 syncf();
                 auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force alignment to word boundary
-                auto temp = atomicLoad(addr);
+                lockBus();
+                auto temp = load(addr);
                 auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                atomicStore(addr, temp + src);
+                store(addr, temp + src);
+                unlockBus();
                 setDestinationFromSrcDest(instruction, temp, TreatAsOrdinal{});
             }();
             break;
@@ -812,11 +814,14 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
                 // value from memory is stored in src/dest
                 syncf();
+
                 auto addr = sourceFromSrc1(instruction).getWordAligned(); // force alignment to word boundary
-                auto temp = atomicLoad(addr);
+                lockBus();
+                auto temp = load(addr);
                 auto& dest = destinationFromSrcDest(instruction);
                 auto mask = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                atomicStore(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
+                store(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
+                unlockBus();
                 dest.setOrdinal(temp);
             }();
             break;
@@ -1457,4 +1462,14 @@ Core::synmovq(const Instruction &instruction) noexcept {
     synchronizedStore(addr, temp);
     /// @todo figure out how to support bad access conditions
     ac_.setConditionCode(0b010);
+}
+
+void
+Core::lockBus() noexcept {
+    /// @todo implement this
+}
+
+void
+Core::unlockBus() noexcept {
+    /// @todo implement this
 }
