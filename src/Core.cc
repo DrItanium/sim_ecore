@@ -104,6 +104,9 @@ namespace {
 #undef X
 #undef Z
     };
+    constexpr Ordinal getBitPosition(Ordinal value) noexcept {
+        return bitPositions[value & 0b11111];
+    }
 }
 
 Register&
@@ -324,9 +327,8 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::bbc(const Instruction& instruction) noexcept {
-    auto masked = valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111;
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    auto bitpos = bitPositions[masked];
+    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
     if ((bitpos & src) == 0) {
         // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
         ac_.setConditionCode(0b000);
@@ -339,9 +341,8 @@ Core::bbc(const Instruction& instruction) noexcept {
 }
 void
 Core::bbs(const Instruction& instruction) noexcept {
-    auto masked = valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111;
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    auto bitpos = bitPositions[masked];
+    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
     if ((bitpos & src) != 0) {
         ac_.setConditionCode(0b010);
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
@@ -557,10 +558,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
         case Opcode::notbit:
             [this, &instruction]() {
-                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setOrdinal(src ^ bitpos);
+                auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
+                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+                setDestinationFromSrcDest(instruction, src ^ bitpos, TreatAsOrdinal{});
             }();
             break;
         case Opcode::logicalAnd:
