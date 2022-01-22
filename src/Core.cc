@@ -1283,7 +1283,7 @@ Core::calls(const Instruction& instruction) noexcept {
         auto type = tempPE & 0b11;
         auto procedureAddress = tempPE & ~0b11;
         // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
-        getRegister(RegisterIndex::RIP).setOrdinal(ip_.getOrdinal() + advanceIPBy);
+        getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
         ip_.setOrdinal(procedureAddress);
         Ordinal temp = 0;
         Ordinal tempRRR = 0;
@@ -1292,7 +1292,7 @@ Core::calls(const Instruction& instruction) noexcept {
             tempRRR = 0;
         } else {
             temp = getSupervisorStackPointer();
-            tempRRR = 0b010 | (pc_.getTraceEnable() ? 0b001 : 0);
+            tempRRR = pc_.getTraceEnable() ? 0b011 : 0b010;
             pc_.setExecutionMode(true);
             pc_.setTraceEnable(temp & 0b1);
         }
