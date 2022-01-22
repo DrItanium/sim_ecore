@@ -527,6 +527,8 @@ private:
     void restoreStandardFrame() noexcept;
     void fmark(const Instruction& inst) noexcept;
     void mark(const Instruction& inst) noexcept;
+    void addc(const Instruction& inst) noexcept;
+    void subc(const Instruction& inst) noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

@@ -311,7 +311,7 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
 void
 Core::lda(const Instruction &inst) noexcept {
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("IP: 0x");
@@ -322,14 +322,14 @@ Core::lda(const Instruction &inst) noexcept {
     auto& dest = destinationFromSrcDest(inst);
     auto addr = computeMemoryAddress(inst);
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("ADDR: 0x");
     Serial.println(addr, HEX);
 #endif
 #endif
     dest.setOrdinal(addr);
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
 #endif
@@ -870,46 +870,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::addc:
-            [this, &instruction]() {
-                auto& src1 = sourceFromSrc1(instruction);
-                auto& src2 = sourceFromSrc2(instruction);
-                DoubleRegister result;
-                result.setLongOrdinal(static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0));
-                // the result will be larger than 32-bits so we have to keep that in mind
-                auto& dest = destinationFromSrcDest(instruction);
-                dest.setOrdinal(result.getOrdinal(0));
-                // do computation here
-                ac_.setConditionCode(0);
-                if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
-                    // set the overflow bit in ac
-                    ac_.setOverflowBit(true);
-                }
-                ac_.setCarryBit(result.getOrdinal(1) != 0);
-
-                // set the carry out bit
-            }();
+            addc(instruction);
             break;
         case Opcode::subc:
-            [this, &instruction]() {
-                auto& src1 = sourceFromSrc1(instruction);
-                auto& src2 = sourceFromSrc2(instruction);
-                union {
-                    LongOrdinal value = 0;
-                    Ordinal halves[2];
-                } result;
-                result.value = static_cast<LongOrdinal>(src2.getOrdinal()) - static_cast<LongOrdinal>(src1.getOrdinal()) - 1 + (ac_.getCarryBit() ? 1 : 0);
-                // the result will be larger than 32-bits so we have to keep that in mind
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                dest.setOrdinal(result.halves[0]);
-                // do computation here
-                ac_.setConditionCode(0);
-                if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
-                    // set the overflow bit in ac
-                    ac_.setOverflowBit(true);
-                }
-                ac_.setCarryBit(result.halves[1] != 0);
-                // set the carry out bit
-            }();
+            subc(instruction);
             break;
         case Opcode::ldib:
             setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsInteger {});
@@ -1020,7 +984,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 auto addr = sourceFromSrc1(instruction).getQuadWordAligned(); // align
                 QuadRegister temp = loadQuad(src);
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+                #ifdef ARDUINO
                 Serial.print("SRC ADDRESS: 0x");
                 Serial.println(src, HEX);
                 Serial.print("QUAD REGISTER CONTENTS: 0x");
@@ -1089,7 +1053,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
     }
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
 #endif
@@ -1428,7 +1392,7 @@ Core::getPreviousPack() noexcept {
 void
 Core::exitCall() noexcept {
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("OLD FP: 0x");
@@ -1437,7 +1401,7 @@ Core::exitCall() noexcept {
 #endif
     setFramePointer(getPFP().getOrdinal());
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("NEW FP: 0x");
     Serial.println(properFramePointerAddress(), HEX);
 #endif
@@ -1447,13 +1411,13 @@ Core::exitCall() noexcept {
     // okay we are done with the current frame so relinquish ownership
     frames[currentFrameIndex_].relinquishOwnership();
     getPreviousPack().restoreOwnership(targetAddress,
-                          [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
-                          [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
+                                       [this](const RegisterFrame& frame, Address targetAddress) noexcept { saveRegisterFrame(frame, targetAddress); },
+                                       [this](RegisterFrame& frame, Address targetAddress) noexcept { restoreRegisterFrame(frame, targetAddress); });
     // okay the restoration is complete so just decrement the address
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
 #endif
@@ -1462,7 +1426,7 @@ Core::exitCall() noexcept {
 void
 Core::enterCall(Address newFP) noexcept {
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("OLD FP: 0x");
@@ -1477,7 +1441,7 @@ Core::enterCall(Address newFP) noexcept {
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
 #ifdef EMULATOR_TRACE
-#ifdef ARDUINO
+    #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
 #endif
@@ -1510,4 +1474,42 @@ Core::fmark(const Instruction &) noexcept {
     if (pc_.getTraceEnable()) {
         generateFault(FaultType::Breakpoint_Trace); /// @todo raise trace breakpoint fault
     }
+}
+void
+Core::addc(const Instruction &instruction) noexcept {
+
+    auto& src1 = sourceFromSrc1(instruction);
+    auto& src2 = sourceFromSrc2(instruction);
+    DoubleRegister result;
+    result.setLongOrdinal(static_cast<LongOrdinal>(src2.getOrdinal()) + static_cast<LongOrdinal>(src1.getOrdinal()) + (ac_.getCarryBit() ? 1 : 0));
+    // the result will be larger than 32-bits so we have to keep that in mind
+    auto& dest = destinationFromSrcDest(instruction);
+    dest.setOrdinal(result.getOrdinal(0));
+    // do computation here
+    ac_.setConditionCode(0);
+    if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+        // set the overflow bit in ac
+        ac_.setOverflowBit(true);
+    }
+    ac_.setCarryBit(result.getOrdinal(1) != 0);
+
+// set the carry out bit
+}
+void
+Core::subc(const Instruction &instruction) noexcept {
+    auto& src1 = sourceFromSrc1(instruction);
+    auto& src2 = sourceFromSrc2(instruction);
+    DoubleRegister result;
+    result.setLongOrdinal(static_cast<LongOrdinal>(src2.getOrdinal()) - static_cast<LongOrdinal>(src1.getOrdinal()) - 1 + (ac_.getCarryBit() ? 1 : 0));
+    // the result will be larger than 32-bits so we have to keep that in mind
+    auto& dest = destinationFromSrcDest(instruction);
+    dest.setOrdinal(result.getOrdinal(0));
+    // do computation here
+    ac_.setConditionCode(0);
+    if ((src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit())) {
+        // set the overflow bit in ac
+        ac_.setOverflowBit(true);
+    }
+    ac_.setCarryBit(result.getOrdinal(1) != 0);
+    // set the carry out bit
 }
