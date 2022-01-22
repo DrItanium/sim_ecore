@@ -302,30 +302,8 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
 }
 void
 Core::lda(const Instruction &inst) noexcept {
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("ENTERING ");
-    Serial.println(__PRETTY_FUNCTION__);
-    Serial.print("IP: 0x");
-    Serial.println(ip_.getOrdinal(), HEX);
-#endif
-#endif
     // compute the effective address (memory address) and store it in destination
-    auto& dest = destinationFromSrcDest(inst);
-    auto addr = computeMemoryAddress(inst);
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("ADDR: 0x");
-    Serial.println(addr, HEX);
-#endif
-#endif
-    dest.setOrdinal(addr);
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("EXITING ");
-    Serial.println(__PRETTY_FUNCTION__);
-#endif
-#endif
+    setDestinationFromSrcDest(inst, computeMemoryAddress(inst), TreatAsOrdinal{});
 }
 void
 Core::cmpo(const Instruction& instruction) noexcept {
