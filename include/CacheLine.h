@@ -9,7 +9,6 @@
 #else
 #include <cstdint>
 #endif
-#include "MemoryThing.h"
 #include "Types.h"
 /**
  * @brief Readonly view of a cache address
