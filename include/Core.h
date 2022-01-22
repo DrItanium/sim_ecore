@@ -478,6 +478,7 @@ private:
     void synmovq(const Instruction& inst) noexcept;
     void lockBus() noexcept;
     void unlockBus() noexcept;
+    void condBranch(const Instruction& inst) noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;

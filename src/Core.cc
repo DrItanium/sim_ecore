@@ -355,6 +355,12 @@ Core::bbs(const Instruction& instruction) noexcept {
 
 }
 void
+Core::condBranch(const Instruction& inst) noexcept {
+    if ((ac_.getConditionCode() & inst.getEmbeddedMask()) != 0) {
+        ipRelativeBranch(inst);
+    }
+}
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
 #ifdef EMULATOR_TRACE
     #ifdef ARDUINO
@@ -364,11 +370,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     Serial.println(ip_.getOrdinal(), HEX);
 #endif
 #endif
-    auto condBranch = [this, &instruction](uint8_t mask) {
-        if ((ac_.getConditionCode()& mask) != 0) {
-            ipRelativeBranch(instruction);
-        }
-    };
     auto condFault = [this](uint8_t mask) {
         if ((ac_.getConditionCode()& mask) != 0) {
             generateFault(FaultType::Constraint_Range);
@@ -401,7 +402,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::bne:
         case Opcode::ble:
         case Opcode::bo:
-            condBranch(instruction.getEmbeddedMask());
+            condBranch(instruction);
             break;
         case Opcode::faultno:
             if (ac_.getConditionCode() == 0) {
