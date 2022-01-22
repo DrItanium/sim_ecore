@@ -49,12 +49,6 @@ public:
     ~EBISBCore() override = default;
     void begin() override;
 protected:
-    ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal ordinal) override;
-    ShortOrdinal ioSpaceLoad(Address address, TreatAsShortOrdinal ordinal) override;
-    Ordinal ioSpaceLoad(Address address, TreatAsOrdinal ordinal) override;
-    void ioSpaceStore(Address address, ByteOrdinal value) override;
-    void ioSpaceStore(Address address, ShortOrdinal value) override;
-    void ioSpaceStore(Address address, Ordinal value) override;
     ByteOrdinal doIACLoad(Address address, TreatAsByteOrdinal ordinal) override;
     ShortOrdinal doIACLoad(Address address, TreatAsShortOrdinal ordinal) override;
     Ordinal doIACLoad(Address address, TreatAsOrdinal ordinal) override;

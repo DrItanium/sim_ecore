@@ -50,13 +50,6 @@ protected:
     void storeAligned(Address address, Ordinal value) override;
     void generateFault(FaultType ) override;
 protected:
-    virtual ByteOrdinal ioSpaceLoad(Address address, TreatAsByteOrdinal) = 0;
-    virtual ShortOrdinal ioSpaceLoad(Address address, TreatAsShortOrdinal) = 0;
-    virtual Ordinal ioSpaceLoad(Address address, TreatAsOrdinal) = 0;
-
-    virtual void ioSpaceStore(Address address, ByteOrdinal value) = 0;
-    virtual void ioSpaceStore(Address address, ShortOrdinal value) = 0;
-    virtual void ioSpaceStore(Address address, Ordinal value) = 0;
 
     virtual ByteOrdinal doIACLoad(Address address, TreatAsByteOrdinal) = 0;
     virtual ShortOrdinal doIACLoad(Address address, TreatAsShortOrdinal) = 0;
@@ -73,12 +66,6 @@ protected:
     virtual void doRAMStore(Address address, ShortOrdinal value) = 0;
     virtual void doRAMStore(Address address, Ordinal value) = 0;
 
-    virtual bool inIOSpace(Address target) noexcept {
-        return target >= 0xFE00'0000 && !inIACSpace(target);
-    }
-    virtual Address toIOSpaceOffset(Address target)  noexcept {
-        return toIACSpaceOffset(target);
-    }
     static constexpr bool inIACSpace(Address target) noexcept {
         return target >= 0xFF00'0000;
     }

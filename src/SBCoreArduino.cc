@@ -41,8 +41,6 @@ void
 SBCoreArduino::storeAligned(Address destination, Ordinal value) {
     if (inRAMArea(destination)) {
         doRAMStore(toRAMOffset(destination), value);
-    } else if (inIOSpace(destination)) {
-        ioSpaceStore(toIOSpaceOffset(destination), value);
     } else if (inIACSpace(destination)) {
         doIACStore(toIACSpaceOffset(destination), value);
     } else {
@@ -54,8 +52,6 @@ Ordinal
 SBCoreArduino::loadAligned(Address address) {
     if (inRAMArea(address)) {
         return doRAMLoad(toRAMOffset(address), TreatAsOrdinal {});
-    } else if (inIOSpace(address)) {
-        return ioSpaceLoad(toIOSpaceOffset(address), TreatAsOrdinal{});
     } else if (inIACSpace(address)) {
         return doIACLoad(toIACSpaceOffset(address), TreatAsOrdinal{});
     } else {
@@ -67,8 +63,6 @@ ByteOrdinal
 SBCoreArduino::loadByte(Address destination) {
     if (inRAMArea(destination)) {
         return doRAMLoad(toRAMOffset(destination), TreatAsByteOrdinal {});
-    } else if (inIOSpace(destination)) {
-        return ioSpaceLoad(toIOSpaceOffset(destination), TreatAsByteOrdinal{});
     } else if (inIACSpace(destination)) {
         return doIACLoad(toIACSpaceOffset(destination), TreatAsByteOrdinal{});
     } else {
@@ -80,8 +74,6 @@ void
 SBCoreArduino::storeShortAligned(Address destination, ShortOrdinal value) {
     if (inRAMArea(destination)) {
         doRAMStore(toRAMOffset(destination), value);
-    } else if (inIOSpace(destination)) {
-        ioSpaceStore(toIOSpaceOffset(destination), value);
     } else if (inIACSpace(destination)) {
         doIACStore(toIACSpaceOffset(destination), value);
     } else {
@@ -93,8 +85,6 @@ ShortOrdinal
 SBCoreArduino::loadShortAligned(Address destination) {
     if (inRAMArea(destination)) {
         return doRAMLoad(toRAMOffset(destination), TreatAsShortOrdinal {});
-    } else if (inIOSpace(destination)) {
-        return ioSpaceLoad(toIOSpaceOffset(destination), TreatAsShortOrdinal{});
     } else if (inIACSpace(destination)) {
         return doIACLoad(toIACSpaceOffset(destination), TreatAsShortOrdinal{});
     } else {
@@ -111,8 +101,6 @@ void
 SBCoreArduino::storeByte(Address destination, ByteOrdinal value) {
     if (inRAMArea(destination)) {
         doRAMStore(toRAMOffset(destination), value);
-    } else if (inIOSpace(destination)) {
-        ioSpaceStore(toIOSpaceOffset(destination), value);
     } else if (inIACSpace(destination)) {
         doIACStore(toIACSpaceOffset(destination), value);
     } else {

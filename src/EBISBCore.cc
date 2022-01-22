@@ -85,50 +85,6 @@ EBISBCore::begin() {
 
 
 ByteOrdinal
-EBISBCore::ioSpaceLoad(Address address, TreatAsByteOrdinal) {
-    return 0;
-}
-void
-EBISBCore::ioSpaceStore(Address address, ByteOrdinal value) {
-    // nothing to do here right now
-}
-Ordinal
-EBISBCore::ioSpaceLoad(Address address, TreatAsOrdinal ) {
-    // right now there is nothing to do here
-    return 0;
-}
-ShortOrdinal
-EBISBCore::ioSpaceLoad(Address address, TreatAsShortOrdinal) {
-    switch (address) {
-        case 2:
-            Serial.flush();
-            break;
-        case 0:
-            return Serial.read();
-        default:
-            break;
-    }
-    return 0;
-}
-
-void
-EBISBCore::ioSpaceStore(Address address, ShortOrdinal value) {
-    switch (address) {
-        case 2:
-            Serial.flush();
-            break;
-        case 0:
-            Serial.write(static_cast<char>(value));
-            break;
-        default:
-            break;
-    }
-}
-void
-EBISBCore::ioSpaceStore(Address address, Ordinal value) {
-    // nothing to do right now
-}
-ByteOrdinal
 EBISBCore::doIACLoad(Address address, TreatAsByteOrdinal ordinal) {
     return 0;
 }
