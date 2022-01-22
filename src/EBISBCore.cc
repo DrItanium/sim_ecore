@@ -24,6 +24,7 @@
 #include <Arduino.h>
 
 #include <SPI.h>
+#include <Wire.h>
 #include "Types.h"
 #include "Core.h"
 
@@ -33,6 +34,7 @@ Core::begin() noexcept {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
     SPI.begin();
+    Wire.begin();
     /// @todo setup all of the mega2560 peripherals here
 }
 
