@@ -1459,11 +1459,3 @@ Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCa
     ac_.setCarryBit(result.getOrdinal(1) != 0);
     // set the carry out bit
 }
-void
-Core::subc(const Instruction &instruction) noexcept {
-    withCarryOperationGeneric(instruction, ArithmeticWithCarryOperation::Subtract);
-}
-void
-Core::addc(const Instruction &instruction) noexcept {
-    withCarryOperationGeneric(instruction, ArithmeticWithCarryOperation::Add);
-}

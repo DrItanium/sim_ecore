@@ -530,8 +530,8 @@ private:
         Subtract,
     };
     void withCarryOperationGeneric(const Instruction& inst, ArithmeticWithCarryOperation op) noexcept;
-    void addc(const Instruction& inst) noexcept;
-    void subc(const Instruction& inst) noexcept;
+    void addc(const Instruction& inst) noexcept { withCarryOperationGeneric(inst, ArithmeticWithCarryOperation::Add); }
+    void subc(const Instruction& inst) noexcept { withCarryOperationGeneric(inst, ArithmeticWithCarryOperation::Subtract); }
     template<typename T>
     void concmpGeneric(const Instruction& instruction) noexcept {
         if ((ac_.getConditionCode() & 0b100) == 0) {
