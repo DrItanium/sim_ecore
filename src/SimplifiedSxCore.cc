@@ -36,7 +36,7 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     systemAddressTableBase_ = sat;
     prcbBase_ = pcb;
     // skip the check words
-    ip_.setOrdinal(startIP);
+    absoluteBranch(startIP);
     executing_ = true;
     pc_.setPriority(31);
     pc_.setState(true); // needs to be set as interrupted
@@ -57,14 +57,13 @@ SimplifiedSxCore::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
             reg.setLongOrdinal(0);
         }
     }
-    getRegister(RegisterIndex::FP).setOrdinal(thePointer);
+    setFramePointer(thePointer);
     // we need to take ownership of the target frame on startup
     // we want to take ownership and throw anything out just in case so make the lambda do nothing
     getCurrentPack().takeOwnership(thePointer, [](const auto&, auto) noexcept { });
-    // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well
-    getRegister(RegisterIndex::SP960).setOrdinal(thePointer + 64);
-    getRegister(RegisterIndex::PFP).setOrdinal(thePointer);
-    advanceIPBy = 0; // make sure that we don't do anything dumb at this point
+    // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well, but you do!
+    getStackPointer().setOrdinal(thePointer + 64);
+    getPFP().setOrdinal(thePointer);
 #ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");

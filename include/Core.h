@@ -280,7 +280,7 @@ protected:
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
     virtual void resetExecutionStatus() noexcept = 0;
     LocalRegisterPack& getCurrentPack() noexcept { return frames[currentFrameIndex_]; }
-private:
+protected:
     void setFramePointer(Ordinal value) noexcept;
     [[nodiscard]] Ordinal getFramePointerValue() const noexcept;
     void lda(const Instruction& inst) noexcept;
@@ -477,11 +477,12 @@ private:
     void synmovq(const Instruction& inst) noexcept;
     void lockBus() noexcept;
     void unlockBus() noexcept;
-    void condBranch(const Instruction& inst) noexcept;
     Ordinal getNextCallFrameStart() noexcept;
-    void absoluteBranch(Ordinal value) noexcept;
     void balx(const Instruction& inst) noexcept;
     void bx(const Instruction& inst) noexcept;
+protected:
+    void condBranch(const Instruction& inst) noexcept;
+    void absoluteBranch(Ordinal value) noexcept;
 protected:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
