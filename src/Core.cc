@@ -1275,8 +1275,7 @@ Core::callx(const Instruction& instruction) noexcept {
 
 void
 Core::calls(const Instruction& instruction) noexcept {
-    auto targ = getSourceRegister(instruction.getSrc1()).getOrdinal();
-    if (targ > 259) {
+    if (auto targ = valueFromSrc1Register(instruction, TreatAsOrdinal{}); targ > 259) {
         generateFault(FaultType::Protection_Length);
     } else {
         syncf();
