@@ -509,6 +509,7 @@ private:
     Ordinal getNextCallFrameStart() noexcept;
     void balx(const Instruction& inst) noexcept;
     void bx(const Instruction& inst) noexcept;
+    void notbit(const Instruction& inst) noexcept;
 protected:
     void condBranch(const Instruction& inst) noexcept;
     void absoluteBranch(Ordinal value) noexcept;

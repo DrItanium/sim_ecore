@@ -557,11 +557,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             arithmeticGeneric<ArithmeticOperation::Divide, TreatAsInteger>(instruction);
             break;
         case Opcode::notbit:
-            [this, &instruction]() {
-                auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                setDestinationFromSrcDest(instruction, src ^ bitpos, TreatAsOrdinal{});
-            }();
+            notbit(instruction);
             break;
         case Opcode::logicalAnd:
             logicalOpGeneric<LogicalOp::And>(instruction);
@@ -1570,4 +1566,10 @@ void Core::synchronizedStore(Address destination, const Register& value) noexcep
     // there is a lookup for an interrupt control register, in the Sx manual, we are going to ignore that for now
     synchronizeMemoryRequests();
     store(destination, value.getOrdinal());
+}
+void
+Core::notbit(const Instruction& instruction) noexcept {
+    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    setDestinationFromSrcDest(instruction, src ^ bitpos, TreatAsOrdinal{});
 }
