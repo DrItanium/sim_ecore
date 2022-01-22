@@ -260,45 +260,29 @@ protected:
     virtual void storeShortAligned(Address destination, ShortOrdinal value) = 0;
     virtual Ordinal loadAligned(Address destination) = 0;
     virtual void storeAligned(Address destination, Ordinal value) = 0;
-    ShortOrdinal loadShort(Address destination) noexcept;
+    [[nodiscard]] ShortOrdinal loadShort(Address destination) noexcept;
     virtual void storeShort(Address destination, ShortOrdinal value);
-    Ordinal load(Address destination);
+    [[nodiscard]] Ordinal load(Address destination);
     void store(Address destination, Ordinal value);
 
-    Register& getRegister(RegisterIndex targetIndex);
-    const Register& getRegister(RegisterIndex targetIndex) const;
-    const Register& getSourceRegister(RegisterIndex targetIndex) const { return getRegister(targetIndex); }
-    DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
-    const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const;
-    const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const { return getDoubleRegister(targetIndex); }
-    TripleRegister& getTripleRegister(RegisterIndex targetIndex);
-    const TripleRegister& getTripleRegister(RegisterIndex targetIndex) const;
-    QuadRegister& getQuadRegister(RegisterIndex targetIndex);
-    const QuadRegister& getQuadRegister(RegisterIndex targetIndex) const;
-    Register& getStackPointer() noexcept {
-        return getRegister(RegisterIndex::SP960);
-    }
-    const Register& getStackPointer() const noexcept {
-        return getRegister(RegisterIndex::SP960);
-    }
-    Register& getFramePointer() noexcept {
-        return getRegister(RegisterIndex::FP);
-    }
-    const Register& getFramePointer() const noexcept {
-        return getRegister(RegisterIndex::FP);
-    }
-    Register& getPFP() noexcept {
-        return getRegister(RegisterIndex::PFP);
-    }
-    const Register& getPFP() const noexcept {
-        return getRegister(RegisterIndex::PFP);
-    }
-    Register& getRIP() noexcept {
-        return getRegister(RegisterIndex::RIP);
-    }
-    const Register& getRIP() const noexcept {
-        return getRegister(RegisterIndex::RIP);
-    }
+    [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
+    [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const;
+    [[nodiscard]] const Register& getSourceRegister(RegisterIndex targetIndex) const { return getRegister(targetIndex); }
+    [[nodiscard]] DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
+    [[nodiscard]] const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const;
+    [[nodiscard]] const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const { return getDoubleRegister(targetIndex); }
+    [[nodiscard]] TripleRegister& getTripleRegister(RegisterIndex targetIndex);
+    [[nodiscard]] const TripleRegister& getTripleRegister(RegisterIndex targetIndex) const;
+    [[nodiscard]] QuadRegister& getQuadRegister(RegisterIndex targetIndex);
+    [[nodiscard]] const QuadRegister& getQuadRegister(RegisterIndex targetIndex) const;
+    [[nodiscard]] Register& getStackPointer() noexcept { return getRegister(RegisterIndex::SP960); }
+    [[nodiscard]] const Register& getStackPointer() const noexcept { return getRegister(RegisterIndex::SP960); }
+    [[nodiscard]] Register& getFramePointer() noexcept { return getRegister(RegisterIndex::FP); }
+    [[nodiscard]] const Register& getFramePointer() const noexcept { return getRegister(RegisterIndex::FP); }
+    [[nodiscard]] Register& getPFP() noexcept { return getRegister(RegisterIndex::PFP); }
+    [[nodiscard]] const Register& getPFP() const noexcept { return getRegister(RegisterIndex::PFP); }
+    [[nodiscard]] Register& getRIP() noexcept { return getRegister(RegisterIndex::RIP); }
+    [[nodiscard]] const Register& getRIP() const noexcept { return getRegister(RegisterIndex::RIP); }
 private:
     /**
      * @brief Compute the next instruction location and store it in RIP
@@ -316,7 +300,7 @@ protected:
     void shlo(const Instruction& inst) noexcept;
     void flushreg() noexcept;
     void ipRelativeBranch(const Instruction& inst) noexcept;
-    Instruction loadInstruction(Address baseAddress) noexcept;
+    [[nodiscard]] Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
     void cmpi(const Instruction& instruction) noexcept;
     void cmpo(const Instruction& instruction) noexcept;
@@ -324,23 +308,23 @@ protected:
     void cycle() noexcept;
     void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
     void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
-    Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;
-    Ordinal getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const;
+    [[nodiscard]] Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;
+    [[nodiscard]] Ordinal getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const;
     void cmpobx(const Instruction& instruction, uint8_t mask) noexcept;
     void cmpobx(const Instruction& instruction) noexcept { cmpobx(instruction, instruction.getEmbeddedMask()); }
     void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;
     void cmpibx(const Instruction& instruction) noexcept { cmpibx(instruction, instruction.getEmbeddedMask()); }
 
-    Register& destinationFromSrcDest(const Instruction& instruction) noexcept;
-    const Register& sourceFromSrcDest(const Instruction& instruction) const noexcept;
+    [[nodiscard]] Register& destinationFromSrcDest(const Instruction& instruction) noexcept;
+    [[nodiscard]] const Register& sourceFromSrcDest(const Instruction& instruction) const noexcept;
     void setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal);
     void setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger);
-    const Register& sourceFromSrc1(const Instruction& instruction) const noexcept;
-    const Register& sourceFromSrc2(const Instruction& instruction) const noexcept;
-    Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
-    Integer valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept;
-    Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
-    Integer valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept;
+    [[nodiscard]] const Register& sourceFromSrc1(const Instruction& instruction) const noexcept;
+    [[nodiscard]] const Register& sourceFromSrc2(const Instruction& instruction) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
+    [[nodiscard]] Integer valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
+    [[nodiscard]] Integer valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
