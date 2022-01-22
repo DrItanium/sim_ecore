@@ -272,7 +272,10 @@ protected:
         return getRegister(RegisterIndex::RIP);
     }
 private:
-    void setRIP(Ordinal value) noexcept;
+    /**
+     * @brief Compute the next instruction location and store it in RIP
+     */
+    void setRIP() noexcept;
 protected:
     inline Ordinal getSupervisorStackPointer() noexcept { return load((getSystemProcedureTableBase() + 12)); }
     virtual void resetExecutionStatus() noexcept = 0;

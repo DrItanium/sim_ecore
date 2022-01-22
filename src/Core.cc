@@ -1159,11 +1159,15 @@ Core::getNextCallFrameStart() noexcept {
     return (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
 }
 void
+Core::setRIP() noexcept {
+    getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
+}
+void
 Core::call(const Instruction& instruction) noexcept {
     // wait for any uncompleted instructions to finish
     auto temp = getNextCallFrameStart();
     auto fp = getFramePointerValue();
-    setRIP(ip_.getOrdinal() + advanceIPBy);
+    setRIP();
     enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
@@ -1178,7 +1182,7 @@ Core::callx(const Instruction& instruction) noexcept {
     auto temp = getNextCallFrameStart();
     auto fp = getFramePointerValue();
     auto memAddr = computeMemoryAddress(instruction);
-    setRIP(ip_.getOrdinal() + advanceIPBy);
+    setRIP();
 /// @todo implement support for caching register frames
     enterCall(temp);
     ip_.setOrdinal(memAddr);
@@ -1199,7 +1203,7 @@ Core::calls(const Instruction& instruction) noexcept {
         auto type = tempPE & 0b11;
         auto procedureAddress = tempPE & ~0b11;
         // read entry from system-procedure table, where sptbase is address of system-procedure table from IMI
-        getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
+        setRIP();
         ip_.setOrdinal(procedureAddress);
         Ordinal temp = 0;
         Ordinal tempRRR = 0;
@@ -1534,8 +1538,4 @@ Core::loadQuad(Address destination) noexcept {
     QuadRegister tmp;
     load(destination, tmp);
     return tmp;
-}
-void
-Core::setRIP(Ordinal value) noexcept {
-    getRIP().setOrdinal(value);
 }
