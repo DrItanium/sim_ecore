@@ -30,11 +30,17 @@
 
 void
 Core::begin() noexcept {
+    Serial.begin(115200);
+    while (!Serial);
     Serial.println(F("STARTING UP EAVR2e i960 Processor"));
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
+    Serial.print(F("BRINGING SPI UP..."));
     SPI.begin();
+    Serial.println(F("DONE!"));
+    Serial.print(F("BRINGING I2C UP..."));
     Wire.begin();
+    Serial.println(F("DONE!"));
     /// @todo setup all of the mega2560 peripherals here
 }
 

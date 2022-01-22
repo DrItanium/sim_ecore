@@ -226,14 +226,41 @@ public:
 #undef X
     };
 public:
+    // Mega2560 pins
+    enum class Pinout {
+        // expose four controllable interrupts
+        i960_INT0_ = 19,
+        i960_INT1_ = 18,
+        i960_INT2_ = 2,
+        i960_INT3_ = 3,
+        /**
+         * @brief The real EBI_A15 is used to select which 32k window to write to in the EBI space. Thus we take A15 into our own hands when dealing with the external bus
+         */
+        EBI_A15 = 38,
+        EBI_A16 = 49,
+        EBI_A17 = 48,
+        EBI_A18 = 47,
+        EBI_A19 = 46,
+        EBI_A20 = 45,
+        EBI_A21 = 44,
+        EBI_A22 = 43,
+        EBI_A23 = 42,
+        EBI_A24 = A8,
+        EBI_A25 = A9,
+        EBI_A26 = A10,
+        EBI_A27 = A11,
+        EBI_A28 = A12,
+        EBI_A29 = A13,
+        EBI_A30 = A14,
+        EBI_A31 = A15,
+    };
 public:
     explicit Core(Ordinal salign = 4);
     ~Core() = default;
     void begin() noexcept;
-public:
-    void run();
-private:
     void boot();
+    void cycle() noexcept;
+private:
     Ordinal getSystemAddressTableBase() const noexcept;
     Ordinal getPRCBPtrBase() const noexcept;
     [[nodiscard]] Ordinal getSystemProcedureTableBase() ;
@@ -303,7 +330,6 @@ private:
     void cmpi(const Instruction& instruction) noexcept;
     void cmpo(const Instruction& instruction) noexcept;
     void syncf() noexcept;
-    void cycle() noexcept;
     void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
     void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
     [[nodiscard]] Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;

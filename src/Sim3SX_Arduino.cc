@@ -29,15 +29,11 @@
 #include <Arduino.h>
 Core theCore;
 void setup() {
-    Serial.begin(115200);
-    while (!Serial);
     theCore.begin();
-    Serial.println(F("INVOKING RUN!"));
-    theCore.run();
-    Serial.println(F("EMULATOR HALTED!"));
+    theCore.boot();
 }
 void loop() {
-    delay(1000);
+    theCore.cycle();
 }
 #if __cplusplus >= 201402L
 #ifdef ARDUINO_AVR_MEGA2560

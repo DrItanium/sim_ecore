@@ -945,13 +945,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
 #endif
 #endif
 }
-void
-Core::run() {
-    boot();
-    while(true) {
-        cycle();
-    }
-}
 Ordinal
 Core::getSystemProcedureTableBase() {
     return load(getSystemAddressTableBase() + 120);
