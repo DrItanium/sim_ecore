@@ -525,6 +525,11 @@ private:
     void restoreStandardFrame() noexcept;
     void fmark(const Instruction& inst) noexcept;
     void mark(const Instruction& inst) noexcept;
+    enum class ArithmeticWithCarryOperation : byte {
+        Add,
+        Subtract,
+    };
+    void withCarryOperationGeneric(const Instruction& inst, ArithmeticWithCarryOperation op) noexcept;
     void addc(const Instruction& inst) noexcept;
     void subc(const Instruction& inst) noexcept;
     template<typename T>

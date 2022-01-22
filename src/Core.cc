@@ -1444,33 +1444,13 @@ namespace {
     }
 }
 void
-Core::addc(const Instruction &instruction) noexcept {
-
+Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCarryOperation op) noexcept {
     auto& src1 = sourceFromSrc1(instruction);
     auto& src2 = sourceFromSrc2(instruction);
-    DoubleRegister result(addWithCarry(src2.getOrdinal(), src1.getOrdinal(), ac_.getCarryBit() ? 1 : 0));
-    // the result will be larger than 32-bits so we have to keep that in mind
+    auto carry = ac_.getCarryBit() ? 1 : 0;
+    DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ? addWithCarry(src2.getOrdinal(), src1.getOrdinal(), carry) : subtractWithCarry(src2.getOrdinal(), src1.getOrdinal(), carry));
     auto& dest = destinationFromSrcDest(instruction);
     dest.setOrdinal(result.getOrdinal(0));
-    // do computation here
-    ac_.setConditionCode(0);
-    if (overflowDetected(src2, src1, dest)) {
-        // set the overflow bit in ac
-        ac_.setOverflowBit(true);
-    }
-    ac_.setCarryBit(result.getOrdinal(1) != 0);
-
-// set the carry out bit
-}
-void
-Core::subc(const Instruction &instruction) noexcept {
-    auto& src1 = sourceFromSrc1(instruction);
-    auto& src2 = sourceFromSrc2(instruction);
-    DoubleRegister result(subtractWithCarry(src2.getOrdinal(), src1.getOrdinal(), ac_.getCarryBit() ? 1 : 0));
-    // the result will be larger than 32-bits so we have to keep that in mind
-    auto& dest = destinationFromSrcDest(instruction);
-    dest.setOrdinal(result.getOrdinal(0));
-    // do computation here
     ac_.setConditionCode(0);
     if (overflowDetected(src2, src1, dest)) {
         // set the overflow bit in ac
@@ -1478,4 +1458,12 @@ Core::subc(const Instruction &instruction) noexcept {
     }
     ac_.setCarryBit(result.getOrdinal(1) != 0);
     // set the carry out bit
+}
+void
+Core::subc(const Instruction &instruction) noexcept {
+    withCarryOperationGeneric(instruction, ArithmeticWithCarryOperation::Subtract);
+}
+void
+Core::addc(const Instruction &instruction) noexcept {
+    withCarryOperationGeneric(instruction, ArithmeticWithCarryOperation::Add);
 }
