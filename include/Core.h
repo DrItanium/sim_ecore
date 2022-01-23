@@ -595,4 +595,8 @@ void pinMode(Pinout p, decltype(OUTPUT) direction) noexcept;
 void digitalWrite(Pinout p, decltype(HIGH) value) noexcept;
 byte digitalRead(Pinout p) noexcept;
 [[noreturn]] void haltExecution(const __FlashStringHelper* message) noexcept;
+template<typename T>
+inline volatile T& memory(const size_t address) noexcept {
+    return *reinterpret_cast<T*>(address);
+}
 #endif //SIM3_CORE_H

@@ -42,6 +42,17 @@ constexpr Address InternalBootProgramBase = 0xFFFE'0000;
 constexpr Address InternalPeripheralBase  = 0xFFFF'0000;
 constexpr Address InternalSRAMBase = 0xFFFD'0000;
 constexpr Address InternalSRAMEnd = InternalSRAMBase + 1024;
+namespace {
+    ByteOrdinal
+    readFromBusWindow(size_t offset) noexcept {
+        return memory<ByteOrdinal>(BusMemoryWindowStart + (offset & 0x7FFF));
+    }
+
+    void
+    writeToBusWindow(size_t offset, ByteOrdinal value) noexcept {
+        memory<ByteOrdinal>(BusMemoryWindowStart + (offset & 0x7FFF)) = value;
+    }
+}
 ByteOrdinal
 Core::loadByte(Address destination) {
     if (destination < InternalMemorySpaceBase) {
