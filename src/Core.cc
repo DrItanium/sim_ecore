@@ -270,46 +270,23 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
     }
     switch (instruction.getMemFormatMode()) {
         case MEMFormatMode::MEMA_AbsoluteOffset:
-            Serial.println(F("\tMEMA_AbsoluteOffset"));
             return instruction.getOffset();
         case MEMFormatMode::MEMA_RegisterIndirectWithOffset:
-            Serial.println(F("\tMEMA_RegisterIndirectWithOffset"));
             return instruction.getOffset() + valueFromAbaseRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_RegisterIndirect:
-            Serial.println(F("\tMEMB_RegisterIndirect"));
             return valueFromAbaseRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_RegisterIndirectWithIndex:
-            Serial.println(F("\tMEMB_RegisterIndirectWithIndex"));
             return valueFromAbaseRegister(instruction, TreatAsOrdinal{}) + scaledValueFromIndexRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_IPWithDisplacement:
-            Serial.println(F("\tMEMB_IPWithDisplacement"));
             return static_cast<Ordinal>(ip_.getInteger() + instruction.getDisplacement() + 8);
         case MEMFormatMode::MEMB_AbsoluteDisplacement:
-            Serial.println(F("\tMEMB_AbsoluteDisplacement"));
             return instruction.getDisplacement(); // this will return the optional displacement
         case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement: {
-            Serial.println(F("\tMEMB_RegisterIndirectWithDisplacement"));
-            auto disp = instruction.getDisplacement();
-            auto abaseValue = valueFromAbaseRegister(instruction, TreatAsInteger{});
-            Serial.print(F("\t\tdisp: 0x"));
-            Serial.println(disp, HEX);
-            Serial.print(F("\t\tabaseValue: 0x"));
-            Serial.println(abaseValue, HEX);
-            Serial.print(F("\t\tframe pointer value: 0x"));
-            Serial.println(getFramePointerValue(), HEX);
-            auto iresult = disp + abaseValue;
-            auto result = static_cast<Ordinal>(iresult);
-            Serial.print(F("\t\tResult: 0x"));
-            Serial.print(iresult, HEX);
-            Serial.print(F(" => 0x"));
-            Serial.println(result, HEX);
-            return result;
+            return static_cast<Ordinal>(valueFromAbaseRegister(instruction, TreatAsInteger{}) + instruction.getDisplacement());
         }
         case MEMFormatMode::MEMB_IndexWithDisplacement:
-            Serial.println(F("\tMEMB_IndexWithDisplacement"));
             return static_cast<Ordinal>(scaledValueFromIndexRegister(instruction, TreatAsInteger{}) + instruction.getDisplacement());
         case MEMFormatMode::MEMB_RegisterIndirectWithIndexAndDisplacement:
-            Serial.println(F("\tMEMB_RegisterIndirectWithIndexAndDisplacement"));
             return static_cast<Ordinal>(
                     valueFromAbaseRegister(instruction, TreatAsInteger{}) +
                     scaledValueFromIndexRegister(instruction, TreatAsInteger{}) +
@@ -1026,14 +1003,9 @@ Core::shro(const Instruction &inst) noexcept {
 
 void
 Core::shlo(const Instruction &inst) noexcept {
-    Serial.println(F("\tshlo"));
     auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
-    Serial.print(F("\t\tlen: 0x"));
-    Serial.println(len, HEX);
     if (auto& dest = destinationFromSrcDest(inst); len < 32) {
         auto src = valueFromSrc2Register(inst, TreatAsOrdinal{});
-        Serial.print(F("\t\tsrc: 0x"));
-        Serial.println(src, HEX);
         dest.setOrdinal(src << len);
     } else {
         dest.setOrdinal(0);
@@ -1084,11 +1056,7 @@ Core::getLocals() const noexcept {
 }
 void
 Core::setFramePointer(Ordinal value) noexcept {
-    Serial.print(F("\t\t\tFP(Old): 0x"));
-    Serial.println(getFramePointerValue(), HEX);
     getFramePointer().setOrdinal(value);
-    Serial.print(F("\t\t\tFP(New): 0x"));
-    Serial.println(getFramePointerValue(), HEX);
 }
 
 Ordinal
@@ -1101,11 +1069,7 @@ Core::setRIP() noexcept {
 }
 void
 Core::setStackPointer(Ordinal value) noexcept {
-    Serial.print(F("\t\t\tSP(Old): 0x"));
-    Serial.println(getStackPointerValue(), HEX);
     getStackPointer().setOrdinal(value);
-    Serial.print(F("\t\t\tSP(New): 0x"));
-    Serial.println(getStackPointerValue(), HEX);
 }
 Ordinal
 Core::getStackPointerValue() const noexcept {
@@ -1115,13 +1079,7 @@ void
 Core::call(const Instruction& instruction) noexcept {
     // wait for any uncompleted instructions to finish
     auto temp = getNextCallFrameStart();
-    Serial.print(F("\t\tcall: Next Call Frame Start: 0x"));
-    Serial.println(temp, HEX);
     auto fp = getFramePointerValue();
-    Serial.print(F("\t\tcall: fp: 0x"));
-    Serial.println(fp, HEX);
-    Serial.print(F("\t\tcall: sp: 0x"));
-    Serial.println(getStackPointerValue(), HEX);
     setRIP();
     enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
