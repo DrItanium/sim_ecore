@@ -30,15 +30,15 @@
 #include "Core.h"
 
 void
-pinMode(Core::Pinout pin, decltype(OUTPUT) direction) noexcept {
+pinMode(Pinout pin, decltype(OUTPUT) direction) noexcept {
     ::pinMode(static_cast<int>(pin), direction);
 }
 void
-digitalWrite(Core::Pinout pin, decltype(LOW) value) noexcept {
+digitalWrite(Pinout pin, decltype(LOW) value) noexcept {
     ::digitalWrite(static_cast<byte>(pin), value);
 }
 byte
-digitalRead(Core::Pinout p) noexcept {
+digitalRead(Pinout p) noexcept {
     return ::digitalRead(static_cast<byte>(p));
 }
 namespace {
@@ -66,13 +66,23 @@ namespace {
     constexpr Address computeBaseAddress(BuiltinDevices dev) noexcept {
         return ((static_cast<Address>(dev) << 8) + BuiltinDevice_BaseAddress);
     }
-    inline void setupEBI() noexcept {
+    void
+    setupEBI() noexcept {
+        Serial.print(F("Enabling EBI..."));
         // full 64k space without bus keeper
         XMCRB = 0b0000'0000;
         // turn on the EBI
         XMCRA |= _BV(SRE);
+        Serial.println(F("DONE!"));
+        Serial.print(F("Setting up Extended EBI..."));
+        for (const auto& ebiPin : EBIExtendedPins) {
+            pinMode(ebiPin, OUTPUT);
+            digitalWrite(ebiPin, LOW);
+        }
+        Serial.println(F("DONE!"));
     }
     void setupInternalConfigurationSpace() noexcept {
+        Serial.print(F("BRINGING UP INTERNAL CONFIGURATION SPACE EEPROM..."));
         EEPROM.begin();
         // okay we need to check to make sure that the configuration space contains the values in question that we expect.
         // The 4k of EEPROM we have onboard is meant to hold onto internal device addresses
@@ -83,44 +93,68 @@ namespace {
         for (int i = 0, addr = 0; i < static_cast<int>(BuiltinDevices::Count); ++i, addr += sizeof(Address)) {
             EEPROM.put(addr, computeBaseAddress(static_cast<BuiltinDevices>(i)));
         }
+        Serial.println(F("DONE!"));
+    }
+    void
+    setupInterruptPins() noexcept {
+        Serial.print(F("Setting up Interrupt Pins..."));
+        pinMode(Pinout::Int0_, INPUT);
+        pinMode(Pinout::Int1_, INPUT);
+        pinMode(Pinout::Int2_, INPUT);
+        pinMode(Pinout::Int3_, INPUT);
+        /// @todo attach to interrupt handlers
+        Serial.println(F("DONE!"));
+
+    }
+    void
+    bringUpSPI() noexcept {
+        Serial.print(F("BRINGING SPI UP..."));
+        SPI.begin();
+        Serial.println(F("DONE!"));
+    }
+    void
+    bringUpI2C() noexcept {
+
+        Serial.print(F("BRINGING I2C UP..."));
+        Wire.begin();
+        Serial.println(F("DONE!"));
+    }
+    void
+    bringUpSerial() noexcept {
+        Serial.begin(115200);
+        while (!Serial);
+        Serial.println(F("STARTING UP EAVR2e i960 Processor"));
+    }
+    void
+    configureLED() noexcept {
+        pinMode(LED_BUILTIN, OUTPUT);
+        digitalWrite(LED_BUILTIN, LOW);
+    }
+    void
+    performCoreSanityTests() noexcept {
+
+    }
+}
+void
+haltExecution(const __FlashStringHelper* message) noexcept {
+    Serial.print(F("HALTING EXECUTION: "));
+    Serial.println(message);
+    while (true) {
+        delay(1000);
     }
 }
 void
 Core::begin() noexcept {
-    Serial.begin(115200);
-    while (!Serial);
-    Serial.println(F("STARTING UP EAVR2e i960 Processor"));
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
-    Serial.print(F("BRINGING SPI UP..."));
-    SPI.begin();
-    Serial.println(F("DONE!"));
-    Serial.print(F("BRINGING I2C UP..."));
-    Wire.begin();
-    Serial.println(F("DONE!"));
-    Serial.print(F("Enabling EBI..."));
+    bringUpSerial();
+    configureLED();
+    bringUpSPI();
+    bringUpI2C();
     setupEBI();
-    Serial.println(F("DONE!"));
-    Serial.print(F("Setting up Extended EBI..."));
-    for (const auto& ebiPin : Core::EBIExtendedPins) {
-        pinMode(ebiPin, OUTPUT);
-        digitalWrite(ebiPin, LOW);
-    }
-    Serial.println(F("DONE!"));
-    Serial.print(F("Setting up Interrupt Pins..."));
-    pinMode(Pinout::Int0_, INPUT);
-    pinMode(Pinout::Int1_, INPUT);
-    pinMode(Pinout::Int2_, INPUT);
-    pinMode(Pinout::Int3_, INPUT);
-    Serial.println(F("DONE!"));
-    Serial.print(F("BRINGING UP INTERNAL CONFIGURATION SPACE EEPROM..."));
+    setupInterruptPins();
     setupInternalConfigurationSpace();
-    Serial.println(F("DONE!"));
     /// @todo setup all of the mega2560 peripherals here
-    Serial.println(F("FORCE HANGING!!!"));
-    while (true) {
-        delay(1000);
-    }
+    performCoreSanityTests();
+    haltExecution(F("FORCE HANGING!"));
 }
 
 void

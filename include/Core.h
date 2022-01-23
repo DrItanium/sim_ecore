@@ -227,52 +227,6 @@ public:
     };
 public:
     // Mega2560 pins
-    enum class Pinout {
-        // expose four controllable interrupts
-        Int0_ = 19,
-        Int1_ = 18,
-        Int2_ = 2,
-        Int3_ = 3,
-        /**
-         * @brief The real EBI_A15 is used to select which 32k window to write to in the EBI space. Thus we take A15 into our own hands when dealing with the external bus
-         */
-        EBI_A15 = 38,
-        EBI_A16 = 49,
-        EBI_A17 = 48,
-        EBI_A18 = 47,
-        EBI_A19 = 46,
-        EBI_A20 = 45,
-        EBI_A21 = 44,
-        EBI_A22 = 43,
-        EBI_A23 = 42,
-        EBI_A24 = A8,
-        EBI_A25 = A9,
-        EBI_A26 = A10,
-        EBI_A27 = A11,
-        EBI_A28 = A12,
-        EBI_A29 = A13,
-        EBI_A30 = A14,
-        EBI_A31 = A15,
-    };
-    static constexpr Pinout EBIExtendedPins[] {
-            Pinout::EBI_A15 ,
-            Pinout::EBI_A16 ,
-            Pinout::EBI_A17 ,
-            Pinout::EBI_A18 ,
-            Pinout::EBI_A19 ,
-            Pinout::EBI_A20 ,
-            Pinout::EBI_A21 ,
-            Pinout::EBI_A22 ,
-            Pinout::EBI_A23 ,
-            Pinout::EBI_A24 ,
-            Pinout::EBI_A25 ,
-            Pinout::EBI_A26 ,
-            Pinout::EBI_A27 ,
-            Pinout::EBI_A28 ,
-            Pinout::EBI_A29 ,
-            Pinout::EBI_A30 ,
-            Pinout::EBI_A31 ,
-    };
 public:
     explicit Core(Ordinal salign = 4);
     ~Core() = default;
@@ -566,7 +520,54 @@ private:
     Ordinal systemAddressTableBase_ = 0;
     Ordinal prcbBase_ = 0;
 };
-void pinMode(Core::Pinout p, decltype(OUTPUT) direction) noexcept;
-void digitalWrite(Core::Pinout p, decltype(HIGH) value) noexcept;
-byte digitalRead(Core::Pinout p) noexcept;
+enum class Pinout {
+    // expose four controllable interrupts
+    Int0_ = 19,
+    Int1_ = 18,
+    Int2_ = 2,
+    Int3_ = 3,
+    /**
+     * @brief The real EBI_A15 is used to select which 32k window to write to in the EBI space. Thus we take A15 into our own hands when dealing with the external bus
+     */
+    EBI_A15 = 38,
+    EBI_A16 = 49,
+    EBI_A17 = 48,
+    EBI_A18 = 47,
+    EBI_A19 = 46,
+    EBI_A20 = 45,
+    EBI_A21 = 44,
+    EBI_A22 = 43,
+    EBI_A23 = 42,
+    EBI_A24 = A8,
+    EBI_A25 = A9,
+    EBI_A26 = A10,
+    EBI_A27 = A11,
+    EBI_A28 = A12,
+    EBI_A29 = A13,
+    EBI_A30 = A14,
+    EBI_A31 = A15,
+};
+static constexpr Pinout EBIExtendedPins[] {
+        Pinout::EBI_A15 ,
+        Pinout::EBI_A16 ,
+        Pinout::EBI_A17 ,
+        Pinout::EBI_A18 ,
+        Pinout::EBI_A19 ,
+        Pinout::EBI_A20 ,
+        Pinout::EBI_A21 ,
+        Pinout::EBI_A22 ,
+        Pinout::EBI_A23 ,
+        Pinout::EBI_A24 ,
+        Pinout::EBI_A25 ,
+        Pinout::EBI_A26 ,
+        Pinout::EBI_A27 ,
+        Pinout::EBI_A28 ,
+        Pinout::EBI_A29 ,
+        Pinout::EBI_A30 ,
+        Pinout::EBI_A31 ,
+};
+void pinMode(Pinout p, decltype(OUTPUT) direction) noexcept;
+void digitalWrite(Pinout p, decltype(HIGH) value) noexcept;
+byte digitalRead(Pinout p) noexcept;
+[[noreturn]] void haltExecution(const __FlashStringHelper* message) noexcept;
 #endif //SIM3_CORE_H
