@@ -257,10 +257,6 @@ private:
     void synchronizedStore(Address destination, const Register& value) noexcept;
     [[nodiscard]] ByteOrdinal loadByte(Address destination);
     void storeByte(Address destination, ByteOrdinal value);
-    [[nodiscard]] ShortOrdinal loadShortAligned(Address destination);
-    void storeShortAligned(Address destination, ShortOrdinal value);
-    [[nodiscard]] Ordinal loadAligned(Address destination);
-    void storeAligned(Address destination, Ordinal value);
     [[nodiscard]] ShortOrdinal loadShort(Address destination) noexcept;
     void storeShort(Address destination, ShortOrdinal value);
     [[nodiscard]] Ordinal load(Address destination);

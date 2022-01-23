@@ -70,91 +70,78 @@ Core::storeByte(Address destination, ByteOrdinal value) {
         }
     }
 }
-ShortOrdinal
-Core::loadShortAligned(Address destination) {
-    return 0;
-}
-void
-Core::storeShortAligned(Address destination, ShortOrdinal value) {
-
-}
-Ordinal
-Core::loadAligned(Address destination) {
-    return 0;
-
-}
-void
-Core::storeAligned(Address destination, Ordinal value) {
-
-}
 
 Ordinal
 Core::load(Address destination) {
-    if ((destination & 0b11) == 0) {
-        // phew, things are aligned
-        return loadAligned(destination);
-    } else {
-        // have to do this short by short as we could span cache lines or other such nonsense
-        // we want to get 16-bit quantities out because it could turn out that the lsb is still zero and thus we would still be able to do
-        // partially fast loads
-        auto lower = static_cast<Ordinal>(loadShort(destination + 0));
-        auto upper = static_cast<Ordinal>(loadShort(destination + 2)) << 16;
-        return lower | upper;
+    union {
+       byte bytes[sizeof(Ordinal)] ;
+       Ordinal value;
+    } container;
+    for (size_t i = 0; i < sizeof(Ordinal); ++i, ++destination) {
+        container.bytes[i] = loadByte(destination);
     }
+    return container.value;
 }
 
 ShortOrdinal
 Core::loadShort(Address destination) noexcept {
-    if ((destination & 0b1) == 0) {
-        // okay, it is aligned to 2-byte boundaries, we can call the aligned version of this function
-        return loadShortAligned(destination);
-    } else {
-        // bad news, we are looking at an unaligned load so do byte by byte instead and then compose it together
-        auto lower = static_cast<ShortOrdinal>(loadByte(destination + 0));
-        auto upper = static_cast<ShortOrdinal>(loadByte(destination + 1)) << 8;
-        return lower | upper;
+    union {
+        byte bytes[sizeof(ShortOrdinal)] ;
+        ShortOrdinal value;
+    } container;
+    for (size_t i = 0; i < sizeof(ShortOrdinal); ++i, ++destination) {
+        container.bytes[i] = loadByte(destination);
     }
+    return container.value;
 }
 
 void
 Core::store(Address destination, Ordinal value) {
-    if ((destination & 0b11) == 0b00) {
-        storeAligned(destination, value);
-    } else {
-        // store the upper and lower halves in separate requests
-        storeShort(destination + 0, value);
-        storeShort(destination + 2, value >> 16);
+    using K = decltype(value);
+    union {
+        K value;
+        byte bytes[sizeof(K)];
+    } container;
+    container.value = value;
+    for (size_t i = 0; i < sizeof(K); ++i, ++destination) {
+        storeByte(destination, container.bytes[i]);
     }
 }
 void
 Core::storeShort(Address destination, ShortOrdinal value) {
-    if ((destination & 1) == 0) {
-        // yay! aligned
-        storeShortAligned(destination, value);
-    } else {
-        // store the components into memory
-        storeByte(destination + 0, value)  ;
-        storeByte(destination + 1, value >> 8);
+    using K = decltype(value);
+    union {
+        K value;
+        byte bytes[sizeof(K)];
+    } container;
+    container.value = value;
+    for (size_t i = 0; i < sizeof(K); ++i, ++destination) {
+        storeByte(destination, container.bytes[i]);
     }
 }
 void
 Core::storeLong(Address destination, LongOrdinal value) {
-    DoubleRegister wrapper(value);
-    store(destination + 0, wrapper.getOrdinal(0));
-    store(destination + 4, wrapper.getOrdinal(1));
+    using K = decltype(value);
+    union {
+        K value;
+        byte bytes[sizeof(K)];
+    } container;
+    container.value = value;
+    for (size_t i = 0; i < sizeof(K); ++i, ++destination) {
+        storeByte(destination, container.bytes[i]);
+    }
 }
 void
 Core::store(Address destination, const TripleRegister& reg) {
-    store(destination + 0, reg.getOrdinal(0));
-    store(destination + 4, reg.getOrdinal(1));
-    store(destination + 8, reg.getOrdinal(2));
+    for (size_t i = 0; i < 3; ++i, destination += sizeof(Ordinal)) {
+        store(destination, reg.getOrdinal(i));
+    }
 }
 void
 Core::store(Address destination, const QuadRegister& reg) {
-    store(destination + 0, reg.getOrdinal(0));
-    store(destination + 4, reg.getOrdinal(1));
-    store(destination + 8, reg.getOrdinal(2));
-    store(destination + 12, reg.getOrdinal(3));
+    for (size_t i = 0; i < 4; ++i, destination += sizeof(Ordinal)) {
+        store(destination, reg.getOrdinal(i));
+    }
 }
 void
 Core::storeShortInteger(Address destination, ShortInteger value) {
@@ -176,23 +163,23 @@ Core::storeByteInteger(Address destination, ByteInteger value) {
 }
 LongOrdinal
 Core::loadLong(Address destination) {
-    auto lower = load(destination + 0);
-    auto upper = load(destination + 4);
-    auto outcome = DoubleRegister(lower, upper).getLongOrdinal();
-    return outcome;
+    DoubleRegister reg;
+    for (int i = 0; i < 2; ++i, destination += sizeof(Ordinal)) {
+        reg.setOrdinal(load(destination), i);
+    }
+    return reg.getLongOrdinal();
 }
 void
 Core::load(Address destination, TripleRegister& reg) noexcept {
-    reg.setOrdinal(load(destination + 0), 0);
-    reg.setOrdinal(load(destination + 4), 1);
-    reg.setOrdinal(load(destination + 8), 2);
+    for (int i = 0; i < 3; ++i, destination += sizeof(Ordinal)) {
+        reg.setOrdinal(load(destination), i);
+    }
 }
 void
 Core::load(Address destination, QuadRegister& reg) noexcept {
-    reg.setOrdinal(load(destination + 0), 0);
-    reg.setOrdinal(load(destination + 4), 1);
-    reg.setOrdinal(load(destination + 8), 2);
-    reg.setOrdinal(load(destination + 12), 3);
+    for (int i = 0; i < 4; ++i, destination += sizeof(Ordinal)) {
+        reg.setOrdinal(load(destination), i);
+    }
 }
 QuadRegister
 Core::loadQuad(Address destination) noexcept {
@@ -207,7 +194,6 @@ void Core::synchronizedStore(Address destination, const DoubleRegister& value) n
 }
 void Core::synchronizedStore(Address destination, const QuadRegister& value) noexcept {
     synchronizeMemoryRequests();
-    store(destination, value);
     if (destination == 0xFF00'0010) {
         IACMessage msg(value);
         processIACMessage(msg);
