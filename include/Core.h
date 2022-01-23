@@ -563,6 +563,34 @@ static constexpr Pinout EBIExtendedPins[] {
         Pinout::EBI_A30 ,
         Pinout::EBI_A31 ,
 };
+namespace Builtin
+{
+    enum class Devices
+    {
+        Query,
+        IO,
+        InterruptVectors,
+        ExternalInterrupts,
+        Timer0,
+        Timer1,
+        Timer2,
+        Timer3,
+        Timer4,
+        Timer5,
+        SPI,
+        SerialConsole,
+        I2C,
+        AnalogComparator,
+        AnalogToDigitalConverter,
+        JTAG,
+        Count,
+    };
+    constexpr Address ConfigurationSpaceBaseAddress = 0xFFFF'F000;
+    constexpr Address InternalBaseAddress = 0xFFFF'0000;
+    constexpr Address computeBaseAddress(Devices dev) noexcept {
+        return ((static_cast<Address>(dev) << 8) + InternalBaseAddress);
+    }
+}
 void pinMode(Pinout p, decltype(OUTPUT) direction) noexcept;
 void digitalWrite(Pinout p, decltype(HIGH) value) noexcept;
 byte digitalRead(Pinout p) noexcept;

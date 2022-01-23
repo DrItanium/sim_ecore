@@ -43,31 +43,6 @@ digitalRead(Pinout p) noexcept {
 }
 namespace
 {
-    enum class BuiltinDevices
-    {
-        Query,
-        IO,
-        InterruptVectors,
-        ExternalInterrupts,
-        Timer0,
-        Timer1,
-        Timer2,
-        Timer3,
-        Timer4,
-        Timer5,
-        SPI,
-        SerialConsole,
-        I2C,
-        AnalogComparator,
-        AnalogToDigitalConverter,
-        JTAG,
-        Count,
-    };
-    constexpr Address BuiltinConfigurationSpaceBaseAddress = 0xFFFF'F000;
-    constexpr Address BuiltinDevice_BaseAddress = 0xFFFF'0000;
-    constexpr Address computeBaseAddress(BuiltinDevices dev) noexcept {
-        return ((static_cast<Address>(dev) << 8) + BuiltinDevice_BaseAddress);
-    }
     void
     setupEBI() noexcept {
         Serial.print(F("Enabling EBI..."));
@@ -93,8 +68,8 @@ namespace
         // I am planning to use the upper most 4k to hold onto this special configuration space
 
         // we want to check out the configuration space and install any important base addresses there
-        for (int i = 0, addr = 0; i < static_cast<int>(BuiltinDevices::Count); ++i, addr += sizeof(Address)) {
-            EEPROM.put(addr, computeBaseAddress(static_cast<BuiltinDevices>(i)));
+        for (int i = 0, addr = 0; i < static_cast<int>(Builtin::Devices::Count); ++i, addr += sizeof(Address)) {
+            EEPROM.put(addr, Builtin::computeBaseAddress(static_cast<Builtin::Devices>(i)));
         }
         Serial.println(F("DONE!"));
     }

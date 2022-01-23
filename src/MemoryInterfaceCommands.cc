@@ -22,6 +22,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Arduino.h>
+#include <EEPROM.h>
 #include "Core.h"
 #include "Types.h"
 #include "InternalBootProgram.h"
@@ -54,6 +55,9 @@ Core::loadByte(Address destination) {
             // access the initial boot program, do not try to hide it either
             auto offset = static_cast<size_t>(destination - InternalBootProgramBase);
             return readFromInternalBootProgram(offset);
+        } else if ((destination >= Builtin::ConfigurationSpaceBaseAddress)) {
+            auto offset = static_cast<int>(destination & 0xFFF);
+            return EEPROM.read(offset);
         } else {
             return 0;
         }
@@ -67,6 +71,11 @@ Core::storeByte(Address destination, ByteOrdinal value) {
         if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
             auto offset = destination - InternalSRAMBase;
             internalSRAM_[offset] = value;
+        } else if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+            // allow read/write support because why not? Then I can use the embedded program to set everything up
+            // The only thing we need to make sure is that we only rewrite if needed
+            auto offset = static_cast<int>(destination & 0xFFF);
+            EEPROM.update(offset, value);
         }
     }
 }
