@@ -22,6 +22,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Core.h"
+const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
 #include <Arduino.h>
 Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).getOrdinal(); }
 Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).getInteger(); }
@@ -1025,9 +1026,14 @@ Core::shro(const Instruction &inst) noexcept {
 
 void
 Core::shlo(const Instruction &inst) noexcept {
+    Serial.println(F("\tshlo"));
     auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
+    Serial.print(F("\t\tlen: 0x"));
+    Serial.println(len, HEX);
     if (auto& dest = destinationFromSrcDest(inst); len < 32) {
         auto src = valueFromSrc2Register(inst, TreatAsOrdinal{});
+        Serial.print(F("\t\tsrc: 0x"));
+        Serial.println(src, HEX);
         dest.setOrdinal(src << len);
     } else {
         dest.setOrdinal(0);
@@ -1109,7 +1115,13 @@ void
 Core::call(const Instruction& instruction) noexcept {
     // wait for any uncompleted instructions to finish
     auto temp = getNextCallFrameStart();
+    Serial.print(F("\t\tcall: Next Call Frame Start: 0x"));
+    Serial.println(temp, HEX);
     auto fp = getFramePointerValue();
+    Serial.print(F("\t\tcall: fp: 0x"));
+    Serial.println(fp, HEX);
+    Serial.print(F("\t\tcall: sp: 0x"));
+    Serial.println(getStackPointerValue(), HEX);
     setRIP();
     enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());

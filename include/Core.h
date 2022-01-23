@@ -264,7 +264,7 @@ private:
 
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
     [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const;
-    [[nodiscard]] const Register& getSourceRegister(RegisterIndex targetIndex) const { return getRegister(targetIndex); }
+    [[nodiscard]] const Register& getSourceRegister(RegisterIndex targetIndex) const noexcept;
     [[nodiscard]] DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
     [[nodiscard]] const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const;
     [[nodiscard]] const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const { return getDoubleRegister(targetIndex); }
