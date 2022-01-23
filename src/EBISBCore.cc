@@ -285,17 +285,19 @@ constexpr byte SanityCheckProgram[] PROGMEM {
 };
 constexpr unsigned int SanityCheckProgramLen PROGMEM = 124;
 
-template<typename T>
-Instruction
-loadInstruction(T* container, int offset) noexcept {
-    char result[8] = { 0 };
-    for (int i = offset, j = 0; j < 8; ++i, ++j) {
-        result[j] = pgm_read_byte_far(&container[i]);
-    }
-    return {reinterpret_cast<Ordinal*>(result)[0], reinterpret_cast<Ordinal*>(result)[1] };
-}
-
 void
 Core::performSanityCheck() noexcept {
+    ip_.setOrdinal(0);
+    auto programLen = static_cast<Ordinal>(pgm_read_word_far(&SanityCheckProgramLen));
     // This method will be the sanity testing entry point, many unit tests will be run here and expanded over time.
+    while (ip_.getOrdinal() < programLen) {
+        char result[8] = { 0 };
+        for (unsigned int i = ip_.getOrdinal(), j = 0; j < 8; ++i, ++j) {
+            result[j] = pgm_read_byte_far(&SanityCheckProgram[i]);
+        }
+        Instruction curr{reinterpret_cast<Ordinal*>(result)[0],
+                         reinterpret_cast<Ordinal*>(result)[1] };
+        executeInstruction(curr);
+
+    }
 }
