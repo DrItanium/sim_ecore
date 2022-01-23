@@ -111,10 +111,10 @@ public:
     }
     [[nodiscard]] constexpr uint8_t getEmbeddedMask() const noexcept { return getMajorOpcode() & 0b111; }
     [[nodiscard]] constexpr auto identifyOpcode() const noexcept { return static_cast<Opcode>(getOpcode()); }
-    [[nodiscard]] constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getOpcode()); }
-    [[nodiscard]] constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getOpcode()); }
-    [[nodiscard]] constexpr auto isCOBRFormat() const noexcept { return ::isCOBRFormat(getOpcode()); }
-    [[nodiscard]] constexpr auto isCTRLFormat() const noexcept { return ::isCTRLFormat(getOpcode()); }
+    [[nodiscard]] constexpr auto isMEMFormat() const noexcept { return ::isMEMFormat(getMajorOpcode()); }
+    [[nodiscard]] constexpr auto isREGFormat() const noexcept { return ::isREGFormat(getMajorOpcode()); }
+    [[nodiscard]] constexpr auto isCOBRFormat() const noexcept { return ::isCOBRFormat(getMajorOpcode()); }
+    [[nodiscard]] constexpr auto isCTRLFormat() const noexcept { return ::isCTRLFormat(getMajorOpcode()); }
     [[nodiscard]] constexpr Integer getDisplacement() const noexcept {
         if (isCOBRFormat()) {
             return cobr.displacement;
