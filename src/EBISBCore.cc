@@ -25,6 +25,7 @@
 
 #include <SPI.h>
 #include <Wire.h>
+#include <EEPROM.h>
 #include "Types.h"
 #include "Core.h"
 
@@ -41,11 +42,62 @@ digitalRead(Core::Pinout p) noexcept {
     return ::digitalRead(static_cast<byte>(p));
 }
 namespace {
+    enum class BuiltinDevices {
+        Query,
+        IO,
+        InterruptVectors,
+        ExternalInterrupts,
+        Timer0,
+        Timer1,
+        Timer2,
+        Timer3,
+        Timer4,
+        Timer5,
+        SPI,
+        SerialConsole,
+        I2C,
+        AnalogComparator,
+        AnalogToDigitalConverter,
+        JTAG,
+    };
+    constexpr Address BuiltinConfigurationSpaceBaseAddress = 0xFFFF'F000;
+    constexpr Address BuiltinDevice_BaseAddress = 0xFFFF'0000;
+    constexpr Address computeBaseAddress(BuiltinDevices dev) noexcept {
+        return ((static_cast<Address>(dev) << 8) + BuiltinDevice_BaseAddress);
+    }
+    /**
+     * @brief Base address of the query space, used to get information about the processor being run
+     */
+    constexpr Address BuiltinDevice_QuerySpace = computeBaseAddress(BuiltinDevices::Query);
+    constexpr Address BuiltinDevice_IOSpace = computeBaseAddress(BuiltinDevices::IO);
+    constexpr Address BuiltinDevice_InterruptVectorsSpace = computeBaseAddress(BuiltinDevices::InterruptVectors);
+    constexpr Address BuiltinDevice_ExternalInterruptsSpace = computeBaseAddress(BuiltinDevices::ExternalInterrupts);
+    constexpr Address BuiltinDevice_SerialConsoleSpace = computeBaseAddress(BuiltinDevices::SerialConsole);
+    constexpr Address BuiltinDevice_SPISpace = computeBaseAddress(BuiltinDevices::SPI);
+    constexpr Address BuiltinDevice_I2CSpace = computeBaseAddress(BuiltinDevices::I2C);
+    constexpr Address BuiltinDevice_Timer0Space = computeBaseAddress(BuiltinDevices::Timer0);
+    constexpr Address BuiltinDevice_Timer1Space = computeBaseAddress(BuiltinDevices::Timer1);
+    constexpr Address BuiltinDevice_Timer2Space = computeBaseAddress(BuiltinDevices::Timer2);
+    constexpr Address BuiltinDevice_Timer3Space = computeBaseAddress(BuiltinDevices::Timer3);
+    constexpr Address BuiltinDevice_Timer4Space = computeBaseAddress(BuiltinDevices::Timer4);
+    constexpr Address BuiltinDevice_Timer5Space = computeBaseAddress(BuiltinDevices::Timer5);
+    constexpr Address BuiltinDevice_AnalogComparator = computeBaseAddress(BuiltinDevices::AnalogComparator);
+    constexpr Address BuiltinDevice_AnalogToDigitalConverter = computeBaseAddress(BuiltinDevices::AnalogToDigitalConverter);
+    constexpr Address BuiltinDevice_JTAG = computeBaseAddress(BuiltinDevices::JTAG);
     inline void setupEBI() noexcept {
         // full 64k space without bus keeper
         XMCRB = 0b0000'0000;
         // turn on the EBI
         XMCRA |= _BV(SRE);
+    }
+    void setupInternalConfigurationSpace() noexcept {
+        EEPROM.begin();
+        // okay we need to check to make sure that the configuration space contains the values in question that we expect.
+        // The 4k of EEPROM we have onboard is meant to hold onto internal device addresses
+        // Like the hard i960 devices, we are going to set the addresses of all devices into the 0xFF00'0000 address space.
+        // I am planning to use the upper most 4k to hold onto this special configuration space
+
+        // we want to check out the configuration space and install any important base addresses there
     }
 }
 void
@@ -76,7 +128,9 @@ Core::begin() noexcept {
     pinMode(Pinout::Int2_, INPUT);
     pinMode(Pinout::Int3_, INPUT);
     Serial.println(F("DONE!"));
-
+    Serial.print(F("BRINGING UP INTERNAL CONFIGURATION SPACE EEPROM..."));
+    setupInternalConfigurationSpace();
+    Serial.println(F("DONE!"));
     /// @todo setup all of the mega2560 peripherals here
     Serial.println(F("FORCE HANGING!!!"));
     while (true) {
