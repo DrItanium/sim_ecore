@@ -254,7 +254,11 @@ void Core::synchronizedStore(Address destination, const QuadRegister& value) noe
 void Core::synchronizedStore(Address destination, const Register& value) noexcept {
     // there is a lookup for an interrupt control register, in the Sx manual, we are going to ignore that for now
     synchronizeMemoryRequests();
-    store(destination, value.getOrdinal());
+    if (destination == 0xFF00'0004) {
+        // interrupt control register is here, ignore it for now
+    } else {
+        store(destination, value.getOrdinal());
+    }
 }
 
 void
