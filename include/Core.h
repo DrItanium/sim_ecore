@@ -498,14 +498,14 @@ private:
 private:
     void bbc(const Instruction& inst) noexcept;
     void bbs(const Instruction& inst) noexcept;
-    const Register& getAbaseRegister(const Instruction& inst) const noexcept;
-    const Register& getIndexRegister(const Instruction& inst) const noexcept;
-    Ordinal valueFromAbaseRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
-    Integer valueFromAbaseRegister(const Instruction& inst, TreatAsInteger) const noexcept;
-    Ordinal valueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
-    Integer valueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
-    Ordinal scaledValueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
-    Integer scaledValueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
+    [[nodiscard]] const Register& getAbaseRegister(const Instruction& inst) const noexcept;
+    [[nodiscard]] const Register& getIndexRegister(const Instruction& inst) const noexcept;
+    [[nodiscard]] Ordinal valueFromAbaseRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
+    [[nodiscard]] Integer valueFromAbaseRegister(const Instruction& inst, TreatAsInteger) const noexcept;
+    [[nodiscard]] Ordinal valueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
+    [[nodiscard]] Integer valueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
+    [[nodiscard]] Ordinal scaledValueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
+    [[nodiscard]] Integer scaledValueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
     void restoreStandardFrame() noexcept;
     void fmark(const Instruction& inst) noexcept;
     void mark(const Instruction& inst) noexcept;
