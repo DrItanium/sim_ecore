@@ -52,8 +52,8 @@ Core::loadByte(Address destination) {
             return internalSRAM_[offset];
         } else if ((destination >= InternalBootProgramBase) && (destination < InternalPeripheralBase)) {
             // access the initial boot program, do not try to hide it either
-            size_t offset = static_cast<size_t>(destination - InternalBootProgramBase);
-            return pgm_read_byte(&BootProgram[offset]);
+            auto offset = static_cast<size_t>(destination - InternalBootProgramBase);
+            return readFromInternalBootProgram(offset);
         } else {
             return 0;
         }

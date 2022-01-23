@@ -28,5 +28,5 @@
 #ifndef SIM_ECORE_INTERNALBOOTPROGRAM_H
 #define SIM_ECORE_INTERNALBOOTPROGRAM_H
 #include <Arduino.h>
-extern const byte BootProgram[] PROGMEM3;
+uint8_t readFromInternalBootProgram(size_t index) noexcept;
 #endif //SIM_ECORE_INTERNALBOOTPROGRAM_H
