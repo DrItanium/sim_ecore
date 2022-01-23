@@ -37,10 +37,10 @@ constexpr size_t CacheMemoryWindowStart = (RAMEND + 1);
 constexpr size_t BusMemoryWindowStart = 0x8000;
 
 
-constexpr Address InternalSRAMBase = 0xFFFD'0000;
-constexpr Address InternalSRAMEnd = InternalSRAMBase + Core::NumSRAMBytesMapped;
 constexpr Address InternalMemorySpaceBase = 0xFF00'0000;
-constexpr Address InternalBootProgramBase = 0xFFFE'0000;
+constexpr Address InternalBootProgramBase = 0xFFFD'0000;
+constexpr Address InternalSRAMBase = 0xFFFE'0000;
+constexpr Address InternalSRAMEnd = InternalSRAMBase + Core::NumSRAMBytesMapped;
 constexpr Address InternalPeripheralBase  = 0xFFFF'0000;
 namespace {
     constexpr size_t computeWindowOffsetAddress(size_t offset) noexcept {
@@ -58,38 +58,69 @@ namespace {
 }
 ByteOrdinal
 Core::loadByte(Address destination) {
-    if (destination < InternalMemorySpaceBase) {
+    if (static_cast<byte>(destination >> 24) == 0xFF) {
+        constexpr byte BootProgramBaseStart = static_cast<byte>(InternalBootProgramBase >> 16);
+        constexpr byte InternalPeripheralStart = static_cast<byte>(InternalPeripheralBase >> 16);
+        constexpr byte InternalSRAMStart = static_cast<byte>(InternalSRAMBase >> 16);
+        byte subOffset = static_cast<byte>(destination >> 16);
+        switch (subOffset) {
+            case BootProgramBaseStart:
+                return readFromInternalBootProgram(static_cast<size_t>(destination - InternalBootProgramBase));
+            case InternalSRAMStart:
+                if (auto offset = destination - InternalSRAMStart; offset < InternalSRAMEnd) {
+                    return internalSRAM_[static_cast<size_t>(offset)];
+                } else {
+                    return 0;
+                }
+                break;
+            case InternalPeripheralStart:
+                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+                    return EEPROM.read(static_cast<int>(destination & 0xFFF));
+                } else {
+                    /// @todo handle other devices
+                }
+                // more lookup needed here
+                // do something here
+                break;
+            default:
+                break;
+        }
+        return 0;
+    } else {
         setEBIUpper(destination);
         return readFromBusWindow(static_cast<size_t>(destination));
-    } else {
-        if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
-            return internalSRAM_[static_cast<size_t>(destination - InternalSRAMBase)];
-        } else if ((destination >= InternalBootProgramBase) && (destination < InternalPeripheralBase)) {
-            // access the initial boot program, do not try to hide it either
-            return readFromInternalBootProgram(static_cast<size_t>(destination - InternalBootProgramBase));
-        } else if ((destination >= Builtin::ConfigurationSpaceBaseAddress)) {
-            return EEPROM.read(static_cast<int>(destination & 0xFFF));
-        } else {
-            return 0;
-        }
     }
 }
 void
 Core::storeByte(Address destination, ByteOrdinal value) {
-    if (destination < InternalMemorySpaceBase) {
-        /// @todo implement accessing from the EBI window
+    if (static_cast<byte>(destination >> 24) == 0xFF) {
+        constexpr byte BootProgramBaseStart = static_cast<byte>(InternalBootProgramBase >> 16);
+        constexpr byte InternalPeripheralStart = static_cast<byte>(InternalPeripheralBase >> 16);
+        constexpr byte InternalSRAMStart = static_cast<byte>(InternalSRAMBase >> 16);
+        byte subOffset = static_cast<byte>(destination >> 16);
+        switch (subOffset) {
+            case BootProgramBaseStart:
+                break;
+            case InternalSRAMStart:
+                if (auto offset = destination - InternalSRAMStart; offset < InternalSRAMEnd) {
+                    internalSRAM_[static_cast<size_t>(offset)] = value;
+                }
+                break;
+            case InternalPeripheralStart:
+                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+                    EEPROM.update(static_cast<int>(destination & 0xFFF), value);
+                } else {
+                    /// @todo handle other devices
+                }
+                // more lookup needed here
+                // do something here
+                break;
+            default:
+                break;
+        }
+    } else {
         setEBIUpper(destination);
         writeToBusWindow(static_cast<size_t>(destination), value);
-    } else {
-        if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
-            auto offset = destination - InternalSRAMBase;
-            internalSRAM_[offset] = value;
-        } else if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
-            // allow read/write support because why not? Then I can use the embedded program to set everything up
-            // The only thing we need to make sure is that we only rewrite if needed
-            auto offset = static_cast<int>(destination & 0xFFF);
-            EEPROM.update(offset, value);
-        }
     }
 }
 
