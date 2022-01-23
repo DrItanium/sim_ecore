@@ -499,6 +499,7 @@ private:
     void boot0(Ordinal sat, Ordinal pcb, Ordinal startIP);
     void shrdi(const Instruction& inst) noexcept;
     void setEBIUpper(Address address) noexcept;
+    [[noreturn]] void checksumFail() noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);

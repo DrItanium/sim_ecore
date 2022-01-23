@@ -237,11 +237,22 @@ Core::processIACMessage(const IACMessage &message) noexcept {
         case 0x41: // Test pending interrupts
             testPendingInterrupts(message);
             break;
-        case 0x00:
+        case 0x00: // do normal boot startup
             boot();
+            break;
+        case 0x01: // checksum fail procedure
+            checksumFail();
             break;
         default:
             break;
 
+    }
+}
+
+void
+Core::checksumFail() noexcept {
+    digitalWrite(LED_BUILTIN, HIGH);
+    while (true) {
+        delay(1000);
     }
 }
