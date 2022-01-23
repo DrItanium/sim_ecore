@@ -149,6 +149,8 @@ Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     pc_.setPriority(31);
     pc_.setState(true); // needs to be set as interrupted
     auto thePointer = getInterruptStackPointer();
+    Serial.print(F("Interrupt Stack Pointer: 0x"));
+    Serial.println(thePointer, HEX);
     // also make sure that we set the target pack to zero
     currentFrameIndex_ = 0;
     // invalidate all cache entries forcefully

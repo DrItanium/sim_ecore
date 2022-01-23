@@ -53,6 +53,9 @@ namespace {
 }
 ByteOrdinal
 Core::loadByte(Address destination) {
+    Serial.print(F("loadByte(0x"));
+    Serial.print(destination, HEX);
+    Serial.println(F(")"));
     if (static_cast<byte>(destination >> 24) == 0xFF) {
         constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
         constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
@@ -88,6 +91,11 @@ Core::loadByte(Address destination) {
 }
 void
 Core::storeByte(Address destination, ByteOrdinal value) {
+    Serial.print(F("storeByte(0x"));
+    Serial.print(destination, HEX);
+    Serial.print(F(", 0x"));
+    Serial.print(value, HEX);
+    Serial.println(F(")"));
     if (static_cast<byte>(destination >> 24) == 0xFF) {
         constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
         constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
