@@ -65,8 +65,7 @@ namespace
     };
     constexpr Address BuiltinConfigurationSpaceBaseAddress = 0xFFFF'F000;
     constexpr Address BuiltinDevice_BaseAddress = 0xFFFF'0000;
-    constexpr Address
-    computeBaseAddress(BuiltinDevices dev) noexcept {
+    constexpr Address computeBaseAddress(BuiltinDevices dev) noexcept {
         return ((static_cast<Address>(dev) << 8) + BuiltinDevice_BaseAddress);
     }
     void

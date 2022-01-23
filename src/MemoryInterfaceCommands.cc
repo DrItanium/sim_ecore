@@ -34,18 +34,39 @@ constexpr size_t CacheMemoryWindowStart = (RAMEND + 1);
  */
 constexpr size_t BusMemoryWindowStart = 0x8000;
 
+
+constexpr Address InternalMemorySpaceBase = 0xFF00'0000;
+constexpr Address InternalBootProgramBase = 0xFFFE'0000;
+constexpr Address InternalSRAMBase = 0xFFFD'0000;
+constexpr Address InternalSRAMEnd = InternalSRAMBase + 1024;
 ByteOrdinal
 Core::loadByte(Address destination) {
-    return 0;
+    if (destination < InternalMemorySpaceBase) {
+        /// @todo implement accessing from the EBI window
+        return 0;
+    } else {
+        if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
+            auto offset = destination - InternalSRAMBase;
+            return internalSRAM_[offset];
+        } else {
+            return 0;
+        }
+    }
 }
 void
 Core::storeByte(Address destination, ByteOrdinal value) {
-
+    if (destination < InternalMemorySpaceBase) {
+        /// @todo implement accessing from the EBI window
+    } else {
+        if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
+            auto offset = destination - InternalSRAMBase;
+            internalSRAM_[offset] = value;
+        }
+    }
 }
 ShortOrdinal
 Core::loadShortAligned(Address destination) {
     return 0;
-
 }
 void
 Core::storeShortAligned(Address destination, ShortOrdinal value) {

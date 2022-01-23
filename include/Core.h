@@ -520,6 +520,7 @@ private:
     LocalRegisterPack frames[NumRegisterFrames];
     Ordinal systemAddressTableBase_ = 0;
     Ordinal prcbBase_ = 0;
+    byte internalSRAM_[1024] = { 0 };
 };
 enum class Pinout {
     // expose four controllable interrupts
