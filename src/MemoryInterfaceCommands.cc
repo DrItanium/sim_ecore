@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include "Core.h"
 #include "Types.h"
+#include "InternalBootProgram.h"
 
 /**
  * @brief Defines the start of the internal cache memory connected on the EBI, this is used by the microcontroller itself for whatever it needs (lower 32k)
@@ -37,6 +38,7 @@ constexpr size_t BusMemoryWindowStart = 0x8000;
 
 constexpr Address InternalMemorySpaceBase = 0xFF00'0000;
 constexpr Address InternalBootProgramBase = 0xFFFE'0000;
+constexpr Address InternalPeripheralBase  = 0xFFFF'0000;
 constexpr Address InternalSRAMBase = 0xFFFD'0000;
 constexpr Address InternalSRAMEnd = InternalSRAMBase + 1024;
 ByteOrdinal
@@ -48,6 +50,10 @@ Core::loadByte(Address destination) {
         if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
             auto offset = destination - InternalSRAMBase;
             return internalSRAM_[offset];
+        } else if ((destination >= InternalBootProgramBase) && (destination < InternalPeripheralBase)) {
+            // access the initial boot program, do not try to hide it either
+            size_t offset = static_cast<size_t>(destination - InternalBootProgramBase);
+            return pgm_read_byte(&BootProgram[offset]);
         } else {
             return 0;
         }

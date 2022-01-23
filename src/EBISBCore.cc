@@ -152,8 +152,6 @@ Core::begin() noexcept {
     setupInterruptPins();
     setupInternalConfigurationSpace();
     /// @todo setup all of the mega2560 peripherals here
-    performSanityCheck();
-    haltExecution(F("FORCE HANGING!"));
 }
 
 void

@@ -502,7 +502,6 @@ private:
     void purgeInstructionCache(const IACMessage& message) noexcept;
     void boot0(Ordinal sat, Ordinal pcb, Ordinal startIP);
     void shrdi(const Instruction& inst) noexcept;
-    void performSanityCheck() noexcept;
 private:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
