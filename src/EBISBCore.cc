@@ -59,31 +59,13 @@ namespace {
         AnalogComparator,
         AnalogToDigitalConverter,
         JTAG,
+        Count,
     };
     constexpr Address BuiltinConfigurationSpaceBaseAddress = 0xFFFF'F000;
     constexpr Address BuiltinDevice_BaseAddress = 0xFFFF'0000;
     constexpr Address computeBaseAddress(BuiltinDevices dev) noexcept {
         return ((static_cast<Address>(dev) << 8) + BuiltinDevice_BaseAddress);
     }
-    /**
-     * @brief Base address of the query space, used to get information about the processor being run
-     */
-    constexpr Address BuiltinDevice_QuerySpace = computeBaseAddress(BuiltinDevices::Query);
-    constexpr Address BuiltinDevice_IOSpace = computeBaseAddress(BuiltinDevices::IO);
-    constexpr Address BuiltinDevice_InterruptVectorsSpace = computeBaseAddress(BuiltinDevices::InterruptVectors);
-    constexpr Address BuiltinDevice_ExternalInterruptsSpace = computeBaseAddress(BuiltinDevices::ExternalInterrupts);
-    constexpr Address BuiltinDevice_SerialConsoleSpace = computeBaseAddress(BuiltinDevices::SerialConsole);
-    constexpr Address BuiltinDevice_SPISpace = computeBaseAddress(BuiltinDevices::SPI);
-    constexpr Address BuiltinDevice_I2CSpace = computeBaseAddress(BuiltinDevices::I2C);
-    constexpr Address BuiltinDevice_Timer0Space = computeBaseAddress(BuiltinDevices::Timer0);
-    constexpr Address BuiltinDevice_Timer1Space = computeBaseAddress(BuiltinDevices::Timer1);
-    constexpr Address BuiltinDevice_Timer2Space = computeBaseAddress(BuiltinDevices::Timer2);
-    constexpr Address BuiltinDevice_Timer3Space = computeBaseAddress(BuiltinDevices::Timer3);
-    constexpr Address BuiltinDevice_Timer4Space = computeBaseAddress(BuiltinDevices::Timer4);
-    constexpr Address BuiltinDevice_Timer5Space = computeBaseAddress(BuiltinDevices::Timer5);
-    constexpr Address BuiltinDevice_AnalogComparator = computeBaseAddress(BuiltinDevices::AnalogComparator);
-    constexpr Address BuiltinDevice_AnalogToDigitalConverter = computeBaseAddress(BuiltinDevices::AnalogToDigitalConverter);
-    constexpr Address BuiltinDevice_JTAG = computeBaseAddress(BuiltinDevices::JTAG);
     inline void setupEBI() noexcept {
         // full 64k space without bus keeper
         XMCRB = 0b0000'0000;
@@ -98,6 +80,9 @@ namespace {
         // I am planning to use the upper most 4k to hold onto this special configuration space
 
         // we want to check out the configuration space and install any important base addresses there
+        for (int i = 0, addr = 0; i < static_cast<int>(BuiltinDevices::Count); ++i, addr += sizeof(Address)) {
+            EEPROM.put(addr, computeBaseAddress(static_cast<BuiltinDevices>(i)));
+        }
     }
 }
 void
