@@ -290,6 +290,12 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
             Serial.println(F("\tMEMB_RegisterIndirectWithDisplacement"));
             auto disp = instruction.getDisplacement();
             auto abaseValue = valueFromAbaseRegister(instruction, TreatAsInteger{});
+            Serial.print(F("\t\tdisp: 0x"));
+            Serial.println(disp, HEX);
+            Serial.print(F("\t\tabaseValue: 0x"));
+            Serial.println(abaseValue, HEX);
+            Serial.print(F("\t\tframe pointer value: 0x"));
+            Serial.println(getFramePointerValue(), HEX);
             auto iresult = disp + abaseValue;
             auto result = static_cast<Ordinal>(iresult);
             Serial.print(F("\t\tResult: 0x"));
