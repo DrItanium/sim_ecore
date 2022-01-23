@@ -149,8 +149,6 @@ Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     pc_.setPriority(31);
     pc_.setState(true); // needs to be set as interrupted
     auto thePointer = getInterruptStackPointer();
-    Serial.print(F("\tInterrupt Stack Pointer: 0x"));
-    Serial.println(thePointer, HEX);
     // also make sure that we set the target pack to zero
     currentFrameIndex_ = 0;
     // invalidate all cache entries forcefully
@@ -242,9 +240,11 @@ Core::processIACMessage(const IACMessage &message) noexcept {
             testPendingInterrupts(message);
             break;
         case 0x00: // do normal boot startup
+            Serial.println(F("BOOTING!"));
             boot();
             break;
         case 0x01: // checksum fail procedure
+            Serial.println(F("CHECKSUM FAIL!"));
             checksumFail();
             break;
         default:
