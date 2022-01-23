@@ -498,6 +498,10 @@ private:
     void purgeInstructionCache(const IACMessage& message) noexcept;
     void boot0(Ordinal sat, Ordinal pcb, Ordinal startIP);
     void shrdi(const Instruction& inst) noexcept;
+    void setEBIUpper(Address address) noexcept;
+public:
+    static constexpr size_t NumSRAMBytesMapped = 2048;
+    static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);
 private:
     Register ip_; // start at address zero
     ArithmeticControls ac_;
@@ -515,7 +519,8 @@ private:
     LocalRegisterPack frames[NumRegisterFrames];
     Ordinal systemAddressTableBase_ = 0;
     Ordinal prcbBase_ = 0;
-    byte internalSRAM_[1024] = { 0 };
+    byte internalSRAM_[NumSRAMBytesMapped] = { 0 };
+    Address ebiUpper_ = 0xFFFF'FFFF;
 };
 enum class Pinout {
     // expose four controllable interrupts

@@ -37,38 +37,38 @@ constexpr size_t CacheMemoryWindowStart = (RAMEND + 1);
 constexpr size_t BusMemoryWindowStart = 0x8000;
 
 
+constexpr Address InternalSRAMBase = 0xFFFD'0000;
+constexpr Address InternalSRAMEnd = InternalSRAMBase + Core::NumSRAMBytesMapped;
 constexpr Address InternalMemorySpaceBase = 0xFF00'0000;
 constexpr Address InternalBootProgramBase = 0xFFFE'0000;
 constexpr Address InternalPeripheralBase  = 0xFFFF'0000;
-constexpr Address InternalSRAMBase = 0xFFFD'0000;
-constexpr Address InternalSRAMEnd = InternalSRAMBase + 1024;
 namespace {
+    constexpr size_t computeWindowOffsetAddress(size_t offset) noexcept {
+        return BusMemoryWindowStart + (offset & 0x7FFF);
+    }
     ByteOrdinal
     readFromBusWindow(size_t offset) noexcept {
-        return memory<ByteOrdinal>(BusMemoryWindowStart + (offset & 0x7FFF));
+        return memory<ByteOrdinal>(computeWindowOffsetAddress(offset));
     }
 
     void
     writeToBusWindow(size_t offset, ByteOrdinal value) noexcept {
-        memory<ByteOrdinal>(BusMemoryWindowStart + (offset & 0x7FFF)) = value;
+        memory<ByteOrdinal>(computeWindowOffsetAddress(offset)) = value;
     }
 }
 ByteOrdinal
 Core::loadByte(Address destination) {
     if (destination < InternalMemorySpaceBase) {
-        /// @todo implement accessing from the EBI window
-        return 0;
+        setEBIUpper(destination);
+        return readFromBusWindow(static_cast<size_t>(destination));
     } else {
         if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
-            auto offset = destination - InternalSRAMBase;
-            return internalSRAM_[offset];
+            return internalSRAM_[static_cast<size_t>(destination - InternalSRAMBase)];
         } else if ((destination >= InternalBootProgramBase) && (destination < InternalPeripheralBase)) {
             // access the initial boot program, do not try to hide it either
-            auto offset = static_cast<size_t>(destination - InternalBootProgramBase);
-            return readFromInternalBootProgram(offset);
+            return readFromInternalBootProgram(static_cast<size_t>(destination - InternalBootProgramBase));
         } else if ((destination >= Builtin::ConfigurationSpaceBaseAddress)) {
-            auto offset = static_cast<int>(destination & 0xFFF);
-            return EEPROM.read(offset);
+            return EEPROM.read(static_cast<int>(destination & 0xFFF));
         } else {
             return 0;
         }
@@ -78,6 +78,8 @@ void
 Core::storeByte(Address destination, ByteOrdinal value) {
     if (destination < InternalMemorySpaceBase) {
         /// @todo implement accessing from the EBI window
+        setEBIUpper(destination);
+        writeToBusWindow(static_cast<size_t>(destination), value);
     } else {
         if ((destination >= InternalSRAMBase) && (destination < InternalSRAMEnd) ) {
             auto offset = destination - InternalSRAMBase;
@@ -227,4 +229,19 @@ void Core::synchronizedStore(Address destination, const Register& value) noexcep
     // there is a lookup for an interrupt control register, in the Sx manual, we are going to ignore that for now
     synchronizeMemoryRequests();
     store(destination, value.getOrdinal());
+}
+
+void
+Core::setEBIUpper(Address address) noexcept {
+    static constexpr Address upperMask = 0xFFFF'8000;
+    static constexpr Address bit15Mask = 0x0000'8000;
+    static constexpr Address HigherMask = 0x0F00'0000;
+    static constexpr Address HighestMask = 0xF000'0000;
+    auto realAddress = address & upperMask;
+    if (realAddress != ebiUpper_) {
+        // set our fake A15
+        digitalWrite(Pinout::EBI_A15, bit15Mask & realAddress ? HIGH : LOW);
+        /// @todo set upper ports based off of information
+        ebiUpper_ = realAddress;
+    }
 }
