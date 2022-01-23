@@ -861,17 +861,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             arithmeticGeneric<ArithmeticOperation::ShiftRight, TreatAsInteger>(instruction);
             break;
         case Opcode::shrdi:
-            [this, &instruction]() {
-                // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
-                auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
-                if (auto& dest = destinationFromSrcDest(instruction); len < 32) {
-                    auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
-                    /// @todo fix this dependency on implementation defined behavior with the divide
-                    dest.setInteger(src / bitPositions[len]);
-                } else {
-                    dest.setInteger(0);
-                }
-            }();
+            shrdi(instruction);
             break;
         case Opcode::synld:
             synld(instruction);
@@ -1410,4 +1400,17 @@ Core::notbit(const Instruction& instruction) noexcept {
     auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     setDestinationFromSrcDest(instruction, src ^ bitpos, TreatAsOrdinal{});
+}
+
+void
+Core::shrdi(const Instruction &instruction) noexcept {
+    // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
+    auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
+    if (auto& dest = destinationFromSrcDest(instruction); len < 32) {
+        auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
+        /// @todo fix this dependency on implementation defined behavior with the divide
+        dest.setInteger(src / bitPositions[len]);
+    } else {
+        dest.setInteger(0);
+    }
 }
