@@ -41,8 +41,10 @@ byte
 digitalRead(Pinout p) noexcept {
     return ::digitalRead(static_cast<byte>(p));
 }
-namespace {
-    enum class BuiltinDevices {
+namespace
+{
+    enum class BuiltinDevices
+    {
         Query,
         IO,
         InterruptVectors,
@@ -63,7 +65,8 @@ namespace {
     };
     constexpr Address BuiltinConfigurationSpaceBaseAddress = 0xFFFF'F000;
     constexpr Address BuiltinDevice_BaseAddress = 0xFFFF'0000;
-    constexpr Address computeBaseAddress(BuiltinDevices dev) noexcept {
+    constexpr Address
+    computeBaseAddress(BuiltinDevices dev) noexcept {
         return ((static_cast<Address>(dev) << 8) + BuiltinDevice_BaseAddress);
     }
     void
@@ -75,13 +78,14 @@ namespace {
         XMCRA |= _BV(SRE);
         Serial.println(F("DONE!"));
         Serial.print(F("Setting up Extended EBI..."));
-        for (const auto& ebiPin : EBIExtendedPins) {
+        for (const auto &ebiPin: EBIExtendedPins) {
             pinMode(ebiPin, OUTPUT);
             digitalWrite(ebiPin, LOW);
         }
         Serial.println(F("DONE!"));
     }
-    void setupInternalConfigurationSpace() noexcept {
+    void
+    setupInternalConfigurationSpace() noexcept {
         Serial.print(F("BRINGING UP INTERNAL CONFIGURATION SPACE EEPROM..."));
         EEPROM.begin();
         // okay we need to check to make sure that the configuration space contains the values in question that we expect.
@@ -130,10 +134,6 @@ namespace {
         pinMode(LED_BUILTIN, OUTPUT);
         digitalWrite(LED_BUILTIN, LOW);
     }
-    void
-    performCoreSanityTests() noexcept {
-
-    }
 }
 void
 haltExecution(const __FlashStringHelper* message) noexcept {
@@ -153,7 +153,7 @@ Core::begin() noexcept {
     setupInterruptPins();
     setupInternalConfigurationSpace();
     /// @todo setup all of the mega2560 peripherals here
-    performCoreSanityTests();
+    performSanityCheck();
     haltExecution(F("FORCE HANGING!"));
 }
 
@@ -269,4 +269,10 @@ Core::processIACMessage(const IACMessage &message) noexcept {
             break;
 
     }
+}
+
+
+void
+Core::performSanityCheck() noexcept {
+    // This method will be the sanity testing entry point, many unit tests will be run here and expanded over time.
 }
