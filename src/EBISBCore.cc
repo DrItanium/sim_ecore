@@ -164,7 +164,6 @@ Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well, but you do!
     getStackPointer().setOrdinal(thePointer + 64);
     getPFP().setOrdinal(thePointer);
-    /// @todo sanity check the checksum
 }
 void
 Core::boot() {
@@ -237,6 +236,9 @@ Core::processIACMessage(const IACMessage &message) noexcept {
             break;
         case 0x41: // Test pending interrupts
             testPendingInterrupts(message);
+            break;
+        case 0x00:
+            boot();
             break;
         default:
             break;

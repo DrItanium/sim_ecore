@@ -30,7 +30,6 @@
 Core theCore;
 void setup() {
     theCore.begin();
-    theCore.boot();
 }
 void loop() {
     theCore.cycle();
