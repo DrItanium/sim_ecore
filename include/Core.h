@@ -540,6 +540,12 @@ private:
     void condBranch(const Instruction& inst) noexcept;
     void absoluteBranch(Ordinal value) noexcept;
     void processIACMessage(const IACMessage& message) noexcept;
+    void storeSystemBase(const IACMessage& message) noexcept;
+    void generateSystemInterrupt(const IACMessage& message) noexcept;
+    void reinitializeProcessor(const IACMessage& message) noexcept;
+    void setBreakpointRegister(const IACMessage& message) noexcept;
+    void testPendingInterrupts(const IACMessage& message) noexcept;
+    void purgeInstructionCache(const IACMessage& message) noexcept;
     void boot0(Ordinal sat, Ordinal pcb, Ordinal startIP);
 private:
     Register ip_; // start at address zero

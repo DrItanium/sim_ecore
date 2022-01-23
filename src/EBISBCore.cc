@@ -174,39 +174,62 @@ Core::getPRCBPtrBase() const noexcept {
 }
 
 void
+Core::purgeInstructionCache(const IACMessage &message) noexcept {
+    // do nothing as we don't have an instruction cache
+    /// @todo implement
+}
+
+void
+Core::reinitializeProcessor(const IACMessage &message) noexcept {
+    boot0(message.getField3(), message.getField4(), message.getField5());
+}
+void
+Core::setBreakpointRegister(const IACMessage &message) noexcept {
+    /// @todo implement
+}
+void
+Core::storeSystemBase(const IACMessage &message) noexcept {
+    // stores the current locations of the system address table and the prcb in a specified location in memory.
+    // The address of the system address table is stored in the word starting at the byte specified in field 3,
+    // and the address of the PRCB is stored in the next word in memory (field 3 address plus 4)
+    DoubleRegister pack(getSystemAddressTableBase(), getPRCBPtrBase());
+    storeLong(message.getField3(), pack.getLongOrdinal());
+}
+void
+Core::generateSystemInterrupt(const IACMessage &message) noexcept {
+    // Generates an interrupt request. The interrup vector is given in field 1 of the IAC message. The processor handles the
+    // interrupt request just as it does interrupts received from other sources. If the interrupt priority is higher than the prcessor's
+    // current priority, the processor services the interrupt immediately. Otherwise, it posts the interrup in the pending interrupts
+    // section of the interrupt table.
+}
+void
+Core::testPendingInterrupts(const IACMessage &message) noexcept {
+    // tests for pending interrupts. The processor checks the pending interrupt section of the interrupt
+    // table for a pending interrupt with a priority higher than the prcoessor's current priority. If a higher
+    // priority interrupt is found, it is serviced immediately. Otherwise, no action is taken
+
+    /// @todo implement this
+}
+void
 Core::processIACMessage(const IACMessage &message) noexcept {
     switch (message.getMessageType()) {
         case 0x89: // purge instruction cache
-            // do nothing as we don't have an instruction cache
+            purgeInstructionCache(message);
             break;
         case 0x93: // reinitialize processor
-            boot0(message.getField3(), message.getField4(), message.getField5());
+            reinitializeProcessor(message);
             break;
-        case 0x8F:
-            // set breakpoint register
+        case 0x8F: // set breakpoint register
+            setBreakpointRegister(message);
             break;
-        case 0x80:
-            // store system base
-            [this, &message]() {
-                // stores the current locations of the system address table and the prcb in a specified location in memory.
-                // The address of the system address table is stored in the word starting at the byte specified in field 3,
-                // and the address of the PRCB is stored in the next word in memory (field 3 address plus 4)
-                DoubleRegister pack(getSystemAddressTableBase(), getPRCBPtrBase());
-                storeLong(message.getField3(), pack.getLongOrdinal());
-            }();
+        case 0x80: // store system base
+            storeSystemBase(message);
             break;
         case 0x40: // interrupt
-            // Generates an interrupt request. The interrup vector is given in field 1 of the IAC message. The processor handles the
-            // interrupt request just as it does interrupts received from other sources. If the interrupt priority is higher than the prcessor's
-            // current priority, the processor services the interrupt immediately. Otherwise, it posts the interrup in the pending interrupts
-            // section of the interrupt table.
+            generateSystemInterrupt(message);
             break;
         case 0x41: // Test pending interrupts
-            // tests for pending interrupts. The processor checks the pending interrupt section of the interrupt
-            // table for a pending interrupt with a priority higher than the prcoessor's current priority. If a higher
-            // priority interrupt is found, it is serviced immediately. Otherwise, no action is taken
-
-            /// @todo implement this
+            testPendingInterrupts(message);
             break;
         default:
             break;
