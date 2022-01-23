@@ -120,13 +120,15 @@ haltExecution(const __FlashStringHelper* message) noexcept {
 void
 Core::begin() noexcept {
     bringUpSerial();
-    configureLED();
-    bringUpSPI();
-    bringUpI2C();
     setupEBI();
     setupInterruptPins();
     setupInternalConfigurationSpace();
+    configureLED();
+    // these peripherals are special because I'm not sure that it makes complete sense to expose the raw details to the emulation
+    bringUpSPI();
+    bringUpI2C();
     /// @todo setup all of the mega2560 peripherals here
+    boot(Builtin::InternalBootProgramBase);
 }
 
 void
@@ -166,8 +168,8 @@ Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     getPFP().setOrdinal(thePointer);
 }
 void
-Core::boot() {
-    auto q = loadQuad(0);
+Core::boot(Address base) {
+    auto q = loadQuad(base);
     boot0(q.getOrdinal(0), q.getOrdinal(1), q.getOrdinal(3));
 }
 Ordinal

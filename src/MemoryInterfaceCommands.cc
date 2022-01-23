@@ -37,11 +37,6 @@ constexpr size_t CacheMemoryWindowStart = (RAMEND + 1);
 constexpr size_t BusMemoryWindowStart = 0x8000;
 
 
-constexpr Address InternalMemorySpaceBase = 0xFF00'0000;
-constexpr Address InternalBootProgramBase = 0xFFFD'0000;
-constexpr Address InternalSRAMBase = 0xFFFE'0000;
-constexpr Address InternalSRAMEnd = InternalSRAMBase + Core::NumSRAMBytesMapped;
-constexpr Address InternalPeripheralBase  = 0xFFFF'0000;
 namespace {
     constexpr size_t computeWindowOffsetAddress(size_t offset) noexcept {
         return BusMemoryWindowStart + (offset & 0x7FFF);
@@ -59,15 +54,15 @@ namespace {
 ByteOrdinal
 Core::loadByte(Address destination) {
     if (static_cast<byte>(destination >> 24) == 0xFF) {
-        constexpr byte BootProgramBaseStart = static_cast<byte>(InternalBootProgramBase >> 16);
-        constexpr byte InternalPeripheralStart = static_cast<byte>(InternalPeripheralBase >> 16);
-        constexpr byte InternalSRAMStart = static_cast<byte>(InternalSRAMBase >> 16);
+        constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
+        constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
+        constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
         byte subOffset = static_cast<byte>(destination >> 16);
         switch (subOffset) {
             case BootProgramBaseStart:
-                return readFromInternalBootProgram(static_cast<size_t>(destination - InternalBootProgramBase));
+                return readFromInternalBootProgram(static_cast<size_t>(destination - Builtin::InternalBootProgramBase));
             case InternalSRAMStart:
-                if (auto offset = destination - InternalSRAMStart; offset < InternalSRAMEnd) {
+                if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
                     return internalSRAM_[static_cast<size_t>(offset)];
                 } else {
                     return 0;
@@ -94,15 +89,15 @@ Core::loadByte(Address destination) {
 void
 Core::storeByte(Address destination, ByteOrdinal value) {
     if (static_cast<byte>(destination >> 24) == 0xFF) {
-        constexpr byte BootProgramBaseStart = static_cast<byte>(InternalBootProgramBase >> 16);
-        constexpr byte InternalPeripheralStart = static_cast<byte>(InternalPeripheralBase >> 16);
-        constexpr byte InternalSRAMStart = static_cast<byte>(InternalSRAMBase >> 16);
+        constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
+        constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
+        constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
         byte subOffset = static_cast<byte>(destination >> 16);
         switch (subOffset) {
             case BootProgramBaseStart:
                 break;
             case InternalSRAMStart:
-                if (auto offset = destination - InternalSRAMStart; offset < InternalSRAMEnd) {
+                if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
                     internalSRAM_[static_cast<size_t>(offset)] = value;
                 }
                 break;

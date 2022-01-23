@@ -231,7 +231,7 @@ public:
     explicit Core(Ordinal salign = 4);
     ~Core() = default;
     void begin() noexcept;
-    void boot();
+    void boot(Ordinal baseAddress = 0);
     void cycle() noexcept;
 private:
     [[nodiscard]] Ordinal getSystemAddressTableBase() const noexcept;
@@ -593,6 +593,11 @@ namespace Builtin
     };
     constexpr Address ConfigurationSpaceBaseAddress = 0xFFFF'F000;
     constexpr Address InternalBaseAddress = 0xFFFF'0000;
+    constexpr Address InternalMemorySpaceBase = 0xFF00'0000;
+    constexpr Address InternalBootProgramBase = 0xFFFD'0000;
+    constexpr Address InternalSRAMBase = 0xFFFE'0000;
+    constexpr Address InternalSRAMEnd = InternalSRAMBase + Core::NumSRAMBytesMapped;
+    constexpr Address InternalPeripheralBase  = 0xFFFF'0000;
     constexpr Address computeBaseAddress(Devices dev) noexcept {
         return ((static_cast<Address>(dev) << 8) + InternalBaseAddress);
     }
@@ -605,4 +610,5 @@ template<typename T>
 inline volatile T& memory(const size_t address) noexcept {
     return *reinterpret_cast<T*>(address);
 }
+
 #endif //SIM3_CORE_H
