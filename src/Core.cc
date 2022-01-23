@@ -1346,7 +1346,15 @@ Core::synmov(const Instruction &instruction) noexcept {
     // load from memory and then store to another address in a synchronous fashion
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     auto addr = sourceFromSrc1(instruction).getWordAligned(); // align
-    Register temp(load(src));
+    Serial.print(F("synmov(0x"));
+    Serial.print(addr, HEX);
+    Serial.print(F(", 0x"));
+    Serial.print(src, HEX);
+    Serial.println(F(")"));
+    auto result = load(src);
+    Register temp(result);
+    Serial.print(F("result: 0x"));
+    Serial.println(result, HEX);
     synchronizedStore(addr, temp);
     /// @todo figure out how to support bad access conditions
     ac_.setConditionCode(0b010);

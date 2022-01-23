@@ -256,6 +256,7 @@ void Core::synchronizedStore(Address destination, const Register& value) noexcep
     synchronizeMemoryRequests();
     if (destination == 0xFF00'0004) {
         // interrupt control register is here, ignore it for now
+        Serial.println(F("Writing To Interrupt Control Register!!!"));
     } else {
         store(destination, value.getOrdinal());
     }
