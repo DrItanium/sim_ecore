@@ -950,7 +950,7 @@ Core::getTraceTablePointer() {
 }
 Ordinal
 Core::getInterruptTableBase() {
-    return load(getPRCBPtrBase() + 16);
+    return load(getPRCBPtrBase() + 20);
 }
 Ordinal
 Core::getFaultTableBase() {
@@ -959,7 +959,7 @@ Core::getFaultTableBase() {
 
 Ordinal
 Core::getInterruptStackPointer() {
-    return load(getPRCBPtrBase() + 20);
+    return load(getPRCBPtrBase() + 24);
 }
 /*
 void
