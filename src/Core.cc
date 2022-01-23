@@ -1078,7 +1078,14 @@ Core::getLocals() const noexcept {
 }
 void
 Core::setFramePointer(Ordinal value) noexcept {
+    Serial.print(F("\t\tsetFramePointer(0x"));
+    Serial.print(value, HEX);
+    Serial.println(F(")"));
+    Serial.print(F("\t\t\tFP(Old): 0x"));
+    Serial.println(getFramePointerValue(), HEX);
     getFramePointer().setOrdinal(value);
+    Serial.print(F("\t\t\tFP(New): 0x"));
+    Serial.println(getFramePointerValue(), HEX);
 }
 
 Ordinal
