@@ -269,22 +269,40 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
     }
     switch (instruction.getMemFormatMode()) {
         case MEMFormatMode::MEMA_AbsoluteOffset:
+            Serial.println(F("\tMEMA_AbsoluteOffset"));
             return instruction.getOffset();
         case MEMFormatMode::MEMA_RegisterIndirectWithOffset:
+            Serial.println(F("\tMEMA_RegisterIndirectWithOffset"));
             return instruction.getOffset() + valueFromAbaseRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_RegisterIndirect:
+            Serial.println(F("\tMEMB_RegisterIndirect"));
             return valueFromAbaseRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_RegisterIndirectWithIndex:
+            Serial.println(F("\tMEMB_RegisterIndirectWithIndex"));
             return valueFromAbaseRegister(instruction, TreatAsOrdinal{}) + scaledValueFromIndexRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_IPWithDisplacement:
+            Serial.println(F("\tMEMB_IPWithDisplacement"));
             return static_cast<Ordinal>(ip_.getInteger() + instruction.getDisplacement() + 8);
         case MEMFormatMode::MEMB_AbsoluteDisplacement:
+            Serial.println(F("\tMEMB_AbsoluteDisplacement"));
             return instruction.getDisplacement(); // this will return the optional displacement
-        case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement:
-            return static_cast<Ordinal>(valueFromAbaseRegister(instruction, TreatAsInteger{}) + instruction.getDisplacement());
+        case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement: {
+            Serial.println(F("\tMEMB_RegisterIndirectWithDisplacement"));
+            auto disp = instruction.getDisplacement();
+            auto abaseValue = valueFromAbaseRegister(instruction, TreatAsInteger{});
+            auto iresult = disp + abaseValue;
+            auto result = static_cast<Ordinal>(iresult);
+            Serial.print(F("\t\tResult: 0x"));
+            Serial.print(iresult, HEX);
+            Serial.print(F(" => 0x"));
+            Serial.println(result, HEX);
+            return result;
+        }
         case MEMFormatMode::MEMB_IndexWithDisplacement:
+            Serial.println(F("\tMEMB_IndexWithDisplacement"));
             return static_cast<Ordinal>(scaledValueFromIndexRegister(instruction, TreatAsInteger{}) + instruction.getDisplacement());
         case MEMFormatMode::MEMB_RegisterIndirectWithIndexAndDisplacement:
+            Serial.println(F("\tMEMB_RegisterIndirectWithIndexAndDisplacement"));
             return static_cast<Ordinal>(
                     valueFromAbaseRegister(instruction, TreatAsInteger{}) +
                     scaledValueFromIndexRegister(instruction, TreatAsInteger{}) +
