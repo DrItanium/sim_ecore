@@ -166,7 +166,7 @@ Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     // we want to take ownership and throw anything out just in case so make the lambda do nothing
     getCurrentPack().takeOwnership(thePointer, [](const auto&, auto) noexcept { });
     // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well, but you do!
-    getStackPointer().setOrdinal(thePointer + 64);
+    setStackPointer(thePointer + 64);
     getPFP().setOrdinal(thePointer);
 }
 void

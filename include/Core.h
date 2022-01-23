@@ -500,6 +500,8 @@ private:
     void shrdi(const Instruction& inst) noexcept;
     void setEBIUpper(Address address) noexcept;
     [[noreturn]] void checksumFail() noexcept;
+    void setStackPointer(Ordinal value) noexcept;
+    [[nodiscard]] Ordinal getStackPointerValue() const noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);

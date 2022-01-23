@@ -1078,9 +1078,6 @@ Core::getLocals() const noexcept {
 }
 void
 Core::setFramePointer(Ordinal value) noexcept {
-    Serial.print(F("\t\tsetFramePointer(0x"));
-    Serial.print(value, HEX);
-    Serial.println(F(")"));
     Serial.print(F("\t\t\tFP(Old): 0x"));
     Serial.println(getFramePointerValue(), HEX);
     getFramePointer().setOrdinal(value);
@@ -1090,11 +1087,23 @@ Core::setFramePointer(Ordinal value) noexcept {
 
 Ordinal
 Core::getNextCallFrameStart() noexcept {
-    return (getStackPointer().getOrdinal() + c_) & ~c_; // round to next boundary
+    return (getStackPointerValue() + c_) & ~c_; // round to next boundary
 }
 void
 Core::setRIP() noexcept {
     getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
+}
+void
+Core::setStackPointer(Ordinal value) noexcept {
+    Serial.print(F("\t\t\tSP(Old): 0x"));
+    Serial.println(getStackPointerValue(), HEX);
+    getStackPointer().setOrdinal(value);
+    Serial.print(F("\t\t\tSP(New): 0x"));
+    Serial.println(getStackPointerValue(), HEX);
+}
+Ordinal
+Core::getStackPointerValue() const noexcept {
+    return getStackPointer().getOrdinal();
 }
 void
 Core::call(const Instruction& instruction) noexcept {
@@ -1107,7 +1116,7 @@ Core::call(const Instruction& instruction) noexcept {
     /// @todo expand pfp and fp to accurately model how this works
     getPFP().setOrdinal(fp);
     setFramePointer(temp);
-    getStackPointer().setOrdinal(temp + 64);
+    setStackPointer(temp + 64);
     advanceIPBy = 0; // we already know where we are going so do not jump ahead
 }
 void
@@ -1122,7 +1131,7 @@ Core::callx(const Instruction& instruction) noexcept {
     absoluteBranch(memAddr);
     getPFP().setOrdinal(fp);
     setFramePointer(temp);
-    getStackPointer().setOrdinal(temp + 64);
+    setStackPointer(temp + 64);
 }
 
 void
@@ -1154,7 +1163,7 @@ Core::calls(const Instruction& instruction) noexcept {
         pfp.setAddress(getFramePointerValue());
         pfp.setReturnType(tempRRR);
         setFramePointer(temp);
-        getStackPointer().setOrdinal(temp + 64);
+        setStackPointer(temp + 64);
         // we do not want to jump ahead on calls
     }
 }
