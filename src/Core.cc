@@ -20,10 +20,13 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#define EMULATOR_TRACE
 #include "Core.h"
-const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
 #include <Arduino.h>
+namespace
+{
+    constexpr bool EnableEmulatorTrace = false;
+}
+const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
 Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).getOrdinal(); }
 Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).getInteger(); }
 Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).getOrdinal(); }
@@ -63,8 +66,10 @@ Core::syncf() noexcept {
 
 void
 Core::cycle() noexcept {
-    Serial.print(F("\trip(before): 0x"));
-    Serial.println(getRIP().getOrdinal(), HEX);
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print(F("\trip(before): 0x"));
+        Serial.println(getRIP().getOrdinal(), HEX);
+    }
     advanceIPBy = 4;
     auto instruction = loadInstruction(ip_.getOrdinal());
     executeInstruction(instruction);
@@ -72,8 +77,10 @@ Core::cycle() noexcept {
     if (advanceIPBy > 0)  {
         ip_.setOrdinal(ip_.getOrdinal() + advanceIPBy);
     }
-    Serial.print(F("\trip(after): 0x"));
-    Serial.println(getRIP().getOrdinal(), HEX);
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print(F("\trip(after): 0x"));
+        Serial.println(getRIP().getOrdinal(), HEX);
+    }
 }
 template<typename T>
 byte
@@ -934,12 +941,11 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             generateFault(FaultType::Operation_InvalidOpcode);
             break;
     }
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("EXITING ");
-    Serial.println(__PRETTY_FUNCTION__);
-#endif
-#endif
+    if constexpr (EnableEmulatorTrace) {
+
+        Serial.print("EXITING ");
+        Serial.println(__PRETTY_FUNCTION__);
+    }
 }
 Ordinal
 Core::getSystemProcedureTableBase() {
@@ -1081,7 +1087,9 @@ Core::getStackPointerValue() const noexcept {
 }
 void
 Core::call(const Instruction& instruction) noexcept {
-    Serial.println(F("CALL!"));
+    if constexpr (EnableEmulatorTrace) {
+        Serial.println(F("CALL!"));
+    }
     // wait for any uncompleted instructions to finish
     auto temp = getNextCallFrameStart();
     auto fp = getFramePointerValue();
@@ -1096,13 +1104,17 @@ Core::call(const Instruction& instruction) noexcept {
 }
 void
 Core::callx(const Instruction& instruction) noexcept {
-    Serial.println(F("CALLX!"));
+    if constexpr (EnableEmulatorTrace) {
+        Serial.println(F("CALLX!"));
+    }
 // wait for any uncompleted instructions to finish
     auto temp = getNextCallFrameStart();
     auto fp = getFramePointerValue();
     auto memAddr = computeMemoryAddress(instruction);
-    Serial.print(F("\tMEM ADDR: 0x"));
-    Serial.println(memAddr, HEX);
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print(F("\tMEM ADDR: 0x"));
+        Serial.println(memAddr, HEX);
+    }
     setRIP();
 /// @todo implement support for caching register frames
     enterCall(temp);
@@ -1114,7 +1126,9 @@ Core::callx(const Instruction& instruction) noexcept {
 
 void
 Core::calls(const Instruction& instruction) noexcept {
-    Serial.println(F("CALLS!"));
+    if constexpr (EnableEmulatorTrace) {
+        Serial.println(F("CALLS!"));
+    }
     if (auto targ = valueFromSrc1Register(instruction, TreatAsOrdinal{}); targ > 259) {
         generateFault(FaultType::Protection_Length);
     } else {
@@ -1154,19 +1168,25 @@ Core::restoreStandardFrame() noexcept {
 }
 void
 Core::ret() noexcept {
-    Serial.println(F("RET!"));
+    if constexpr (EnableEmulatorTrace) {
+        Serial.println(F("RET!"));
+    }
     syncf();
     PreviousFramePointer pfp(getPFP());
     switch (pfp.getReturnType()) {
         case 0b000:
-            Serial.println(F("0b000"));
+            if constexpr (EnableEmulatorTrace) {
+                Serial.println(F("0b000"));
+            }
             restoreStandardFrame();
             break;
         case 0b001:
             [this]() {
                 auto fpOrd = getFramePointerValue();
-                Serial.print(F("0b001: fpOrd: 0x"));
-                Serial.println(fpOrd, HEX);
+                if constexpr (EnableEmulatorTrace) {
+                    Serial.print(F("0b001: fpOrd: 0x"));
+                    Serial.println(fpOrd, HEX);
+                }
                 auto x = load(fpOrd - 16);
                 auto y = load(fpOrd - 12);
                 restoreStandardFrame();
@@ -1178,7 +1198,9 @@ Core::ret() noexcept {
             break;
         case 0b010:
             [this]() {
-                Serial.println(F("0b010"));
+                if constexpr (EnableEmulatorTrace) {
+                    Serial.println(F("0b010"));
+                }
                 if (pc_.inSupervisorMode()) {
                     pc_.setTraceEnable(false);
                     pc_.setExecutionMode(false);
@@ -1188,7 +1210,9 @@ Core::ret() noexcept {
             break;
         case 0b011:
             [this]() {
-                Serial.println(F("0b011"));
+                if constexpr (EnableEmulatorTrace) {
+                    Serial.println(F("0b011"));
+                }
                 if (pc_.inSupervisorMode())  {
                     pc_.setTraceEnable(true);
                     pc_.setExecutionMode(false);
@@ -1199,8 +1223,10 @@ Core::ret() noexcept {
         case 0b111: // interrupt return
             [this]() {
                 auto fpOrd = getFramePointerValue();
-                Serial.print(F("0b111: fpOrd: 0x"));
-                Serial.println(fpOrd, HEX);
+                if constexpr (EnableEmulatorTrace) {
+                    Serial.print(F("0b111: fpOrd: 0x"));
+                    Serial.println(fpOrd, HEX);
+                }
                 auto x = load(fpOrd - 16);
                 auto y = load(fpOrd - 12);
                 restoreStandardFrame();
@@ -1236,34 +1262,32 @@ Core::getPreviousPack() noexcept {
 }
 void
 Core::exitCall() noexcept {
-    #ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("ENTERING ");
-    Serial.println(__PRETTY_FUNCTION__);
-    Serial.print("OLD FP: 0x");
-    Serial.println(properFramePointerAddress(), HEX);
-    #endif
-    #endif
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print("ENTERING ");
+        Serial.println(__PRETTY_FUNCTION__);
+        Serial.print("OLD FP: 0x");
+        Serial.println(properFramePointerAddress(), HEX);
+    }
     setFramePointer(getPFP().getOrdinal());
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("NEW FP: 0x");
-    Serial.println(properFramePointerAddress(), HEX);
-#endif
-#endif
-    Serial.print(F("Old Frame Index: 0x"));
-    Serial.println(currentFrameIndex_, HEX);
-    if (getCurrentPack().valid()) {
-        Serial.println(F("CURRENT PACK IS VALID"));
-        Serial.print(F("RIP: 0x"));
-        Serial.println(getRIP().getOrdinal(), HEX);
-    } else {
-        Serial.println(F("CURRENT PACK IS INVALID"));
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print("NEW FP: 0x");
+        Serial.println(properFramePointerAddress(), HEX);
+        Serial.print(F("Old Frame Index: 0x"));
+        Serial.println(currentFrameIndex_, HEX);
+        if (getCurrentPack().valid()) {
+            Serial.println(F("CURRENT PACK IS VALID"));
+            Serial.print(F("RIP: 0x"));
+            Serial.println(getRIP().getOrdinal(), HEX);
+        } else {
+            Serial.println(F("CURRENT PACK IS INVALID"));
+        }
     }
     // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
-    Serial.print(F("targetAddress: 0x"));
-    Serial.println(targetAddress, HEX);
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print(F("targetAddress: 0x"));
+        Serial.println(targetAddress, HEX);
+    }
     // okay we are done with the current frame so relinquish ownership
     frames[currentFrameIndex_].relinquishOwnership();
     getPreviousPack().restoreOwnership(targetAddress,
@@ -1272,51 +1296,45 @@ Core::exitCall() noexcept {
     // okay the restoration is complete so just decrement the address
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
-    Serial.print(F("New Frame Index: 0x"));
-    Serial.println(currentFrameIndex_, HEX);
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
-    Serial.print("EXITING ");
-    Serial.println(__PRETTY_FUNCTION__);
-#endif
-#endif
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print(F("New Frame Index: 0x"));
+        Serial.println(currentFrameIndex_, HEX);
+        Serial.print("EXITING ");
+        Serial.println(__PRETTY_FUNCTION__);
+    }
 }
 void
 Core::enterCall(Address newFP) noexcept {
-#ifdef EMULATOR_TRACE
-#ifdef ARDUINO
-    Serial.print("ENTERING ");
-    Serial.println(__PRETTY_FUNCTION__);
-    Serial.print("OLD FP: 0x");
-    Serial.println(properFramePointerAddress(), HEX);
-    Serial.print("NEW FP: 0x");
-    Serial.println(newFP, HEX);
-#endif
-#endif
-    Serial.print(F("Old Frame Index: 0x"));
-    Serial.println(currentFrameIndex_, HEX);
-    if (getCurrentPack().valid()) {
-        Serial.println(F("CURRENT PACK IS VALID"));
-        Serial.print(F("RIP: 0x"));
-        Serial.println(getRIP().getOrdinal(), HEX);
-    } else {
-        Serial.println(F("CURRENT PACK IS INVALID"));
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print("ENTERING ");
+        Serial.println(__PRETTY_FUNCTION__);
+        Serial.print("OLD FP: 0x");
+        Serial.println(properFramePointerAddress(), HEX);
+        Serial.print("NEW FP: 0x");
+        Serial.println(newFP, HEX);
+        Serial.print(F("Old Frame Index: 0x"));
+        Serial.println(currentFrameIndex_, HEX);
+        if (getCurrentPack().valid()) {
+            Serial.println(F("CURRENT PACK IS VALID"));
+            Serial.print(F("RIP: 0x"));
+            Serial.println(getRIP().getOrdinal(), HEX);
+        } else {
+            Serial.println(F("CURRENT PACK IS INVALID"));
+        }
+        Serial.print(F("newFP: 0x"));
+        Serial.println(newFP, HEX);
     }
-    Serial.print(F("newFP: 0x"));
-    Serial.println(newFP, HEX);
     // this is much simpler than exiting, we just need to take control of the next register frame in the set
     getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
     // then increment the frame index
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
-    Serial.print(F("New Frame Index: 0x"));
-    Serial.println(currentFrameIndex_, HEX);
-#ifdef EMULATOR_TRACE
-#ifdef ARDUINO
-    Serial.print("EXITING ");
-    Serial.println(__PRETTY_FUNCTION__);
-#endif
-#endif
+    if constexpr (EnableEmulatorTrace) {
+        Serial.print(F("New Frame Index: 0x"));
+        Serial.println(currentFrameIndex_, HEX);
+        Serial.print("EXITING ");
+        Serial.println(__PRETTY_FUNCTION__);
+    }
 }
 
 void
