@@ -95,6 +95,7 @@ public:
     class LocalRegisterPack {
     public:
         LocalRegisterPack() = default;
+        [[nodiscard]] constexpr auto valid() const noexcept { return valid_; }
         RegisterFrame& getUnderlyingFrame() noexcept { return underlyingFrame; }
         [[nodiscard]] const RegisterFrame& getUnderlyingFrame() const noexcept { return underlyingFrame; }
         /**

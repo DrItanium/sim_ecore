@@ -20,7 +20,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#define EMULATOR_TRACE
 #include "Core.h"
 const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
 #include <Arduino.h>
@@ -1251,8 +1251,19 @@ Core::exitCall() noexcept {
     Serial.println(properFramePointerAddress(), HEX);
 #endif
 #endif
+    Serial.print(F("Old Frame Index: 0x"));
+    Serial.println(currentFrameIndex_, HEX);
+    if (getCurrentPack().valid()) {
+        Serial.println(F("CURRENT PACK IS VALID"));
+        Serial.print(F("RIP: 0x"));
+        Serial.println(getRIP().getOrdinal(), HEX);
+    } else {
+        Serial.println(F("CURRENT PACK IS INVALID"));
+    }
     // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
+    Serial.print(F("targetAddress: 0x"));
+    Serial.println(targetAddress, HEX);
     // okay we are done with the current frame so relinquish ownership
     frames[currentFrameIndex_].relinquishOwnership();
     getPreviousPack().restoreOwnership(targetAddress,
@@ -1261,6 +1272,8 @@ Core::exitCall() noexcept {
     // okay the restoration is complete so just decrement the address
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
+    Serial.print(F("New Frame Index: 0x"));
+    Serial.println(currentFrameIndex_, HEX);
 #ifdef EMULATOR_TRACE
     #ifdef ARDUINO
     Serial.print("EXITING ");
@@ -1280,11 +1293,24 @@ Core::enterCall(Address newFP) noexcept {
     Serial.println(newFP, HEX);
 #endif
 #endif
+    Serial.print(F("Old Frame Index: 0x"));
+    Serial.println(currentFrameIndex_, HEX);
+    if (getCurrentPack().valid()) {
+        Serial.println(F("CURRENT PACK IS VALID"));
+        Serial.print(F("RIP: 0x"));
+        Serial.println(getRIP().getOrdinal(), HEX);
+    } else {
+        Serial.println(F("CURRENT PACK IS INVALID"));
+    }
+    Serial.print(F("newFP: 0x"));
+    Serial.println(newFP, HEX);
     // this is much simpler than exiting, we just need to take control of the next register frame in the set
     getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
     // then increment the frame index
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
+    Serial.print(F("New Frame Index: 0x"));
+    Serial.println(currentFrameIndex_, HEX);
 #ifdef EMULATOR_TRACE
 #ifdef ARDUINO
     Serial.print("EXITING ");
