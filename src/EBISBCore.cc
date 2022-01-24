@@ -240,11 +240,11 @@ Core::processIACMessage(const IACMessage &message) noexcept {
             testPendingInterrupts(message);
             break;
         case 0x00: // do normal boot startup
-            //Serial.println(F("BOOTING!"));
+            Serial.println(F("BOOTING!"));
             boot();
             break;
         case 0x01: // checksum fail procedure
-            //Serial.println(F("CHECKSUM FAIL!"));
+            Serial.println(F("CHECKSUM FAIL!"));
             checksumFail();
             break;
         default:
