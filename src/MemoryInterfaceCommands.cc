@@ -128,11 +128,6 @@ Core::load(Address destination) {
     for (size_t i = 0; i < sizeof(Ordinal); ++i, ++destination) {
         container.bytes[i] = loadByte(destination);
     }
-    Serial.print(F("load(0x"));
-    Serial.print(destination, HEX);
-    Serial.print(F(", 0x"));
-    Serial.print(container.value, HEX);
-    Serial.println(F(")"));
     return container.value;
 }
 
@@ -156,11 +151,6 @@ Core::store(Address destination, Ordinal value) {
         byte bytes[sizeof(K)];
     } container;
     container.value = value;
-    Serial.print(F("store(0x"));
-    Serial.print(destination, HEX);
-    Serial.print(F(", 0x"));
-    Serial.print(value, HEX);
-    Serial.println(F(")"));
     for (size_t i = 0; i < sizeof(K); ++i, ++destination) {
         storeByte(destination, container.bytes[i]);
     }
