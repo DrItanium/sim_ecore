@@ -1069,11 +1069,7 @@ Core::getNextCallFrameStart() noexcept {
 }
 void
 Core::setRIP() noexcept {
-    Serial.print(F("\trip(before): 0x"));
-    Serial.println(getRIP().getOrdinal(), HEX);
     getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
-    Serial.print(F("\trip(after): 0x"));
-    Serial.println(getRIP().getOrdinal(), HEX);
 }
 void
 Core::setStackPointer(Ordinal value) noexcept {
@@ -1153,7 +1149,9 @@ Core::calls(const Instruction& instruction) noexcept {
 void
 Core::restoreStandardFrame() noexcept {
     exitCall();
-    absoluteBranch(getRIP().getOrdinal());
+    auto returnValue = getRIP().getOrdinal();
+    ip_.setOrdinal(returnValue);
+    advanceIPBy = 0;
 }
 void
 Core::ret() noexcept {
@@ -1239,20 +1237,16 @@ Core::getPreviousPack() noexcept {
 }
 void
 Core::exitCall() noexcept {
-#ifdef EMULATOR_TRACE
     #ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("OLD FP: 0x");
     Serial.println(properFramePointerAddress(), HEX);
 #endif
-#endif
     setFramePointer(getPFP().getOrdinal());
-#ifdef EMULATOR_TRACE
     #ifdef ARDUINO
     Serial.print("NEW FP: 0x");
     Serial.println(properFramePointerAddress(), HEX);
-#endif
 #endif
     // compute the new frame pointer address
     auto targetAddress = properFramePointerAddress();
@@ -1264,17 +1258,14 @@ Core::exitCall() noexcept {
     // okay the restoration is complete so just decrement the address
     --currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
-#ifdef EMULATOR_TRACE
     #ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
 #endif
-#endif
 }
 void
 Core::enterCall(Address newFP) noexcept {
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
+#ifdef ARDUINO
     Serial.print("ENTERING ");
     Serial.println(__PRETTY_FUNCTION__);
     Serial.print("OLD FP: 0x");
@@ -1282,17 +1273,14 @@ Core::enterCall(Address newFP) noexcept {
     Serial.print("NEW FP: 0x");
     Serial.println(newFP, HEX);
 #endif
-#endif
     // this is much simpler than exiting, we just need to take control of the next register frame in the set
     getNextPack().takeOwnership(newFP, [this](const RegisterFrame& frame, Address address) noexcept { saveRegisterFrame(frame, address); });
     // then increment the frame index
     ++currentFrameIndex_;
     currentFrameIndex_ %= NumRegisterFrames;
-#ifdef EMULATOR_TRACE
-    #ifdef ARDUINO
+#ifdef ARDUINO
     Serial.print("EXITING ");
     Serial.println(__PRETTY_FUNCTION__);
-#endif
 #endif
 }
 
