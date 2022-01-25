@@ -32,10 +32,6 @@
  * @brief Defines the start of the internal cache memory connected on the EBI, this is used by the microcontroller itself for whatever it needs (lower 32k)
  */
 constexpr size_t CacheMemoryWindowStart = (RAMEND + 1);
-/**
- * @brief Defines the start of the window used to peer out into the external bus itself
- */
-constexpr size_t BusMemoryWindowStart = 0x8000;
 
 
 namespace {
@@ -57,28 +53,6 @@ namespace {
 #undef Register32
 #undef Register16
     };
-    constexpr size_t computeWindowOffsetAddress(size_t offset) noexcept {
-        return BusMemoryWindowStart + (offset & 0x7FFF);
-    }
-    template<typename T>
-    typename T::UnderlyingType
-    readFromBusWindow(size_t offset, T) noexcept {
-        return memory<typename T::UnderlyingType>(computeWindowOffsetAddress(offset));
-    }
-    ByteOrdinal
-    readFromBusWindow(size_t offset) noexcept {
-        return readFromBusWindow(offset, TreatAsByteOrdinal{});
-    }
-
-    template<typename T>
-    void
-    writeToBusWindow(size_t offset, typename T::UnderlyingType value, T) noexcept {
-        memory<decltype(value)>(computeWindowOffsetAddress(offset)) = value;
-    }
-    void
-    writeToBusWindow(size_t offset, ByteOrdinal value) noexcept {
-        writeToBusWindow(offset, value, TreatAsByteOrdinal{});
-    }
     constexpr auto EnableEmulatorTrace = false;
     constexpr decltype(getCPUClockFrequency()) SPIClockFrequencies[] {
         getCPUClockFrequency() / 4,
@@ -317,8 +291,7 @@ Core::readFromInternalSpace(Address destination) noexcept {
             if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
                 return internalSRAM_[static_cast<size_t>(offset)];
             } else {
-                setEBIUpper(destination);
-                return readFromBusWindow(static_cast<size_t>(destination));
+                return loadFromBus(destination, TreatAsByteOrdinal{});
             }
         case InternalPeripheralStart:
             if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
@@ -335,13 +308,11 @@ Core::readFromInternalSpace(Address destination) noexcept {
                     case Builtin::Devices::SerialConsole:
                         return SerialConsole::read(offset);
                     default:
-                        setEBIUpper(destination);
-                        return readFromBusWindow(static_cast<size_t>(destination));
+                        return loadFromBus(destination, TreatAsByteOrdinal{});
                 }
             }
         default:
-            setEBIUpper(destination);
-            return readFromBusWindow(static_cast<size_t>(destination));
+            return loadFromBus(destination, TreatAsByteOrdinal{});
     }
 }
 void
@@ -352,10 +323,13 @@ Core::writeToInternalSpace(Address destination, byte value) noexcept {
     byte subOffset = static_cast<byte>(destination >> 16);
     switch (subOffset) {
         case BootProgramBaseStart:
+            // ignore writes made to this location
             break;
         case InternalSRAMStart:
             if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
                 internalSRAM_[static_cast<size_t>(offset)] = value;
+            } else {
+                storeToBus(destination, value, TreatAsByteOrdinal{});
             }
             break;
         case InternalPeripheralStart:
@@ -373,16 +347,14 @@ Core::writeToInternalSpace(Address destination, byte value) noexcept {
                         SerialConsole::write(offset, value);
                         break;
                     default:
-                        setEBIUpper(destination);
-                        writeToBusWindow(static_cast<size_t>(destination), value);
+                        storeToBus(destination, value, TreatAsByteOrdinal{});
                         break;
 
                 }
             }
             break;
         default:
-            setEBIUpper(destination);
-            writeToBusWindow(static_cast<size_t>(destination), value);
+            storeToBus(destination, value, TreatAsByteOrdinal{});
             break;
     }
 }

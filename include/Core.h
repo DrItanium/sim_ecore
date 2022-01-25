@@ -252,6 +252,14 @@ private:
     [[nodiscard]] static constexpr bool inInternalSpace(Address destination) noexcept {
         return static_cast<byte>(destination >> 24) == 0xFF;
     }
+    /**
+     * @brief Compute the actual address within the EBI window
+     * @param offset The lower 16-bits of the address
+     * @return The adjusted window address
+     */
+    [[nodiscard]] static constexpr size_t computeWindowOffsetAddress(Address offset) noexcept {
+        return 0x8000 + (static_cast<size_t>(offset) & 0x7FFF);
+    }
     void store(Address destination, const TripleRegister& reg) noexcept;
     void store(Address destination, const QuadRegister& reg) noexcept;
     void load(Address destination, TripleRegister& reg) noexcept;
@@ -265,12 +273,12 @@ private:
     template<typename T>
     void storeToBus(Address destination, T value, TreatAs<T>) noexcept {
         setEBIUpper(destination);
-        memory<T>(static_cast<size_t>(destination)) = value;
+        memory<T>(computeWindowOffsetAddress(destination)) = value;
     }
     template<typename T>
     typename TreatAs<T>::UnderlyingType loadFromBus(Address destination, TreatAs<T>) noexcept {
         setEBIUpper(destination);
-        return memory<T>(static_cast<size_t>(destination));
+        return memory<T>(computeWindowOffsetAddress(destination));
     }
 
     template<typename T>
