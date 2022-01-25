@@ -1178,7 +1178,65 @@ Core::ret() noexcept {
         FaultReturn = 0b001,
         SupervisorReturnWithTraceFlagSet = 0b010,
         SupervisorReturnWithTraceFlagClear = 0b011,
+        StoppedInterruptCall = 0b110, // only found in the i960KB manual..., will not be implemented right now
         InterruptReturn = 0b111,
+    };
+    auto handleFaultReturn = [this]() {
+        if constexpr (EnableEmulatorTrace) {
+            Serial.println(F("FAULT RETURN!"));
+        }
+        auto fpOrd = getFramePointerValue();
+        if constexpr (EnableEmulatorTrace) {
+            Serial.print(F("0b001: fpOrd: 0x"));
+            Serial.println(fpOrd, HEX);
+        }
+        auto x = load(fpOrd - 16);
+        auto y = load(fpOrd - 12);
+        restoreStandardFrame();
+        ac_.setValue(y);
+        if (pc_.inSupervisorMode()) {
+            pc_.setValue(x);
+        }
+    };
+    auto handleSupervisorReturnWithTraceSet = [this]() {
+        if constexpr (EnableEmulatorTrace) {
+            Serial.println(F("Supervisor return, with the trace enable flag in the process controls set to 1 and exec mode set to 0"));
+        }
+        if (pc_.inSupervisorMode()) {
+            pc_.setTraceEnable(false);
+            pc_.setExecutionMode(false);
+        }
+        restoreStandardFrame();
+    };
+    auto handleSupervisorReturnWithTraceClear = [this]() {
+        if constexpr (EnableEmulatorTrace) {
+            Serial.println(F("Supervisor return, with the trace enable flag in the process controls set to 0 and exec mode set to 0"));
+        }
+        if (pc_.inSupervisorMode())  {
+            pc_.setTraceEnable(true);
+            pc_.setExecutionMode(false);
+        }
+        restoreStandardFrame();
+    };
+    auto handleInterruptReturn = [this]() {
+        if constexpr (EnableEmulatorTrace) {
+            Serial.println(F("INTERRUPT RETURN!"));
+        }
+
+        auto fpOrd = getFramePointerValue();
+        if constexpr (EnableEmulatorTrace) {
+            Serial.print(F("0b111: fpOrd: 0x"));
+            Serial.println(fpOrd, HEX);
+        }
+        auto x = load(fpOrd - 16);
+        auto y = load(fpOrd - 12);
+        restoreStandardFrame();
+        ac_.setValue(y);
+        if (pc_.inSupervisorMode()) {
+            pc_.setValue(x);
+            /// @todo check_pending_interrupts
+            checkPendingInterrupts();
+        }
     };
     switch (static_cast<PFPReturnType>(pfp.getReturnType())) {
         case PFPReturnType::LocalReturn:
@@ -1188,67 +1246,18 @@ Core::ret() noexcept {
             restoreStandardFrame();
             break;
         case PFPReturnType::FaultReturn:
-            if constexpr (EnableEmulatorTrace) {
-                Serial.println(F("FAULT RETURN!"));
-            }
-            [this]() {
-                auto fpOrd = getFramePointerValue();
-                if constexpr (EnableEmulatorTrace) {
-                    Serial.print(F("0b001: fpOrd: 0x"));
-                    Serial.println(fpOrd, HEX);
-                }
-                auto x = load(fpOrd - 16);
-                auto y = load(fpOrd - 12);
-                restoreStandardFrame();
-                ac_.setValue(y);
-                if (pc_.inSupervisorMode()) {
-                    pc_.setValue(x);
-                }
-            }();
+            handleFaultReturn();
             break;
         case PFPReturnType::SupervisorReturnWithTraceFlagSet:
-            [this]() {
-                if constexpr (EnableEmulatorTrace) {
-                    Serial.println(F("Supervisor return, with the trace enable flag in the process controls set to 1 and exec mode set to 0"));
-                }
-                if (pc_.inSupervisorMode()) {
-                    pc_.setTraceEnable(false);
-                    pc_.setExecutionMode(false);
-                }
-                restoreStandardFrame();
-            }();
+            handleSupervisorReturnWithTraceSet();
             break;
         case PFPReturnType::SupervisorReturnWithTraceFlagClear:
-            [this]() {
-                if constexpr (EnableEmulatorTrace) {
-                    Serial.println(F("Supervisor return, with the trace enable flag in the process controls set to 0 and exec mode set to 0"));
-                }
-                if (pc_.inSupervisorMode())  {
-                    pc_.setTraceEnable(true);
-                    pc_.setExecutionMode(false);
-                }
-                restoreStandardFrame();
-            }();
+            handleSupervisorReturnWithTraceClear();
             break;
         case PFPReturnType::InterruptReturn:
-            if constexpr (EnableEmulatorTrace) {
-                Serial.println(F("INTERRUPT RETURN!"));
-            }
-            [this]() {
-                auto fpOrd = getFramePointerValue();
-                if constexpr (EnableEmulatorTrace) {
-                    Serial.print(F("0b111: fpOrd: 0x"));
-                    Serial.println(fpOrd, HEX);
-                }
-                auto x = load(fpOrd - 16);
-                auto y = load(fpOrd - 12);
-                restoreStandardFrame();
-                ac_.setValue(y);
-                if (pc_.inSupervisorMode()) {
-                    pc_.setValue(x);
-                    /// @todo check_pending_interrupts
-                }
-            }();
+            handleInterruptReturn();
+            break;
+        case PFPReturnType::StoppedInterruptCall:
             break;
         default: // reserved entries
             break;
@@ -1505,4 +1514,8 @@ Core::shrdi(const Instruction &instruction) noexcept {
     } else {
         dest.setInteger(0);
     }
+}
+void
+Core::checkPendingInterrupts() noexcept {
+    /// @todo implement if it makes sense
 }
