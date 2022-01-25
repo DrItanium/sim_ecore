@@ -249,7 +249,7 @@ private:
     [[nodiscard]] Ordinal getFaultTableBase() noexcept;
     [[nodiscard]] Ordinal getInterruptStackPointer() noexcept;
     void generateFault(FaultType fault) noexcept;
-    constexpr bool inInternalSpace(Address destination) const noexcept {
+    [[nodiscard]] static constexpr bool inInternalSpace(Address destination) noexcept {
         return static_cast<byte>(destination >> 24) == 0xFF;
     }
     void store(Address destination, const TripleRegister& reg) noexcept;
