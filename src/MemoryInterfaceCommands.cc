@@ -195,6 +195,27 @@ namespace {
                 return 0;
         }
     }
+
+    void
+    writeSerialConsoleSpace(byte offset, byte value) noexcept {
+        /// @todo implement
+    }
+
+    byte
+    readSerialConsoleSpace(byte offset) noexcept {
+        /// @todo implement
+        return 0;
+    }
+
+    void
+    writeIOSpace(byte offset, byte value) noexcept {
+        /// @todo implement
+    }
+    byte
+    readIOSpace(byte offset) noexcept {
+        /// @todo implement
+        return 0;
+    }
 }
 ByteOrdinal
 Core::loadByte(Address destination) {
@@ -217,11 +238,15 @@ Core::loadByte(Address destination) {
                     return EEPROM.read(static_cast<int>(destination & 0xFFF));
                 } else {
                     /// @todo handle other devices
-                    switch (Builtin::addressToTargetPeripheral(destination))  {
+                    switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
                         case Builtin::Devices::SPI:
-                            return doSPIReads(static_cast<byte>(destination));
+                            return doSPIReads(offset);
                         case Builtin::Devices::Query:
-                            return readQuerySpace(static_cast<byte>(destination));
+                            return readQuerySpace(offset);
+                        case Builtin::Devices::IO:
+                            return readIOSpace(offset);
+                        case Builtin::Devices::SerialConsole:
+                            return readSerialConsoleSpace(offset);
                         default:
                             return 0;
                     }
@@ -254,14 +279,16 @@ Core::storeByte(Address destination, ByteOrdinal value) {
                 if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
                     EEPROM.update(static_cast<int>(destination & 0xFFF), value);
                 } else {
-                    switch (Builtin::addressToTargetPeripheral(destination))  {
+                    switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
                         case Builtin::Devices::SPI:
-                            doSPIWrite(static_cast<byte>(destination), value);
+                            doSPIWrite(offset, value);
                             break;
-                        case Builtin::Devices::I2C:
                         case Builtin::Devices::IO:
-                        case Builtin::Devices::Query:
-                        case Builtin::Devices::AnalogComparator:
+                            writeIOSpace(offset, value);
+                            break;
+                        case Builtin::Devices::SerialConsole:
+                            writeSerialConsoleSpace(offset, value);
+                            break;
                         default:
                             break;
 

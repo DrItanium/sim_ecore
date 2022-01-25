@@ -577,22 +577,17 @@ namespace Builtin
     enum class Devices
     {
         Query,
-        IO,
-        InterruptVectors,
-        ExternalInterrupts,
-        Timer0,
-        Timer1,
-        Timer2,
-        Timer3,
-        Timer4,
-        Timer5,
-        SPI,
         SerialConsole,
+        IO,
+        SPI,
         I2C,
         AnalogComparator,
-        AnalogToDigitalConverter,
+        Interrupts,
+        Timers,
+        AnalogToDigitalConverters,
         JTAG,
         Count,
+        Error = Count,
     };
     constexpr Address ConfigurationSpaceBaseAddress = 0xFFFF'F000;
     constexpr Address InternalBaseAddress = 0xFFFF'0000;
