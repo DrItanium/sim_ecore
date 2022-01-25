@@ -1173,14 +1173,6 @@ Core::ret() noexcept {
     }
     syncf();
     PreviousFramePointer pfp(getPFP());
-    enum class PFPReturnType : byte {
-        LocalReturn = 0b000,
-        FaultReturn = 0b001,
-        SupervisorReturnWithTraceFlagSet = 0b010,
-        SupervisorReturnWithTraceFlagClear = 0b011,
-        StoppedInterruptCall = 0b110, // only found in the i960KB manual..., will not be implemented right now
-        InterruptReturn = 0b111,
-    };
     auto handleFaultReturn = [this]() {
         if constexpr (EnableEmulatorTrace) {
             Serial.println(F("FAULT RETURN!"));
@@ -1238,26 +1230,24 @@ Core::ret() noexcept {
             checkPendingInterrupts();
         }
     };
-    switch (static_cast<PFPReturnType>(pfp.getReturnType())) {
-        case PFPReturnType::LocalReturn:
+    switch (pfp.getReturnType()) {
+        case PreviousFramePointer::ReturnType::LocalReturn:
             if constexpr (EnableEmulatorTrace) {
                 Serial.println(F("LOCAL RETURN"));
             }
             restoreStandardFrame();
             break;
-        case PFPReturnType::FaultReturn:
+        case PreviousFramePointer::ReturnType::FaultReturn:
             handleFaultReturn();
             break;
-        case PFPReturnType::SupervisorReturnWithTraceFlagSet:
+        case PreviousFramePointer::ReturnType::SupervisorReturnWithTraceFlagSet:
             handleSupervisorReturnWithTraceSet();
             break;
-        case PFPReturnType::SupervisorReturnWithTraceFlagClear:
+        case PreviousFramePointer::ReturnType::SupervisorReturnWithTraceFlagClear:
             handleSupervisorReturnWithTraceClear();
             break;
-        case PFPReturnType::InterruptReturn:
+        case PreviousFramePointer::ReturnType::InterruptReturn:
             handleInterruptReturn();
-            break;
-        case PFPReturnType::StoppedInterruptCall:
             break;
         default: // reserved entries
             break;

@@ -76,6 +76,15 @@ private:
 
 class PreviousFramePointer {
 public:
+    enum class ReturnType : byte {
+        LocalReturn = 0b000,
+        FaultReturn = 0b001,
+        SupervisorReturnWithTraceFlagSet = 0b010,
+        SupervisorReturnWithTraceFlagClear = 0b011,
+        StoppedInterruptCall = 0b110, // only found in the i960KB manual..., will not be implemented right now
+        InterruptReturn = 0b111,
+    };
+public:
     explicit PreviousFramePointer(Register& targetRegister) : reg_(targetRegister) {}
     [[nodiscard]] constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.getOrdinal() & 0b1000); }
     void enablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() | 0b1000); }
@@ -83,7 +92,7 @@ public:
     void setPrereturnTraceFlag(bool value) const noexcept {
         value ? enablePrereturnTraceFlag() : disablePrereturnTraceFlag();
     }
-    [[nodiscard]] constexpr Ordinal getReturnType() const noexcept { return reg_.getOrdinal() & 0b111; }
+    [[nodiscard]] constexpr auto getReturnType() const noexcept { return static_cast<ReturnType>(reg_.getOrdinal() & 0b111); }
     [[nodiscard]] constexpr Ordinal getAddress() const noexcept {
         // according to the i960Sx manual, the lowest 6 bits are ignored but the lowest 4 bits are always confirmed
         return reg_.getOrdinal() & ~0b1'111;
