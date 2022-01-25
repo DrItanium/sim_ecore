@@ -1173,14 +1173,24 @@ Core::ret() noexcept {
     }
     syncf();
     PreviousFramePointer pfp(getPFP());
-    switch (pfp.getReturnType()) {
-        case 0b000:
+    enum class PFPReturnType : byte {
+        LocalReturn = 0b000,
+        FaultReturn = 0b001,
+        SupervisorReturnWithTraceFlagSet = 0b010,
+        SupervisorReturnWithTraceFlagClear = 0b011,
+        InterruptReturn = 0b111,
+    };
+    switch (static_cast<PFPReturnType>(pfp.getReturnType())) {
+        case PFPReturnType::LocalReturn:
             if constexpr (EnableEmulatorTrace) {
-                Serial.println(F("0b000"));
+                Serial.println(F("LOCAL RETURN"));
             }
             restoreStandardFrame();
             break;
-        case 0b001:
+        case PFPReturnType::FaultReturn:
+            if constexpr (EnableEmulatorTrace) {
+                Serial.println(F("FAULT RETURN!"));
+            }
             [this]() {
                 auto fpOrd = getFramePointerValue();
                 if constexpr (EnableEmulatorTrace) {
@@ -1196,10 +1206,10 @@ Core::ret() noexcept {
                 }
             }();
             break;
-        case 0b010:
+        case PFPReturnType::SupervisorReturnWithTraceFlagSet:
             [this]() {
                 if constexpr (EnableEmulatorTrace) {
-                    Serial.println(F("0b010"));
+                    Serial.println(F("Supervisor return, with the trace enable flag in the process controls set to 1 and exec mode set to 0"));
                 }
                 if (pc_.inSupervisorMode()) {
                     pc_.setTraceEnable(false);
@@ -1208,10 +1218,10 @@ Core::ret() noexcept {
                 restoreStandardFrame();
             }();
             break;
-        case 0b011:
+        case PFPReturnType::SupervisorReturnWithTraceFlagClear:
             [this]() {
                 if constexpr (EnableEmulatorTrace) {
-                    Serial.println(F("0b011"));
+                    Serial.println(F("Supervisor return, with the trace enable flag in the process controls set to 0 and exec mode set to 0"));
                 }
                 if (pc_.inSupervisorMode())  {
                     pc_.setTraceEnable(true);
@@ -1220,7 +1230,10 @@ Core::ret() noexcept {
                 restoreStandardFrame();
             }();
             break;
-        case 0b111: // interrupt return
+        case PFPReturnType::InterruptReturn:
+            if constexpr (EnableEmulatorTrace) {
+                Serial.println(F("INTERRUPT RETURN!"));
+            }
             [this]() {
                 auto fpOrd = getFramePointerValue();
                 if constexpr (EnableEmulatorTrace) {
@@ -1237,8 +1250,7 @@ Core::ret() noexcept {
                 }
             }();
             break;
-        default:
-            // undefined
+        default: // reserved entries
             break;
     }
 }
