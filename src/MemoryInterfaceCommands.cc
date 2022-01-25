@@ -39,6 +39,16 @@ constexpr size_t BusMemoryWindowStart = 0x8000;
 
 
 namespace {
+    enum class SPIRegisters : byte {
+        Data,
+        TransferComplete,
+        WriteCollision,
+        ClockPhase,
+        ClockPolarity,
+        ClockRate,
+        DataOrder,
+        PeripheralEnable,
+    };
     constexpr size_t computeWindowOffsetAddress(size_t offset) noexcept {
         return BusMemoryWindowStart + (offset & 0x7FFF);
     }
@@ -52,53 +62,28 @@ namespace {
         memory<ByteOrdinal>(computeWindowOffsetAddress(offset)) = value;
     }
     constexpr auto EnableEmulatorTrace = false;
-}
-ByteOrdinal
-Core::loadByte(Address destination) {
-    if (static_cast<byte>(destination >> 24) == 0xFF) {
-        constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
-        constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
-        constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
-        byte subOffset = static_cast<byte>(destination >> 16);
-        switch (subOffset) {
-            case BootProgramBaseStart:
-                return readFromInternalBootProgram(static_cast<size_t>(destination - Builtin::InternalBootProgramBase));
-            case InternalSRAMStart:
-                if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
-                    return internalSRAM_[static_cast<size_t>(offset)];
-                } else {
-                    return 0;
-                }
-                break;
-            case InternalPeripheralStart:
-                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
-                    return EEPROM.read(static_cast<int>(destination & 0xFFF));
-                } else {
-                    /// @todo handle other devices
-                }
-                // more lookup needed here
-                // do something here
-                break;
+    byte doSPIReads(byte offset) noexcept {
+        switch (static_cast<SPIRegisters>(offset)) {
+            case SPIRegisters::Data:
+                return SPDR;
+            case SPIRegisters::PeripheralEnable:
+                return (SPCR & _BV(SPE)) ? 0xFF : 0x00;
+            case SPIRegisters::ClockPolarity:
+                return (SPCR & _BV(CPOL)) ? 0xFF : 0x00;
+            case SPIRegisters::ClockPhase:
+                return (SPCR & _BV(CPHA)) ? 0xFF : 0x00;
+            case SPIRegisters::DataOrder:
+                return (SPCR & _BV(DORD)) ? 0xFF : 0x00;
+            case SPIRegisters::ClockRate:
+                return (SPCR & 0b11) | ((SPSR | 0b1) << 3);
+            case SPIRegisters::WriteCollision:
+                return (SPSR & _BV(WCOL)) ? 0xFF : 0x00;
+            case SPIRegisters::TransferComplete:
+                return (SPSR & _BV(SPIF)) ? 0xFF : 0x00;
             default:
-                break;
+                return 0;
         }
-        return 0;
-    } else {
-        setEBIUpper(destination);
-        return readFromBusWindow(static_cast<size_t>(destination));
     }
-}
-namespace {
-    enum class SPIRegisters : byte {
-        Data,
-        TransferComplete,
-        WriteCollision,
-        ClockPhase,
-        ClockPolarity,
-        ClockRate,
-        DataOrder,
-        PeripheralEnable,
-    };
     void doSPIWrite(byte offset, byte value) noexcept {
         switch (static_cast<SPIRegisters>(offset)) {
             case SPIRegisters::Data:
@@ -156,27 +141,49 @@ namespace {
         }
     }
 }
+ByteOrdinal
+Core::loadByte(Address destination) {
+    if (static_cast<byte>(destination >> 24) == 0xFF) {
+        constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
+        constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
+        constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
+        byte subOffset = static_cast<byte>(destination >> 16);
+        switch (subOffset) {
+            case BootProgramBaseStart:
+                return readFromInternalBootProgram(static_cast<size_t>(destination - Builtin::InternalBootProgramBase));
+            case InternalSRAMStart:
+                if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
+                    return internalSRAM_[static_cast<size_t>(offset)];
+                } else {
+                    return 0;
+                }
+            case InternalPeripheralStart:
+                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+                    return EEPROM.read(static_cast<int>(destination & 0xFFF));
+                } else {
+                    /// @todo handle other devices
+                    switch (Builtin::addressToTargetPeripheral(destination))  {
+                        case Builtin::Devices::SPI:
+                            return doSPIReads(static_cast<byte>(destination));
+                        case Builtin::Devices::I2C:
+                        case Builtin::Devices::IO:
+                        case Builtin::Devices::Query:
+                        case Builtin::Devices::AnalogComparator:
+                        default:
+                            return 0;
+                    }
+                }
+            default:
+                break;
+        }
+        return 0;
+    } else {
+        setEBIUpper(destination);
+        return readFromBusWindow(static_cast<size_t>(destination));
+    }
+}
 void
 Core::storeByte(Address destination, ByteOrdinal value) {
-    auto handlePeripheralDispatch = [this](Address destination, ByteOrdinal value) {
-        /// @todo handle other devices
-        if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
-            EEPROM.update(static_cast<int>(destination & 0xFFF), value);
-        } else {
-            switch (Builtin::addressToTargetPeripheral(destination))  {
-                case Builtin::Devices::SPI:
-                    doSPIWrite(static_cast<byte>(destination), value);
-                    break;
-                case Builtin::Devices::I2C:
-                case Builtin::Devices::IO:
-                case Builtin::Devices::Query:
-                case Builtin::Devices::AnalogComparator:
-                default:
-                    break;
-
-            }
-        }
-    };
     if (static_cast<byte>(destination >> 24) == 0xFF) {
         constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
         constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
@@ -191,7 +198,22 @@ Core::storeByte(Address destination, ByteOrdinal value) {
                 }
                 break;
             case InternalPeripheralStart:
-                handlePeripheralDispatch(destination, value);
+                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+                    EEPROM.update(static_cast<int>(destination & 0xFFF), value);
+                } else {
+                    switch (Builtin::addressToTargetPeripheral(destination))  {
+                        case Builtin::Devices::SPI:
+                            doSPIWrite(static_cast<byte>(destination), value);
+                            break;
+                        case Builtin::Devices::I2C:
+                        case Builtin::Devices::IO:
+                        case Builtin::Devices::Query:
+                        case Builtin::Devices::AnalogComparator:
+                        default:
+                            break;
+
+                    }
+                }
                 break;
             default:
                 break;
