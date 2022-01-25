@@ -39,7 +39,12 @@ constexpr size_t BusMemoryWindowStart = 0x8000;
 
 
 namespace {
+    constexpr auto getCPUClockFrequency() noexcept {
+        return F_CPU;
+    }
     enum class SPIRegisters : byte {
+#define Register16(name) name ## 0, name ## 1
+#define Register32(name) Register16(name ## 0), Register16(name ## 1)
         Data,
         TransferComplete,
         WriteCollision,
@@ -48,6 +53,9 @@ namespace {
         ClockRate,
         DataOrder,
         PeripheralEnable,
+        Register32(ClockFrequency),
+#undef Register32
+#undef Register16
     };
     constexpr size_t computeWindowOffsetAddress(size_t offset) noexcept {
         return BusMemoryWindowStart + (offset & 0x7FFF);
@@ -62,7 +70,32 @@ namespace {
         memory<ByteOrdinal>(computeWindowOffsetAddress(offset)) = value;
     }
     constexpr auto EnableEmulatorTrace = false;
+    constexpr decltype(getCPUClockFrequency()) SPIClockFrequencies[] {
+        getCPUClockFrequency() / 4,
+        getCPUClockFrequency() / 16,
+        getCPUClockFrequency() / 64,
+        getCPUClockFrequency() / 128,
+        getCPUClockFrequency() / 2,
+        getCPUClockFrequency() / 8,
+        getCPUClockFrequency() / 32,
+        getCPUClockFrequency() / 64,
+    };
+    constexpr byte SPIClockFrequencies_Decomposed[8][4]{
+#define X(ind) { static_cast<byte>(SPIClockFrequencies[ind]), static_cast<byte>(SPIClockFrequencies[ind] >> 8), static_cast<byte>(SPIClockFrequencies[ind] >> 16), static_cast<byte>(SPIClockFrequencies[ind] >> 24), }
+            X(0),
+            X(1),
+            X(2),
+            X(3),
+            X(4),
+            X(5),
+            X(6),
+            X(7),
+#undef X
+    };
     byte doSPIReads(byte offset) noexcept {
+        auto computeClockRateSetup = []() {
+            return (SPCR & 0b11) | ((SPSR | 0b1) << 3);
+        };
         switch (static_cast<SPIRegisters>(offset)) {
             case SPIRegisters::Data:
                 return SPDR;
@@ -75,11 +108,15 @@ namespace {
             case SPIRegisters::DataOrder:
                 return (SPCR & _BV(DORD)) ? 0xFF : 0x00;
             case SPIRegisters::ClockRate:
-                return (SPCR & 0b11) | ((SPSR | 0b1) << 3);
+                return computeClockRateSetup();
             case SPIRegisters::WriteCollision:
                 return (SPSR & _BV(WCOL)) ? 0xFF : 0x00;
             case SPIRegisters::TransferComplete:
                 return (SPSR & _BV(SPIF)) ? 0xFF : 0x00;
+            case SPIRegisters::ClockFrequency00: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][0];
+            case SPIRegisters::ClockFrequency01: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][1];
+            case SPIRegisters::ClockFrequency10: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][2];
+            case SPIRegisters::ClockFrequency11: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][3];
             default:
                 return 0;
         }
@@ -150,10 +187,10 @@ namespace {
     byte
     readQuerySpace(byte offset) noexcept {
         switch (static_cast<QueryRegisters>(offset)) {
-            case QueryRegisters::ClockFrequency00: return static_cast<byte>(F_CPU);
-            case QueryRegisters::ClockFrequency01: return static_cast<byte>(F_CPU >> 8);
-            case QueryRegisters::ClockFrequency10: return static_cast<byte>(F_CPU >> 16);
-            case QueryRegisters::ClockFrequency11: return static_cast<byte>(F_CPU >> 24);
+            case QueryRegisters::ClockFrequency00: return static_cast<byte>(getCPUClockFrequency());
+            case QueryRegisters::ClockFrequency01: return static_cast<byte>(getCPUClockFrequency() >> 8);
+            case QueryRegisters::ClockFrequency10: return static_cast<byte>(getCPUClockFrequency() >> 16);
+            case QueryRegisters::ClockFrequency11: return static_cast<byte>(getCPUClockFrequency() >> 24);
             default:
                 return 0;
         }
