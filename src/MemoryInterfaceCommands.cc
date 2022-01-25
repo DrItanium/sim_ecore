@@ -38,147 +38,168 @@ namespace {
     constexpr auto getCPUClockFrequency() noexcept {
         return F_CPU;
     }
-    enum class SPIRegisters : byte {
-#define Register16(name) name ## 0, name ## 1
-#define Register32(name) Register16(name ## 0), Register16(name ## 1)
-        Data,
-        TransferComplete,
-        WriteCollision,
-        ClockPhase,
-        ClockPolarity,
-        ClockRate,
-        DataOrder,
-        PeripheralEnable,
-        Register32(ClockFrequency),
-#undef Register32
-#undef Register16
-    };
     constexpr auto EnableEmulatorTrace = false;
-    constexpr decltype(getCPUClockFrequency()) SPIClockFrequencies[] {
-        getCPUClockFrequency() / 4,
-        getCPUClockFrequency() / 16,
-        getCPUClockFrequency() / 64,
-        getCPUClockFrequency() / 128,
-        getCPUClockFrequency() / 2,
-        getCPUClockFrequency() / 8,
-        getCPUClockFrequency() / 32,
-        getCPUClockFrequency() / 64,
-    };
-    constexpr byte SPIClockFrequencies_Decomposed[8][4]{
-#define X(ind) { static_cast<byte>(SPIClockFrequencies[ind]), static_cast<byte>(SPIClockFrequencies[ind] >> 8), static_cast<byte>(SPIClockFrequencies[ind] >> 16), static_cast<byte>(SPIClockFrequencies[ind] >> 24), }
-            X(0),
-            X(1),
-            X(2),
-            X(3),
-            X(4),
-            X(5),
-            X(6),
-            X(7),
-#undef X
-    };
-    [[nodiscard]] byte computeClockRateSetup() noexcept {
-        return (SPCR & 0b11) | ((SPSR | 0b1) << 3);
-    }
-    byte doSPIReads(byte offset) noexcept {
-        switch (static_cast<SPIRegisters>(offset)) {
-            case SPIRegisters::Data:
-                return SPDR;
-            case SPIRegisters::PeripheralEnable:
-                return (SPCR & _BV(SPE)) ? 0xFF : 0x00;
-            case SPIRegisters::ClockPolarity:
-                return (SPCR & _BV(CPOL)) ? 0xFF : 0x00;
-            case SPIRegisters::ClockPhase:
-                return (SPCR & _BV(CPHA)) ? 0xFF : 0x00;
-            case SPIRegisters::DataOrder:
-                return (SPCR & _BV(DORD)) ? 0xFF : 0x00;
-            case SPIRegisters::ClockRate:
-                return computeClockRateSetup();
-            case SPIRegisters::WriteCollision:
-                return (SPSR & _BV(WCOL)) ? 0xFF : 0x00;
-            case SPIRegisters::TransferComplete:
-                return (SPSR & _BV(SPIF)) ? 0xFF : 0x00;
-            case SPIRegisters::ClockFrequency00: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][0];
-            case SPIRegisters::ClockFrequency01: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][1];
-            case SPIRegisters::ClockFrequency10: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][2];
-            case SPIRegisters::ClockFrequency11: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][3];
-            default:
-                return 0;
-        }
-    }
-    void doSPIWrite(byte offset, byte value) noexcept {
-        switch (static_cast<SPIRegisters>(offset)) {
-            case SPIRegisters::Data:
-                SPDR = offset;
-                break;
-            case SPIRegisters::PeripheralEnable:
-                if (value == 0) {
-                    SPI.end();
-                } else {
-                    SPI.begin();
-                }
-                break;
-            case SPIRegisters::ClockPolarity:
-                if (value == 0) {
-                    SPCR &= ~_BV(CPOL);
-                } else {
-                    SPCR |= _BV(CPOL);
-                }
-                break;
-            case SPIRegisters::ClockPhase:
-                if (value == 0) {
-                    SPCR &= ~_BV(CPHA);
-                } else {
-                    SPCR |= _BV(CPHA);
-                }
-                break;
-            case SPIRegisters::DataOrder:
-                if (value == 0) {
-                    SPCR &= ~_BV(DORD);
-                } else {
-                    SPCR |= _BV(DORD);
-                }
-                break;
-            case SPIRegisters::ClockRate:
-                [value]() noexcept {
-                    if (value & 0b001) {
-                        SPCR &= ~_BV(SPR0);
-                    } else {
-                        SPCR |= _BV(SPR0);
-                    }
-                    if (value & 0b010) {
-                        SPCR &= ~_BV(SPR1);
-                    } else {
-                        SPCR |= _BV(SPR1);
-                    }
-                    if (value & 0b100) {
-                        SPSR &= ~_BV(SPI2X);
-                    } else {
-                        SPSR |= _BV(SPI2X);
-                    }
-                }();
-                break;
-            default:
-                break;
-        }
-    }
-    enum class QueryRegisters : byte {
+
+    class SPIInterface {
+    public:
+        enum class Registers : byte {
 #define Register16(name) name ## 0, name ## 1
 #define Register32(name) Register16(name ## 0), Register16(name ## 1)
-    Register32(ClockFrequency),
+            Data,
+            TransferComplete,
+            WriteCollision,
+            ClockPhase,
+            ClockPolarity,
+            ClockRate,
+            DataOrder,
+            PeripheralEnable,
+            Register32(ClockFrequency),
 #undef Register32
 #undef Register16
-    };
-    byte
-    readQuerySpace(byte offset) noexcept {
-        switch (static_cast<QueryRegisters>(offset)) {
-            case QueryRegisters::ClockFrequency00: return static_cast<byte>(getCPUClockFrequency());
-            case QueryRegisters::ClockFrequency01: return static_cast<byte>(getCPUClockFrequency() >> 8);
-            case QueryRegisters::ClockFrequency10: return static_cast<byte>(getCPUClockFrequency() >> 16);
-            case QueryRegisters::ClockFrequency11: return static_cast<byte>(getCPUClockFrequency() >> 24);
-            default:
-                return 0;
+        };
+        static constexpr decltype(getCPUClockFrequency()) SPIClockFrequencies[] {
+                getCPUClockFrequency() / 4,
+                getCPUClockFrequency() / 16,
+                getCPUClockFrequency() / 64,
+                getCPUClockFrequency() / 128,
+                getCPUClockFrequency() / 2,
+                getCPUClockFrequency() / 8,
+                getCPUClockFrequency() / 32,
+                getCPUClockFrequency() / 64,
+        };
+        static constexpr byte SPIClockFrequencies_Decomposed[8][4]{
+#define X(ind) { static_cast<byte>(SPIClockFrequencies[ind]), static_cast<byte>(SPIClockFrequencies[ind] >> 8), static_cast<byte>(SPIClockFrequencies[ind] >> 16), static_cast<byte>(SPIClockFrequencies[ind] >> 24), }
+                X(0),
+                X(1),
+                X(2),
+                X(3),
+                X(4),
+                X(5),
+                X(6),
+                X(7),
+#undef X
+        };
+    public:
+        SPIInterface() = delete;
+        ~SPIInterface() = delete;
+        SPIInterface(SPIInterface&&) = delete;
+        SPIInterface(const SPIInterface&) = delete;
+        SPIInterface& operator=(const SPIInterface&) = delete;
+        SPIInterface& operator=(SPIInterface&&) = delete;
+        [[nodiscard]] static byte computeClockRateSetup() noexcept {
+            return (SPCR & 0b11) | ((SPSR | 0b1) << 3);
         }
-    }
+        static byte read(byte offset) noexcept {
+            switch (static_cast<Registers>(offset)) {
+                case Registers::Data:
+                    return SPDR;
+                case Registers::PeripheralEnable:
+                    return (SPCR & _BV(SPE)) ? 0xFF : 0x00;
+                case Registers::ClockPolarity:
+                    return (SPCR & _BV(CPOL)) ? 0xFF : 0x00;
+                case Registers::ClockPhase:
+                    return (SPCR & _BV(CPHA)) ? 0xFF : 0x00;
+                case Registers::DataOrder:
+                    return (SPCR & _BV(DORD)) ? 0xFF : 0x00;
+                case Registers::ClockRate:
+                    return computeClockRateSetup();
+                case Registers::WriteCollision:
+                    return (SPSR & _BV(WCOL)) ? 0xFF : 0x00;
+                case Registers::TransferComplete:
+                    return (SPSR & _BV(SPIF)) ? 0xFF : 0x00;
+                case Registers::ClockFrequency00: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][0];
+                case Registers::ClockFrequency01: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][1];
+                case Registers::ClockFrequency10: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][2];
+                case Registers::ClockFrequency11: return SPIClockFrequencies_Decomposed[computeClockRateSetup()][3];
+                default:
+                    return 0;
+            }
+        }
+        static void write(byte offset, byte value) noexcept {
+            switch (static_cast<Registers>(offset)) {
+                case Registers::Data:
+                    SPDR = offset;
+                    break;
+                case Registers::PeripheralEnable:
+                    if (value == 0) {
+                        SPI.end();
+                    } else {
+                        SPI.begin();
+                    }
+                    break;
+                case Registers::ClockPolarity:
+                    if (value == 0) {
+                        SPCR &= ~_BV(CPOL);
+                    } else {
+                        SPCR |= _BV(CPOL);
+                    }
+                    break;
+                case Registers::ClockPhase:
+                    if (value == 0) {
+                        SPCR &= ~_BV(CPHA);
+                    } else {
+                        SPCR |= _BV(CPHA);
+                    }
+                    break;
+                case Registers::DataOrder:
+                    if (value == 0) {
+                        SPCR &= ~_BV(DORD);
+                    } else {
+                        SPCR |= _BV(DORD);
+                    }
+                    break;
+                case Registers::ClockRate:
+                    [value]() noexcept {
+                        if (value & 0b001) {
+                            SPCR &= ~_BV(SPR0);
+                        } else {
+                            SPCR |= _BV(SPR0);
+                        }
+                        if (value & 0b010) {
+                            SPCR &= ~_BV(SPR1);
+                        } else {
+                            SPCR |= _BV(SPR1);
+                        }
+                        if (value & 0b100) {
+                            SPSR &= ~_BV(SPI2X);
+                        } else {
+                            SPSR |= _BV(SPI2X);
+                        }
+                    }();
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+    class QueryInterface {
+    public:
+        enum class Registers : byte {
+#define Register16(name) name ## 0, name ## 1
+#define Register32(name) Register16(name ## 0), Register16(name ## 1)
+            Register32(ClockFrequency),
+#undef Register32
+#undef Register16
+        };
+        QueryInterface() = delete;
+        ~QueryInterface() = delete;
+        QueryInterface(QueryInterface&&) = delete;
+        QueryInterface(const QueryInterface&) = delete;
+        QueryInterface& operator=(const QueryInterface&) = delete;
+        QueryInterface& operator=(QueryInterface&&) = delete;
+    public:
+        static byte read(byte offset) noexcept {
+            switch (static_cast<Registers>(offset)) {
+                case Registers::ClockFrequency00: return static_cast<byte>(getCPUClockFrequency());
+                case Registers::ClockFrequency01: return static_cast<byte>(getCPUClockFrequency() >> 8);
+                case Registers::ClockFrequency10: return static_cast<byte>(getCPUClockFrequency() >> 16);
+                case Registers::ClockFrequency11: return static_cast<byte>(getCPUClockFrequency() >> 24);
+                default:
+                    return 0;
+            }
+        }
+        static void write(byte, byte) noexcept { }
+    };
     class SerialConsole {
     public:
         enum class Registers : byte {
@@ -267,16 +288,27 @@ namespace {
     private:
         static inline uint32_t clockRate_ {115200};
     };
+    class GPIOInterface {
+    public:
+        enum class Registers : byte {
 
-    void
-    writeIOSpace(byte offset, byte value) noexcept {
-        /// @todo implement
-    }
-    byte
-    readIOSpace(byte offset) noexcept {
-        /// @todo implement
-        return 0;
-    }
+        };
+    public:
+        GPIOInterface() = delete;
+        ~GPIOInterface() = delete;
+        GPIOInterface(GPIOInterface&&) = delete;
+        GPIOInterface(const GPIOInterface&) = delete;
+        GPIOInterface& operator=(const GPIOInterface&) = delete;
+        GPIOInterface& operator=(GPIOInterface&&) = delete;
+    public:
+        static void write(byte offset, byte value) noexcept {
+            /// @todo implement
+        }
+        static byte read(byte offset) noexcept {
+            /// @todo implement
+            return 0;
+        }
+    };
 }
 ByteOrdinal
 Core::readFromInternalSpace(Address destination) noexcept {
@@ -300,11 +332,11 @@ Core::readFromInternalSpace(Address destination) noexcept {
                 /// @todo handle other devices
                 switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
                     case Builtin::Devices::SPI:
-                        return doSPIReads(offset);
+                        return SPIInterface::read(offset);
                     case Builtin::Devices::Query:
-                        return readQuerySpace(offset);
+                        return QueryInterface::read(offset);
                     case Builtin::Devices::IO:
-                        return readIOSpace(offset);
+                        return GPIOInterface::read(offset);
                     case Builtin::Devices::SerialConsole:
                         return SerialConsole::read(offset);
                     default:
@@ -338,10 +370,10 @@ Core::writeToInternalSpace(Address destination, byte value) noexcept {
             } else {
                 switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
                     case Builtin::Devices::SPI:
-                        doSPIWrite(offset, value);
+                        SPIInterface::write(offset, value);
                         break;
                     case Builtin::Devices::IO:
-                        writeIOSpace(offset, value);
+                        GPIOInterface::write(offset, value);
                         break;
                     case Builtin::Devices::SerialConsole:
                         SerialConsole::write(offset, value);
