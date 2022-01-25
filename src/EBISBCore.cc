@@ -165,7 +165,7 @@ Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     getCurrentPack().takeOwnership(thePointer, [](const auto&, auto) noexcept { });
     // THE MANUAL DOESN'T STATE THAT YOU NEED TO SETUP SP and PFP as well, but you do!
     setStackPointer(thePointer + 64);
-    getPFP().setOrdinal(thePointer);
+    getPFP().setWhole(thePointer);
 }
 void
 Core::boot(Address base) {

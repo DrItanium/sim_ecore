@@ -99,6 +99,7 @@ public:
     };
 public:
     explicit PreviousFramePointer(Register& targetRegister) : reg_(targetRegister) {}
+    explicit PreviousFramePointer(const Register& targetRegister) : reg_(const_cast<Register&>(targetRegister)) {}
     [[nodiscard]] constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.getOrdinal() & 0b1000); }
     void enablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() | 0b1000); }
     void disablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() & ~static_cast<Ordinal>(0b1000)); }

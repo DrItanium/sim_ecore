@@ -1097,7 +1097,7 @@ Core::call(const Instruction& instruction) noexcept {
     enterCall(temp);
     ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
-    getPFP().setOrdinal(fp);
+    getPFP().setAddress(fp);
     setFramePointer(temp);
     setStackPointer(temp + 64);
     advanceIPBy = 0; // we already know where we are going so do not jump ahead
@@ -1119,7 +1119,7 @@ Core::callx(const Instruction& instruction) noexcept {
 /// @todo implement support for caching register frames
     enterCall(temp);
     absoluteBranch(memAddr);
-    getPFP().setOrdinal(fp);
+    getPFP().setAddress(fp);
     setFramePointer(temp);
     setStackPointer(temp + 64);
 }
@@ -1152,7 +1152,7 @@ Core::calls(const Instruction& instruction) noexcept {
         }
         enterCall(temp);
         /// @todo expand pfp and fp to accurately model how this works
-        PreviousFramePointer pfp(getPFP());
+        auto pfp = getPFP();
         pfp.setAddress(getFramePointerValue());
         pfp.setReturnType(tempRRR);
         setFramePointer(temp);
@@ -1172,7 +1172,7 @@ Core::ret() noexcept {
         Serial.println(F("RET!"));
     }
     syncf();
-    PreviousFramePointer pfp(getPFP());
+    auto pfp = getPFP();
     auto handleFaultReturn = [this]() {
         if constexpr (EnableEmulatorTrace) {
             Serial.println(F("FAULT RETURN!"));
@@ -1279,7 +1279,7 @@ Core::exitCall() noexcept {
         Serial.print("OLD FP: 0x");
         Serial.println(properFramePointerAddress(), HEX);
     }
-    setFramePointer(getPFP().getOrdinal());
+    setFramePointer(getPFP().getAddress());
     if constexpr (EnableEmulatorTrace) {
         Serial.print("NEW FP: 0x");
         Serial.println(properFramePointerAddress(), HEX);

@@ -357,8 +357,8 @@ private:
     [[nodiscard]] const Register& getStackPointer() const noexcept { return getRegister(RegisterIndex::SP960); }
     [[nodiscard]] FramePointer getFramePointer() noexcept { return FramePointer(getRegister(RegisterIndex::FP), frameAlignmentMask_); }
     [[nodiscard]] FramePointer getFramePointer() const noexcept { return FramePointer(getRegister(RegisterIndex::FP), frameAlignmentMask_); }
-    [[nodiscard]] Register& getPFP() noexcept { return getRegister(RegisterIndex::PFP); }
-    [[nodiscard]] const Register& getPFP() const noexcept { return getRegister(RegisterIndex::PFP); }
+    [[nodiscard]] PreviousFramePointer getPFP() noexcept { return PreviousFramePointer(getRegister(RegisterIndex::PFP)); }
+    [[nodiscard]] PreviousFramePointer getPFP() const noexcept { return PreviousFramePointer(getRegister(RegisterIndex::PFP)); }
     [[nodiscard]] Register& getRIP() noexcept { return getRegister(RegisterIndex::RIP); }
     [[nodiscard]] const Register& getRIP() const noexcept { return getRegister(RegisterIndex::RIP); }
 private:
