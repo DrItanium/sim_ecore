@@ -426,13 +426,12 @@ void
 Core::setEBIUpper(Address address) noexcept {
     static constexpr Address upperMask = 0xFFFF'8000;
     static constexpr Address bit15Mask = 0x0000'8000;
-    static constexpr Address HigherMask = 0x0F00'0000;
-    static constexpr Address HighestMask = 0xF000'0000;
     auto realAddress = address & upperMask;
     if (realAddress != ebiUpper_) {
         // set our fake A15
         digitalWrite(Pinout::EBI_A15, bit15Mask & realAddress ? HIGH : LOW);
-        /// @todo set upper ports based off of information
+        PORTL = static_cast<byte>(address >> 16);
+        PORTK = static_cast<byte>(address >> 24);
         ebiUpper_ = realAddress;
     }
 }
