@@ -1024,7 +1024,7 @@ Core::shlo(const Instruction &inst) noexcept {
 
 
 
-Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1) {
+Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1), stackAlignMask_(c_ - 1), frameAlignmentMask_(~stackAlignMask_) {
 }
 
 void

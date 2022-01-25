@@ -600,6 +600,8 @@ private:
     Ordinal advanceIPBy = 0;
     Ordinal salign_;
     Ordinal c_;
+    Address stackAlignMask_;
+    Address frameAlignmentMask_;
     Ordinal currentFrameIndex_ = 0;
     LocalRegisterPack frames[NumRegisterFrames];
     Ordinal systemAddressTableBase_ = 0;
