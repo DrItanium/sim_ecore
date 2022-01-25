@@ -60,14 +60,24 @@ namespace {
     constexpr size_t computeWindowOffsetAddress(size_t offset) noexcept {
         return BusMemoryWindowStart + (offset & 0x7FFF);
     }
+    template<typename T>
+    typename T::UnderlyingType
+    readFromBusWindow(size_t offset, T) noexcept {
+        return memory<typename T::UnderlyingType>(computeWindowOffsetAddress(offset));
+    }
     ByteOrdinal
     readFromBusWindow(size_t offset) noexcept {
-        return memory<ByteOrdinal>(computeWindowOffsetAddress(offset));
+        return readFromBusWindow(offset, TreatAsByteOrdinal{});
     }
 
+    template<typename T>
+    void
+    writeToBusWindow(size_t offset, typename T::UnderlyingType value, T) noexcept {
+        memory<decltype(value)>(computeWindowOffsetAddress(offset)) = value;
+    }
     void
     writeToBusWindow(size_t offset, ByteOrdinal value) noexcept {
-        memory<ByteOrdinal>(computeWindowOffsetAddress(offset)) = value;
+        writeToBusWindow(offset, value, TreatAsByteOrdinal{});
     }
     constexpr auto EnableEmulatorTrace = false;
     constexpr decltype(getCPUClockFrequency()) SPIClockFrequencies[] {
@@ -92,10 +102,10 @@ namespace {
             X(7),
 #undef X
     };
+    [[nodiscard]] byte computeClockRateSetup() noexcept {
+        return (SPCR & 0b11) | ((SPSR | 0b1) << 3);
+    }
     byte doSPIReads(byte offset) noexcept {
-        auto computeClockRateSetup = []() {
-            return (SPCR & 0b11) | ((SPSR | 0b1) << 3);
-        };
         switch (static_cast<SPIRegisters>(offset)) {
             case SPIRegisters::Data:
                 return SPDR;
@@ -195,17 +205,94 @@ namespace {
                 return 0;
         }
     }
-
-    void
-    writeSerialConsoleSpace(byte offset, byte value) noexcept {
-        /// @todo implement
-    }
-
-    byte
-    readSerialConsoleSpace(byte offset) noexcept {
-        /// @todo implement
-        return 0;
-    }
+    class SerialConsole {
+    public:
+        enum class Registers : byte {
+            Data,
+            Available,
+            AvailableForWrite,
+            Status,
+#define Register16(name) name ## 0, name ## 1
+#define Register32(name) Register16(name ## 0), Register16(name ## 1)
+            Register32(ClockFrequency),
+#undef Register32
+#undef Register16
+        };
+    public:
+        SerialConsole() = delete;
+        ~SerialConsole() = delete;
+        SerialConsole(SerialConsole&&) = delete;
+        SerialConsole(const SerialConsole&) = delete;
+        SerialConsole& operator=(const SerialConsole&) = delete;
+        SerialConsole& operator=(SerialConsole&&) = delete;
+        static void setClockRate(uint32_t rate) noexcept { clockRate_ = rate; }
+        [[nodiscard]] static auto getClockRate() noexcept { return clockRate_; }
+        static void putCharacter(byte value) noexcept { Serial.write(value); }
+        [[nodiscard]] static byte getCharacter() noexcept { return static_cast<byte>(Serial.read()); }
+        [[nodiscard]] static byte availableForWrite() noexcept { return Serial.availableForWrite(); }
+        [[nodiscard]] static byte available() noexcept { return Serial.available(); }
+        [[nodiscard]] static byte getStatus() noexcept { return Serial ? 0xFF : 0x00; }
+        inline static void setStatus(byte value) noexcept {
+            setStatus(value != 0);
+        }
+        static void setStatus(bool value) noexcept {
+            if (value) {
+                begin();
+            } else {
+                end();
+            }
+        }
+        static void end() noexcept {
+            if (Serial) {
+                Serial.end();
+            }
+        }
+        static void begin() noexcept {
+            if (!Serial) {
+                Serial.begin(clockRate_);
+            }
+        }
+        static void write(byte offset, byte value) noexcept {
+            switch (static_cast<Registers>(offset)) {
+                case Registers::Data:
+                    putCharacter(value);
+                    break;
+                case Registers::Status:
+                    setStatus(value);
+                    break;
+                case Registers::ClockFrequency00:
+                    clockRate_ = ((clockRate_ & 0xFFFFFF00) | static_cast<uint32_t>(value));
+                    break;
+                case Registers::ClockFrequency01:
+                    clockRate_ = ((clockRate_ & 0xFFFF00FF) | (static_cast<uint32_t>(value)  << 8));
+                    break;
+                case Registers::ClockFrequency10:
+                    clockRate_ = ((clockRate_ & 0xFF00FFFF) | (static_cast<uint32_t>(value)  << 16));
+                    break;
+                case Registers::ClockFrequency11:
+                    clockRate_ = ((clockRate_ & 0x00FFFFFF) | (static_cast<uint32_t>(value)  << 24));
+                    break;
+                default:
+                    break;
+            }
+        }
+        [[nodiscard]] static byte read(byte offset) noexcept {
+            switch (static_cast<Registers>(offset)) {
+                case Registers::Data: return getCharacter();
+                case Registers::Status: return getStatus();
+                case Registers::Available: return available();
+                case Registers::AvailableForWrite: return availableForWrite();
+                case Registers::ClockFrequency00: return static_cast<byte>(clockRate_);
+                case Registers::ClockFrequency01: return static_cast<byte>(clockRate_ >> 8);
+                case Registers::ClockFrequency10: return static_cast<byte>(clockRate_ >> 16);
+                case Registers::ClockFrequency11: return static_cast<byte>(clockRate_ >> 24);
+                default:
+                    return 0;
+            }
+        }
+    private:
+        static inline uint32_t clockRate_ {115200};
+    };
 
     void
     writeIOSpace(byte offset, byte value) noexcept {
@@ -246,7 +333,7 @@ Core::loadByte(Address destination) {
                         case Builtin::Devices::IO:
                             return readIOSpace(offset);
                         case Builtin::Devices::SerialConsole:
-                            return readSerialConsoleSpace(offset);
+                            return SerialConsole::read(offset);
                         default:
                             return 0;
                     }
@@ -287,7 +374,7 @@ Core::storeByte(Address destination, ByteOrdinal value) {
                             writeIOSpace(offset, value);
                             break;
                         case Builtin::Devices::SerialConsole:
-                            writeSerialConsoleSpace(offset, value);
+                            SerialConsole::write(offset, value);
                             break;
                         default:
                             break;
