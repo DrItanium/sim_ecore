@@ -1066,7 +1066,7 @@ Core::getLocals() const noexcept {
 }
 void
 Core::setFramePointer(Ordinal value) noexcept {
-    getFramePointer().setOrdinal(value);
+    getFramePointer().setAddress(value);
 }
 
 Ordinal
@@ -1255,7 +1255,7 @@ Core::ret() noexcept {
 }
 Ordinal
 Core::getFramePointerValue() const noexcept {
-    return getFramePointer().getOrdinal();
+    return getFramePointer().getAddress();
 }
 Ordinal
 Core::properFramePointerAddress() const noexcept {

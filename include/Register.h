@@ -76,10 +76,11 @@ private:
 class FramePointer {
 public:
     explicit FramePointer(Register& targetRegister, Address alignmentMask) : reg_(targetRegister), alignmentMask_(alignmentMask) {}
+    explicit FramePointer(const Register& targetRegister, Address alignmentMask) : reg_(const_cast<Register&>(targetRegister)), alignmentMask_(alignmentMask) {}
     void setAddress(Address address) noexcept {
         reg_.setOrdinal(address & alignmentMask_);
     }
-    Address getAddress() noexcept {
+    [[nodiscard]] Address getAddress() const noexcept {
         return reg_.getOrdinal() & alignmentMask_;
     }
 private:
