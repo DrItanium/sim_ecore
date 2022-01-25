@@ -604,6 +604,12 @@ namespace Builtin
     constexpr Address computeBaseAddress(Devices dev) noexcept {
         return ((static_cast<Address>(dev) << 8) + InternalBaseAddress);
     }
+    constexpr bool mapsToTargetPeripheral(Address address, Devices targetDevice) noexcept {
+        return (computeBaseAddress(targetDevice) == (address & 0xFFFFFF00));
+    }
+    constexpr Devices addressToTargetPeripheral(Address address) noexcept {
+        return static_cast<Devices>(static_cast<byte>(address >> 8));
+    }
 }
 void pinMode(Pinout p, decltype(OUTPUT) direction) noexcept;
 void digitalWrite(Pinout p, decltype(HIGH) value) noexcept;

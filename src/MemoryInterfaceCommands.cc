@@ -23,6 +23,7 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <SPI.h>
 #include "Core.h"
 #include "Types.h"
 #include "InternalBootProgram.h"
@@ -87,8 +88,95 @@ Core::loadByte(Address destination) {
         return readFromBusWindow(static_cast<size_t>(destination));
     }
 }
+namespace {
+    enum class SPIRegisters : byte {
+        Data,
+        TransferComplete,
+        WriteCollision,
+        ClockPhase,
+        ClockPolarity,
+        ClockRate,
+        DataOrder,
+        PeripheralEnable,
+    };
+    void doSPIWrite(byte offset, byte value) noexcept {
+        switch (static_cast<SPIRegisters>(offset)) {
+            case SPIRegisters::Data:
+                SPDR = offset;
+                break;
+            case SPIRegisters::PeripheralEnable:
+                if (value == 0) {
+                    SPI.end();
+                } else {
+                    SPI.begin();
+                }
+                break;
+            case SPIRegisters::ClockPolarity:
+                if (value == 0) {
+                    SPCR &= ~_BV(CPOL);
+                } else {
+                    SPCR |= _BV(CPOL);
+                }
+                break;
+            case SPIRegisters::ClockPhase:
+                if (value == 0) {
+                    SPCR &= ~_BV(CPHA);
+                } else {
+                    SPCR |= _BV(CPHA);
+                }
+                break;
+            case SPIRegisters::DataOrder:
+                if (value == 0) {
+                    SPCR &= ~_BV(DORD);
+                } else {
+                    SPCR |= _BV(DORD);
+                }
+                break;
+            case SPIRegisters::ClockRate:
+                [value]() noexcept {
+                    if (value & 0b001) {
+                        SPCR &= ~_BV(SPR0);
+                    } else {
+                        SPCR |= _BV(SPR0);
+                    }
+                    if (value & 0b010) {
+                        SPCR &= ~_BV(SPR1);
+                    } else {
+                        SPCR |= _BV(SPR1);
+                    }
+                    if (value & 0b100) {
+                        SPSR &= ~_BV(SPI2X);
+                    } else {
+                        SPSR |= _BV(SPI2X);
+                    }
+                }();
+                break;
+            default:
+                break;
+        }
+    }
+}
 void
 Core::storeByte(Address destination, ByteOrdinal value) {
+    auto handlePeripheralDispatch = [this](Address destination, ByteOrdinal value) {
+        /// @todo handle other devices
+        if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+            EEPROM.update(static_cast<int>(destination & 0xFFF), value);
+        } else {
+            switch (Builtin::addressToTargetPeripheral(destination))  {
+                case Builtin::Devices::SPI:
+                    doSPIWrite(static_cast<byte>(destination), value);
+                    break;
+                case Builtin::Devices::I2C:
+                case Builtin::Devices::IO:
+                case Builtin::Devices::Query:
+                case Builtin::Devices::AnalogComparator:
+                default:
+                    break;
+
+            }
+        }
+    };
     if (static_cast<byte>(destination >> 24) == 0xFF) {
         constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
         constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
@@ -103,13 +191,7 @@ Core::storeByte(Address destination, ByteOrdinal value) {
                 }
                 break;
             case InternalPeripheralStart:
-                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
-                    EEPROM.update(static_cast<int>(destination & 0xFFF), value);
-                } else {
-                    /// @todo handle other devices
-                }
-                // more lookup needed here
-                // do something here
+                handlePeripheralDispatch(destination, value);
                 break;
             default:
                 break;
