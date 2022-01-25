@@ -305,208 +305,88 @@ namespace {
     }
 }
 ByteOrdinal
-Core::loadByte(Address destination) {
-    if (static_cast<byte>(destination >> 24) == 0xFF) {
-        constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
-        constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
-        constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
-        byte subOffset = static_cast<byte>(destination >> 16);
-        switch (subOffset) {
-            case BootProgramBaseStart:
-                return readFromInternalBootProgram(static_cast<size_t>(destination - Builtin::InternalBootProgramBase));
-            case InternalSRAMStart:
-                if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
-                    return internalSRAM_[static_cast<size_t>(offset)];
-                } else {
-                    setEBIUpper(destination);
-                    return readFromBusWindow(static_cast<size_t>(destination));
-                }
-            case InternalPeripheralStart:
-                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
-                    return EEPROM.read(static_cast<int>(destination & 0xFFF));
-                } else {
-                    /// @todo handle other devices
-                    switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
-                        case Builtin::Devices::SPI:
-                            return doSPIReads(offset);
-                        case Builtin::Devices::Query:
-                            return readQuerySpace(offset);
-                        case Builtin::Devices::IO:
-                            return readIOSpace(offset);
-                        case Builtin::Devices::SerialConsole:
-                            return SerialConsole::read(offset);
-                        default:
-                            setEBIUpper(destination);
-                            return readFromBusWindow(static_cast<size_t>(destination));
-                    }
-                }
-            default:
-                break;
-        }
-    }
-    setEBIUpper(destination);
-    return readFromBusWindow(static_cast<size_t>(destination));
-}
-void
-Core::storeByte(Address destination, ByteOrdinal value) {
-    if (static_cast<byte>(destination >> 24) == 0xFF) {
-        constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
-        constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
-        constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
-        byte subOffset = static_cast<byte>(destination >> 16);
-        switch (subOffset) {
-            case BootProgramBaseStart:
-                break;
-            case InternalSRAMStart:
-                if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
-                    internalSRAM_[static_cast<size_t>(offset)] = value;
-                }
-                break;
-            case InternalPeripheralStart:
-                if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
-                    EEPROM.update(static_cast<int>(destination & 0xFFF), value);
-                } else {
-                    switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
-                        case Builtin::Devices::SPI:
-                            doSPIWrite(offset, value);
-                            break;
-                        case Builtin::Devices::IO:
-                            writeIOSpace(offset, value);
-                            break;
-                        case Builtin::Devices::SerialConsole:
-                            SerialConsole::write(offset, value);
-                            break;
-                        default:
-                            setEBIUpper(destination);
-                            writeToBusWindow(static_cast<size_t>(destination), value);
-                            break;
-
-                    }
-                }
-                break;
-            default:
+Core::readFromInternalSpace(Address destination) noexcept {
+    constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
+    constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
+    constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
+    byte subOffset = static_cast<byte>(destination >> 16);
+    switch (subOffset) {
+        case BootProgramBaseStart:
+            return readFromInternalBootProgram(static_cast<size_t>(destination - Builtin::InternalBootProgramBase));
+        case InternalSRAMStart:
+            if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
+                return internalSRAM_[static_cast<size_t>(offset)];
+            } else {
                 setEBIUpper(destination);
-                writeToBusWindow(static_cast<size_t>(destination), value);
-                break;
-        }
-    } else {
-        setEBIUpper(destination);
-        writeToBusWindow(static_cast<size_t>(destination), value);
+                return readFromBusWindow(static_cast<size_t>(destination));
+            }
+        case InternalPeripheralStart:
+            if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+                return EEPROM.read(static_cast<int>(destination & 0xFFF));
+            } else {
+                /// @todo handle other devices
+                switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
+                    case Builtin::Devices::SPI:
+                        return doSPIReads(offset);
+                    case Builtin::Devices::Query:
+                        return readQuerySpace(offset);
+                    case Builtin::Devices::IO:
+                        return readIOSpace(offset);
+                    case Builtin::Devices::SerialConsole:
+                        return SerialConsole::read(offset);
+                    default:
+                        setEBIUpper(destination);
+                        return readFromBusWindow(static_cast<size_t>(destination));
+                }
+            }
+        default:
+            setEBIUpper(destination);
+            return readFromBusWindow(static_cast<size_t>(destination));
+    }
+}
+void
+Core::writeToInternalSpace(Address destination, byte value) noexcept {
+    constexpr byte BootProgramBaseStart = static_cast<byte>(Builtin::InternalBootProgramBase >> 16);
+    constexpr byte InternalPeripheralStart = static_cast<byte>(Builtin::InternalPeripheralBase >> 16);
+    constexpr byte InternalSRAMStart = static_cast<byte>(Builtin::InternalSRAMBase >> 16);
+    byte subOffset = static_cast<byte>(destination >> 16);
+    switch (subOffset) {
+        case BootProgramBaseStart:
+            break;
+        case InternalSRAMStart:
+            if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
+                internalSRAM_[static_cast<size_t>(offset)] = value;
+            }
+            break;
+        case InternalPeripheralStart:
+            if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
+                EEPROM.update(static_cast<int>(destination & 0xFFF), value);
+            } else {
+                switch (auto offset = static_cast<byte>(destination); Builtin::addressToTargetPeripheral(destination))  {
+                    case Builtin::Devices::SPI:
+                        doSPIWrite(offset, value);
+                        break;
+                    case Builtin::Devices::IO:
+                        writeIOSpace(offset, value);
+                        break;
+                    case Builtin::Devices::SerialConsole:
+                        SerialConsole::write(offset, value);
+                        break;
+                    default:
+                        setEBIUpper(destination);
+                        writeToBusWindow(static_cast<size_t>(destination), value);
+                        break;
+
+                }
+            }
+            break;
+        default:
+            setEBIUpper(destination);
+            writeToBusWindow(static_cast<size_t>(destination), value);
+            break;
     }
 }
 
-ShortOrdinal
-Core::loadShort(Address destination) noexcept {
-    if (static_cast<byte>(destination >> 24) == 0xFF) {
-        union {
-            byte bytes[sizeof(ShortOrdinal)] ;
-            ShortOrdinal value;
-        } container;
-        // okay we are in internal space. Do byte by byte transfers
-        for (size_t i = 0; i < sizeof(ShortOrdinal); ++i, ++destination) {
-            container.bytes[i] = loadByte(destination);
-        }
-        return container.value;
-    } else {
-        // we are not in internal space so force the matter
-        setEBIUpper(destination);
-        return readFromBusWindow(static_cast<size_t>(destination), TreatAsShortOrdinal{});
-    }
-}
-
-Ordinal
-Core::load(Address destination) noexcept {
-    if (static_cast<byte>(destination >> 24) == 0xFF) {
-        union {
-            byte bytes[sizeof(Ordinal)] ;
-            Ordinal value;
-        } container;
-        // okay we are in internal space. Do byte by byte transfers
-        for (size_t i = 0; i < sizeof(Ordinal); ++i, ++destination) {
-            container.bytes[i] = loadByte(destination);
-        }
-        return container.value;
-    } else {
-        // we are not in internal space so force the matter
-        setEBIUpper(destination);
-        return readFromBusWindow(static_cast<size_t>(destination), TreatAsOrdinal{});
-    }
-}
-
-void
-Core::store(Address destination, Ordinal value) noexcept {
-    using K = decltype(value);
-    union {
-        K value;
-        byte bytes[sizeof(K)];
-    } container;
-    container.value = value;
-    for (size_t i = 0; i < sizeof(K); ++i, ++destination) {
-        storeByte(destination, container.bytes[i]);
-    }
-}
-void
-Core::storeShort(Address destination, ShortOrdinal value) noexcept {
-    using K = decltype(value);
-    union {
-        K value;
-        byte bytes[sizeof(K)];
-    } container;
-    container.value = value;
-    for (size_t i = 0; i < sizeof(K); ++i, ++destination) {
-        storeByte(destination, container.bytes[i]);
-    }
-}
-void
-Core::storeLong(Address destination, LongOrdinal value) {
-    using K = decltype(value);
-    union {
-        K value;
-        byte bytes[sizeof(K)];
-    } container;
-    container.value = value;
-    for (size_t i = 0; i < sizeof(K); ++i, ++destination) {
-        storeByte(destination, container.bytes[i]);
-    }
-}
-void
-Core::store(Address destination, const TripleRegister& reg) {
-    for (size_t i = 0; i < 3; ++i, destination += sizeof(Ordinal)) {
-        store(destination, reg.getOrdinal(i));
-    }
-}
-void
-Core::store(Address destination, const QuadRegister& reg) {
-    for (size_t i = 0; i < 4; ++i, destination += sizeof(Ordinal)) {
-        store(destination, reg.getOrdinal(i));
-    }
-}
-void
-Core::storeShortInteger(Address destination, ShortInteger value) {
-    union {
-        ShortInteger in;
-        ShortOrdinal out;
-    } thing;
-    thing.in = value;
-    storeShort(destination, thing.out);
-}
-void
-Core::storeByteInteger(Address destination, ByteInteger value) {
-    union {
-        ByteInteger in;
-        ByteOrdinal out;
-    } thing;
-    thing.in = value;
-    storeByte(destination, thing.out);
-}
-LongOrdinal
-Core::loadLong(Address destination) {
-    DoubleRegister reg;
-    for (int i = 0; i < 2; ++i, destination += sizeof(Ordinal)) {
-        reg.setOrdinal(load(destination), i);
-    }
-    return reg.getLongOrdinal();
-}
 void
 Core::load(Address destination, TripleRegister& reg) noexcept {
     for (int i = 0; i < 3; ++i, destination += sizeof(Ordinal)) {
@@ -514,10 +394,20 @@ Core::load(Address destination, TripleRegister& reg) noexcept {
     }
 }
 void
-Core::load(Address destination, QuadRegister& reg) noexcept {
-    for (int i = 0; i < 4; ++i, destination += sizeof(Ordinal)) {
-        reg.setOrdinal(load(destination), i);
+Core::store(Address destination, const TripleRegister& reg) noexcept {
+    for (int i = 0; i < 3; ++i, destination += sizeof(Ordinal)) {
+        store(destination, reg.getOrdinal(i), TreatAsOrdinal{});
     }
+}
+void
+Core::load(Address destination, QuadRegister& reg) noexcept {
+    reg.setLowerHalf(load(destination, TreatAsLongOrdinal{}));
+    reg.setUpperHalf(load(destination + sizeof(LongOrdinal), TreatAsLongOrdinal {}));
+}
+void
+Core::store(Address destination, const QuadRegister& reg) noexcept {
+    store(destination, reg.getLowerHalf(), TreatAsLongOrdinal{});
+    store(destination+sizeof(LongOrdinal), reg.getUpperHalf(), TreatAsLongOrdinal{});
 }
 QuadRegister
 Core::loadQuad(Address destination) noexcept {

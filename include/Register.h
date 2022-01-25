@@ -356,6 +356,14 @@ public:
     void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b11] = value; }
     constexpr auto getHalf(int which = 0) const noexcept { return halves_[which & 0b01];}
     void setHalf(LongOrdinal value, int which = 0) noexcept { halves_[which & 0b01] = value; }
+    [[nodiscard]] constexpr auto getLowerHalf() const noexcept { return halves_[0]; }
+    [[nodiscard]] constexpr auto getUpperHalf() const noexcept { return halves_[1]; }
+    void setLowerHalf(LongOrdinal value) noexcept {
+        halves_[0] = value;
+    }
+    void setUpperHalf(LongOrdinal value) noexcept {
+        halves_[1] = value;
+    }
     /**
      * @brief Copy the contents of a provided quad register into this one
      * @param src The source to copy from

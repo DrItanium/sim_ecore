@@ -249,27 +249,17 @@ private:
     [[nodiscard]] Ordinal getFaultTableBase() noexcept;
     [[nodiscard]] Ordinal getInterruptStackPointer() noexcept;
     void generateFault(FaultType fault) noexcept;
-    void storeLong(Address destination, LongOrdinal value) noexcept;
-    void store(Address destination, const TripleRegister& reg) noexcept;
-    void store(Address destination, const QuadRegister& reg) noexcept;
-    void storeShortInteger(Address destination, ShortInteger value) noexcept;
-    void storeByteInteger(Address destination, ByteInteger value) noexcept;
-    [[nodiscard]] LongOrdinal loadLong(Address destination) noexcept;
-    void load(Address destination, TripleRegister& reg) noexcept;
-    void load(Address destination, QuadRegister& reg) noexcept;
-    [[nodiscard]] QuadRegister loadQuad(Address destination) noexcept;
-    void synchronizedStore(Address destination, const DoubleRegister& value) noexcept;
-    void synchronizedStore(Address destination, const QuadRegister& value) noexcept;
-    void synchronizedStore(Address destination, const Register& value) noexcept;
-    [[nodiscard]] ByteOrdinal loadByte(Address destination) noexcept;
-    void storeByte(Address destination, ByteOrdinal value) noexcept;
-    [[nodiscard]] ShortOrdinal loadShort(Address destination) noexcept;
-    void storeShort(Address destination, ShortOrdinal value) noexcept;
-    [[nodiscard]] Ordinal load(Address destination) noexcept;
-    void store(Address destination, Ordinal value) noexcept;
     constexpr bool inInternalSpace(Address destination) const noexcept {
         return static_cast<byte>(destination >> 24) == 0xFF;
     }
+    void store(Address destination, const TripleRegister& reg) noexcept;
+    void store(Address destination, const QuadRegister& reg) noexcept;
+    void load(Address destination, TripleRegister& reg) noexcept;
+    void load(Address destination, QuadRegister& reg) noexcept;
+    void synchronizedStore(Address destination, const DoubleRegister& value) noexcept;
+    void synchronizedStore(Address destination, const QuadRegister& value) noexcept;
+    void synchronizedStore(Address destination, const Register& value) noexcept;
+    [[nodiscard]] QuadRegister loadQuad(Address destination) noexcept;
     [[nodiscard]] ByteOrdinal readFromInternalSpace(Address destination) noexcept;
     void writeToInternalSpace(Address destination, byte value) noexcept;
     template<typename T>
@@ -321,6 +311,29 @@ private:
                 storeToBus(destination, value, K{});
             }
     }
+    inline void storeLong(Address destination, LongOrdinal value) noexcept { store(destination, value, TreatAsLongOrdinal{}); }
+    inline void storeShortInteger(Address destination, ShortInteger value) noexcept { store(destination, value, TreatAsShortInteger{}); }
+    void storeByteInteger(Address destination, ByteInteger value) noexcept { store(destination, value, TreatAsByteInteger{}); }
+    [[nodiscard]] inline LongOrdinal loadLong(Address destination) noexcept { return load(destination, TreatAsLongOrdinal{}); }
+    [[nodiscard]] ByteOrdinal loadByte(Address destination) noexcept {
+        if (inInternalSpace(destination))  {
+            return readFromInternalSpace(destination);
+        } else {
+            return loadFromBus(destination, TreatAsByteOrdinal{});
+        }
+    }
+    void storeByte(Address destination, ByteOrdinal value) noexcept {
+        if (inInternalSpace(destination)) {
+            writeToInternalSpace(destination, value);
+        } else {
+            storeToBus(destination, value, TreatAsByteOrdinal{});
+        }
+    }
+    [[nodiscard]] ShortOrdinal loadShort(Address destination) noexcept { return load(destination, TreatAsShortOrdinal{}); }
+    void storeShort(Address destination, ShortOrdinal value) noexcept { store(destination, value, TreatAsShortOrdinal{}); }
+    [[nodiscard]] Ordinal load(Address destination) noexcept { return load(destination, TreatAsOrdinal{}); }
+    void store(Address destination, Ordinal value) noexcept { store(destination, value, TreatAsOrdinal{}); }
+private:
 
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
     [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const;
