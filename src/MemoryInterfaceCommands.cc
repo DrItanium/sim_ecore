@@ -140,6 +140,24 @@ namespace {
                 break;
         }
     }
+    enum class QueryRegisters : byte {
+#define Register16(name) name ## 0, name ## 1
+#define Register32(name) Register16(name ## 0), Register16(name ## 1)
+    Register32(ClockFrequency),
+#undef Register32
+#undef Register16
+    };
+    byte
+    readQuerySpace(byte offset) noexcept {
+        switch (static_cast<QueryRegisters>(offset)) {
+            case QueryRegisters::ClockFrequency00: return static_cast<byte>(F_CPU);
+            case QueryRegisters::ClockFrequency01: return static_cast<byte>(F_CPU >> 8);
+            case QueryRegisters::ClockFrequency10: return static_cast<byte>(F_CPU >> 16);
+            case QueryRegisters::ClockFrequency11: return static_cast<byte>(F_CPU >> 24);
+            default:
+                return 0;
+        }
+    }
 }
 ByteOrdinal
 Core::loadByte(Address destination) {
@@ -165,10 +183,8 @@ Core::loadByte(Address destination) {
                     switch (Builtin::addressToTargetPeripheral(destination))  {
                         case Builtin::Devices::SPI:
                             return doSPIReads(static_cast<byte>(destination));
-                        case Builtin::Devices::I2C:
-                        case Builtin::Devices::IO:
                         case Builtin::Devices::Query:
-                        case Builtin::Devices::AnalogComparator:
+                            return readQuerySpace(static_cast<byte>(destination));
                         default:
                             return 0;
                     }
