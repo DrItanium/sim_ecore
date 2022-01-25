@@ -30,6 +30,11 @@
 #include "Instruction.h"
 #include "Register.h"
 
+template<typename T>
+inline volatile T& memory(const size_t address) noexcept {
+    return *reinterpret_cast<T*>(address);
+}
+
 enum class FaultType : Ordinal {
     Trace = 0x0001'0000,
     Instruction_Trace = Trace | 0x02,
@@ -237,31 +242,85 @@ public:
 private:
     [[nodiscard]] Ordinal getSystemAddressTableBase() const noexcept;
     [[nodiscard]] Ordinal getPRCBPtrBase() const noexcept;
-    [[nodiscard]] Ordinal getSystemProcedureTableBase() ;
-    [[nodiscard]] Ordinal getFaultProcedureTableBase() ;
-    [[nodiscard]] Ordinal getTraceTablePointer() ;
-    [[nodiscard]] Ordinal getInterruptTableBase() ;
-    [[nodiscard]] Ordinal getFaultTableBase() ;
-    [[nodiscard]] Ordinal getInterruptStackPointer();
-    void generateFault(FaultType fault);
-    void storeLong(Address destination, LongOrdinal value);
-    void store(Address destination, const TripleRegister& reg);
-    void store(Address destination, const QuadRegister& reg);
-    void storeShortInteger(Address destination, ShortInteger value);
-    void storeByteInteger(Address destination, ByteInteger value);
-    [[nodiscard]] LongOrdinal loadLong(Address destination);
+    [[nodiscard]] Ordinal getSystemProcedureTableBase() noexcept;
+    [[nodiscard]] Ordinal getFaultProcedureTableBase() noexcept;
+    [[nodiscard]] Ordinal getTraceTablePointer() noexcept;
+    [[nodiscard]] Ordinal getInterruptTableBase() noexcept;
+    [[nodiscard]] Ordinal getFaultTableBase() noexcept;
+    [[nodiscard]] Ordinal getInterruptStackPointer() noexcept;
+    void generateFault(FaultType fault) noexcept;
+    void storeLong(Address destination, LongOrdinal value) noexcept;
+    void store(Address destination, const TripleRegister& reg) noexcept;
+    void store(Address destination, const QuadRegister& reg) noexcept;
+    void storeShortInteger(Address destination, ShortInteger value) noexcept;
+    void storeByteInteger(Address destination, ByteInteger value) noexcept;
+    [[nodiscard]] LongOrdinal loadLong(Address destination) noexcept;
     void load(Address destination, TripleRegister& reg) noexcept;
     void load(Address destination, QuadRegister& reg) noexcept;
     [[nodiscard]] QuadRegister loadQuad(Address destination) noexcept;
     void synchronizedStore(Address destination, const DoubleRegister& value) noexcept;
     void synchronizedStore(Address destination, const QuadRegister& value) noexcept;
     void synchronizedStore(Address destination, const Register& value) noexcept;
-    [[nodiscard]] ByteOrdinal loadByte(Address destination);
-    void storeByte(Address destination, ByteOrdinal value);
+    [[nodiscard]] ByteOrdinal loadByte(Address destination) noexcept;
+    void storeByte(Address destination, ByteOrdinal value) noexcept;
     [[nodiscard]] ShortOrdinal loadShort(Address destination) noexcept;
-    void storeShort(Address destination, ShortOrdinal value);
-    [[nodiscard]] Ordinal load(Address destination);
-    void store(Address destination, Ordinal value);
+    void storeShort(Address destination, ShortOrdinal value) noexcept;
+    [[nodiscard]] Ordinal load(Address destination) noexcept;
+    void store(Address destination, Ordinal value) noexcept;
+    constexpr bool inInternalSpace(Address destination) const noexcept {
+        return static_cast<byte>(destination >> 24) == 0xFF;
+    }
+    [[nodiscard]] ByteOrdinal readFromInternalSpace(Address destination) noexcept;
+    void writeToInternalSpace(Address destination, byte value) noexcept;
+    template<typename T>
+    void storeToBus(Address destination, T value, TreatAs<T>) noexcept {
+        setEBIUpper(destination);
+        memory<T>(static_cast<size_t>(destination)) = value;
+    }
+    template<typename T>
+    typename TreatAs<T>::UnderlyingType loadFromBus(Address destination, TreatAs<T>) noexcept {
+        setEBIUpper(destination);
+        return memory<T>(static_cast<size_t>(destination));
+    }
+
+    template<typename T>
+    typename TreatAs<T>::UnderlyingType load(Address destination, TreatAs<T>) noexcept {
+        using K = TreatAs<T>;
+        if (inInternalSpace(destination)) {
+            union {
+                byte bytes[sizeof(T)] ;
+                T value;
+            } container;
+            // okay we are in internal space. Do byte by byte transfers
+            for (size_t i = 0; i < sizeof(T); ++i, ++destination) {
+                container.bytes[i] = readFromInternalSpace(destination);
+            }
+            return container.value;
+        } else {
+            // we are not in internal space so force the matter
+            setEBIUpper(destination);
+            return loadFromBus(destination, K{});
+        }
+    }
+    template<typename T>
+    void store(Address destination, T value, TreatAs<T>) noexcept {
+        using K = TreatAs<T>;
+            if (inInternalSpace(destination)) {
+                union {
+                    byte bytes[sizeof(T)] ;
+                    T value;
+                } container;
+                container.value = value;
+                // okay we are in internal space. Do byte by byte transfers
+                for (size_t i = 0; i < sizeof(T); ++i, ++destination) {
+                    writeToInternalSpace(destination, container.bytes[i]);
+                }
+            } else {
+                // we are not in internal space so force the matter
+                setEBIUpper(destination);
+                storeToBus(destination, value, K{});
+            }
+    }
 
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
     [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const;
@@ -610,9 +669,4 @@ void pinMode(Pinout p, decltype(OUTPUT) direction) noexcept;
 void digitalWrite(Pinout p, decltype(HIGH) value) noexcept;
 byte digitalRead(Pinout p) noexcept;
 [[noreturn]] void haltExecution(const __FlashStringHelper* message) noexcept;
-template<typename T>
-inline volatile T& memory(const size_t address) noexcept {
-    return *reinterpret_cast<T*>(address);
-}
-
 #endif //SIM3_CORE_H

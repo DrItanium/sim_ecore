@@ -318,7 +318,8 @@ Core::loadByte(Address destination) {
                 if (auto offset = destination - InternalSRAMStart; offset < Builtin::InternalSRAMEnd) {
                     return internalSRAM_[static_cast<size_t>(offset)];
                 } else {
-                    return 0;
+                    setEBIUpper(destination);
+                    return readFromBusWindow(static_cast<size_t>(destination));
                 }
             case InternalPeripheralStart:
                 if (destination >= Builtin::ConfigurationSpaceBaseAddress) {
@@ -335,17 +336,16 @@ Core::loadByte(Address destination) {
                         case Builtin::Devices::SerialConsole:
                             return SerialConsole::read(offset);
                         default:
-                            return 0;
+                            setEBIUpper(destination);
+                            return readFromBusWindow(static_cast<size_t>(destination));
                     }
                 }
             default:
                 break;
         }
-        return 0;
-    } else {
-        setEBIUpper(destination);
-        return readFromBusWindow(static_cast<size_t>(destination));
     }
+    setEBIUpper(destination);
+    return readFromBusWindow(static_cast<size_t>(destination));
 }
 void
 Core::storeByte(Address destination, ByteOrdinal value) {
@@ -377,12 +377,16 @@ Core::storeByte(Address destination, ByteOrdinal value) {
                             SerialConsole::write(offset, value);
                             break;
                         default:
+                            setEBIUpper(destination);
+                            writeToBusWindow(static_cast<size_t>(destination), value);
                             break;
 
                     }
                 }
                 break;
             default:
+                setEBIUpper(destination);
+                writeToBusWindow(static_cast<size_t>(destination), value);
                 break;
         }
     } else {
@@ -391,32 +395,46 @@ Core::storeByte(Address destination, ByteOrdinal value) {
     }
 }
 
-Ordinal
-Core::load(Address destination) {
-    union {
-       byte bytes[sizeof(Ordinal)] ;
-       Ordinal value;
-    } container;
-    for (size_t i = 0; i < sizeof(Ordinal); ++i, ++destination) {
-        container.bytes[i] = loadByte(destination);
-    }
-    return container.value;
-}
-
 ShortOrdinal
 Core::loadShort(Address destination) noexcept {
-    union {
-        byte bytes[sizeof(ShortOrdinal)] ;
-        ShortOrdinal value;
-    } container;
-    for (size_t i = 0; i < sizeof(ShortOrdinal); ++i, ++destination) {
-        container.bytes[i] = loadByte(destination);
+    if (static_cast<byte>(destination >> 24) == 0xFF) {
+        union {
+            byte bytes[sizeof(ShortOrdinal)] ;
+            ShortOrdinal value;
+        } container;
+        // okay we are in internal space. Do byte by byte transfers
+        for (size_t i = 0; i < sizeof(ShortOrdinal); ++i, ++destination) {
+            container.bytes[i] = loadByte(destination);
+        }
+        return container.value;
+    } else {
+        // we are not in internal space so force the matter
+        setEBIUpper(destination);
+        return readFromBusWindow(static_cast<size_t>(destination), TreatAsShortOrdinal{});
     }
-    return container.value;
+}
+
+Ordinal
+Core::load(Address destination) noexcept {
+    if (static_cast<byte>(destination >> 24) == 0xFF) {
+        union {
+            byte bytes[sizeof(Ordinal)] ;
+            Ordinal value;
+        } container;
+        // okay we are in internal space. Do byte by byte transfers
+        for (size_t i = 0; i < sizeof(Ordinal); ++i, ++destination) {
+            container.bytes[i] = loadByte(destination);
+        }
+        return container.value;
+    } else {
+        // we are not in internal space so force the matter
+        setEBIUpper(destination);
+        return readFromBusWindow(static_cast<size_t>(destination), TreatAsOrdinal{});
+    }
 }
 
 void
-Core::store(Address destination, Ordinal value) {
+Core::store(Address destination, Ordinal value) noexcept {
     using K = decltype(value);
     union {
         K value;
@@ -428,7 +446,7 @@ Core::store(Address destination, Ordinal value) {
     }
 }
 void
-Core::storeShort(Address destination, ShortOrdinal value) {
+Core::storeShort(Address destination, ShortOrdinal value) noexcept {
     using K = decltype(value);
     union {
         K value;
