@@ -31,36 +31,45 @@ union Register {
 public:
     constexpr explicit Register(Ordinal value = 0) noexcept : ord_(value) { }
     [[nodiscard]] constexpr bool getMostSignificantBit() const noexcept { return ord_ & 0x8000'0000; }
-    [[nodiscard]] constexpr auto getOrdinal() const noexcept { return ord_; }
-    [[nodiscard]] constexpr auto getWordAligned() const noexcept { return getOrdinal() & 0xFFFF'FFFC; }
-    [[nodiscard]] constexpr auto getDoubleWordAligned() const noexcept { return getOrdinal() & 0xFFFF'FFF8; }
-    [[nodiscard]] constexpr auto getQuadWordAligned() const noexcept { return getOrdinal() & 0xFFFF'FFF0; }
-    [[nodiscard]] constexpr auto getInteger() const noexcept { return integer_; }
+    [[nodiscard]] constexpr auto getWordAligned() const noexcept { return ord_ & 0xFFFF'FFFC; }
+    [[nodiscard]] constexpr auto getDoubleWordAligned() const noexcept { return ord_ & 0xFFFF'FFF8; }
+    [[nodiscard]] constexpr auto getQuadWordAligned() const noexcept { return ord_ & 0xFFFF'FFF0; }
     [[nodiscard]] constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
     [[nodiscard]] constexpr auto getShortInteger(int which = 0) const noexcept { return sints_[which&0b01]; }
     [[nodiscard]] constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
     [[nodiscard]] constexpr auto getByteInteger(int which = 0) const noexcept { return bints_[which&0b11]; }
-    void setOrdinal(Ordinal value) noexcept {
-        ord_ = value;
+    [[nodiscard]] constexpr auto getOrdinal() const noexcept { return get<Ordinal>(); }
+    [[nodiscard]] constexpr auto getInteger() const noexcept { return get<Integer>(); }
+    [[nodiscard]] constexpr Integer get(TreatAsInteger) const noexcept { return integer_; }
+    [[nodiscard]] constexpr Ordinal get(TreatAsOrdinal) const noexcept { return ord_; }
+    [[nodiscard]] constexpr ByteInteger get(TreatAsByteInteger) const noexcept { return static_cast<ByteInteger>(integer_); }
+    [[nodiscard]] constexpr ByteOrdinal get(TreatAsByteOrdinal) const noexcept { return static_cast<ByteOrdinal>(ord_); }
+    [[nodiscard]] constexpr ShortInteger get(TreatAsShortInteger) const noexcept { return static_cast<ShortInteger>(integer_); }
+    [[nodiscard]] constexpr ShortOrdinal get(TreatAsShortOrdinal) const noexcept { return static_cast<ShortOrdinal>(ord_); }
+    template<typename T>
+    [[nodiscard]] constexpr T get() const noexcept {
+        return get(TreatAs<T>{});
     }
-    void setInteger(Integer value) noexcept {
-        integer_ = value;
-    }
-    void setShortOrdinal(ShortOrdinal value) noexcept { setOrdinal(value); }
-    void setShortInteger(ShortInteger value) noexcept { setInteger(value); }
-    void setByteOrdinal(ByteOrdinal value) noexcept { setOrdinal(value); }
-    void setByteInteger(ByteInteger value) noexcept { setInteger(value); }
-    void setShortOrdinal(ShortOrdinal value, int which) noexcept { sords_[which&0b01] = value; }
-    void setShortInteger(ShortInteger value, int which) noexcept { sints_[which&0b01] = value; }
-    void setByteOrdinal(ByteOrdinal value, int which) noexcept { bords_[which&0b11] = value; }
-    void setByteInteger(ByteInteger value, int which) noexcept { bints_[which&0b11] = value; }
-    void increment(Integer advance) noexcept { integer_ += advance; }
-    void increment(Ordinal advance) noexcept { ord_ += advance; }
-    void decrement(Integer advance) noexcept { integer_ -= advance; }
-    void decrement(Ordinal advance) noexcept { ord_ -= advance; }
+    void set(Integer value, TreatAsInteger) noexcept { integer_ = value; }
+    void set(Ordinal value, TreatAsOrdinal) noexcept { ord_ = value; }
+    void set(ByteInteger value, int which, TreatAsByteInteger) noexcept { bints_[which&0b11] = value; }
+    void set(ByteOrdinal value, int which, TreatAsByteOrdinal) noexcept { bords_[which&0b11] = value; }
+    void set(ShortInteger value, int which, TreatAsShortInteger) noexcept { sints_[which&0b1] = value; }
+    void set(ShortOrdinal value, int which, TreatAsShortOrdinal) noexcept { sords_[which&0b1] = value; }
+    void set(ByteInteger value, TreatAsByteInteger) noexcept { set(value, TreatAsInteger{}); }
+    void set(ByteOrdinal value, TreatAsByteOrdinal) noexcept { set(value, TreatAsOrdinal{}); }
+    void set(ShortInteger value, TreatAsShortInteger) noexcept { set(value, TreatAsInteger{}); }
+    void set(ShortOrdinal value, TreatAsShortOrdinal) noexcept { set(value, TreatAsOrdinal{}); }
+    void setOrdinal(Ordinal value) noexcept { ord_ = value; }
+    void setInteger(Integer value) noexcept { integer_ = value; }
+
+    void increment(Integer advance, TreatAsInteger) noexcept { integer_ += advance; }
+    void increment(Ordinal advance, TreatAsOrdinal) noexcept { ord_ += advance; }
+    void decrement(Integer advance, TreatAsInteger) noexcept { integer_ -= advance; }
+    void decrement(Ordinal advance, TreatAsOrdinal) noexcept { ord_ -= advance; }
 #ifdef NUMERICS_ARCHTIECTURE
-    constexpr auto getReal() const noexcept { return real_; }
-void setReal(Real value) noexcept { real_ = value; }
+    [[nodiscard]] constexpr auto getReal() const noexcept { return real_; }
+    void setReal(Real value) noexcept { real_ = value; }
 #endif
 private:
     Ordinal ord_ = 0;
@@ -73,20 +82,28 @@ private:
     Real real_;
 #endif
 };
+
+/**
+ * @brief Wrapper around a register to make it behave like the frame pointer should
+ */
 class FramePointer {
 public:
     explicit FramePointer(Register& targetRegister, Address alignmentMask) : reg_(targetRegister), alignmentMask_(alignmentMask) {}
     explicit FramePointer(const Register& targetRegister, Address alignmentMask) : reg_(const_cast<Register&>(targetRegister)), alignmentMask_(alignmentMask) {}
     void setAddress(Address address) noexcept {
-        reg_.setOrdinal(address & alignmentMask_);
+        reg_.set(address & alignmentMask_, TreatAsOrdinal{});
     }
     [[nodiscard]] Address getAddress() const noexcept {
-        return reg_.getOrdinal() & alignmentMask_;
+        return reg_.get(TreatAsOrdinal{}) & alignmentMask_;
     }
 private:
     Register& reg_;
     Address alignmentMask_;
 };
+
+/**
+ * @brief Wrapper around a register to make it behave like the previous frame pointer register
+ */
 class PreviousFramePointer {
 public:
     enum class ReturnType : byte {
