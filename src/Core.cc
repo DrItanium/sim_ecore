@@ -652,28 +652,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
 
         case Opcode::modac:
-            [this, &instruction]() {
-                auto& dest = destinationFromSrcDest(instruction);
-                auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                dest.setOrdinal(ac_.modify(mask, src));
-            }( );
+            modac(instruction);
             break;
         case Opcode::modi:
-            [this, &instruction]() {
-                auto denominator = getSourceRegister(instruction.getSrc1()) .getInteger();
-                if (denominator == 0) {
-                    generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
-                } else {
-                    auto numerator = getSourceRegister(instruction.getSrc2()).getInteger();
-                    auto& dest = getRegister(instruction.getSrcDest(false));
-                    auto result = numerator - ((numerator / denominator) * denominator);
-                    if (((numerator * denominator) < 0) && (result != 0)) {
-                        result += denominator;
-                    }
-                    dest.setInteger(result);
-                }
-            }();
+            modi(instruction);
             break;
         case Opcode::modify:
             modify(instruction);
@@ -1531,4 +1513,26 @@ Core::modify(const Instruction &instruction) noexcept {
     auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     dest.setOrdinal(::modify(mask, src, dest.getOrdinal()));
+}
+void
+Core::modi(const Instruction &instruction) noexcept {
+    auto denominator = getSourceRegister(instruction.getSrc1()) .getInteger();
+    if (denominator == 0) {
+        generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
+    } else {
+        auto numerator = getSourceRegister(instruction.getSrc2()).getInteger();
+        auto& dest = getRegister(instruction.getSrcDest(false));
+        auto result = numerator - ((numerator / denominator) * denominator);
+        if (((numerator * denominator) < 0) && (result != 0)) {
+            result += denominator;
+        }
+        dest.setInteger(result);
+    }
+}
+void
+Core::modac(const Instruction &instruction) noexcept {
+    auto& dest = destinationFromSrcDest(instruction);
+    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    dest.setOrdinal(ac_.modify(mask, src));
 }

@@ -594,6 +594,8 @@ private:
     void spanbit(const Instruction& inst) noexcept;
     void alterbit(const Instruction& inst) noexcept;
     void modify(const Instruction& inst) noexcept;
+    void modi(const Instruction& inst) noexcept;
+    void modac(const Instruction& inst) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);
