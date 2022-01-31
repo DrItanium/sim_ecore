@@ -56,6 +56,14 @@ Core::setDestinationFromSrcDest(const Instruction& instruction, Integer value, T
     destinationFromSrcDest(instruction).setInteger(value);
 }
 void
+Core::setDestinationFromSrcDest(const Instruction& instruction, LongOrdinal value, TreatAsLongOrdinal) {
+    getDoubleRegister(instruction.getSrcDest(false)).setLongOrdinal(value);
+}
+DoubleRegister&
+Core::longDestinationFromSrcDest(const Instruction& instruction) noexcept {
+    return getDoubleRegister(instruction.getSrcDest(false));
+}
+void
 Core::syncf() noexcept {
     if (ac_.getNoImpreciseFaults()) {
 
@@ -1522,7 +1530,7 @@ Core::ediv(const Instruction &instruction) noexcept {
     } else {
         auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
         auto denominator = static_cast<LongOrdinal>(denomord);
-        auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+        auto& dest = longDestinationFromSrcDest(instruction);
         // taken from the manual
         auto remainder = static_cast<Ordinal>(numerator - (numerator / denominator) * denominator);
         auto quotient = static_cast<Ordinal>(numerator / denominator);
@@ -1534,7 +1542,6 @@ void
 Core::emul(const Instruction &instruction) noexcept {
     auto src2 = static_cast<LongOrdinal>(valueFromSrc2Register(instruction, TreatAsOrdinal{}));
     auto src1 = static_cast<LongOrdinal>(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
-    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
     // taken from the manual
-    dest.setLongOrdinal(src2 * src1);
+    setDestinationFromSrcDest(instruction, src2 * src1, TreatAsLongOrdinal{});
 }

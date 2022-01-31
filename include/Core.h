@@ -391,8 +391,10 @@ private:
 
     [[nodiscard]] Register& destinationFromSrcDest(const Instruction& instruction) noexcept;
     [[nodiscard]] const Register& sourceFromSrcDest(const Instruction& instruction) const noexcept;
+    [[nodiscard]] DoubleRegister& longDestinationFromSrcDest(const Instruction& instruction) noexcept;
     void setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal);
     void setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger);
+    void setDestinationFromSrcDest(const Instruction& instruction, LongOrdinal value, TreatAsLongOrdinal);
     [[nodiscard]] const Register& sourceFromSrc1(const Instruction& instruction) const noexcept;
     [[nodiscard]] const Register& sourceFromSrc2(const Instruction& instruction) const noexcept;
     [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
