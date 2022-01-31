@@ -1502,17 +1502,15 @@ Core::modify(const Instruction &instruction) noexcept {
 }
 void
 Core::modi(const Instruction &instruction) noexcept {
-    auto denominator = getSourceRegister(instruction.getSrc1()) .getInteger();
-    if (denominator == 0) {
+    if (auto denominator = valueFromSrc1Register(instruction, TreatAsInteger{}); denominator == 0) {
         generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
     } else {
-        auto numerator = getSourceRegister(instruction.getSrc2()).getInteger();
-        auto& dest = getRegister(instruction.getSrcDest(false));
+        auto numerator = valueFromSrc2Register(instruction, TreatAsInteger{});
         auto result = numerator - ((numerator / denominator) * denominator);
         if (((numerator * denominator) < 0) && (result != 0)) {
             result += denominator;
         }
-        dest.setInteger(result);
+        setDestinationFromSrcDest(instruction, result, TreatAsInteger{});
     }
 }
 void
