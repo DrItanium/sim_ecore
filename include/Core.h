@@ -585,6 +585,10 @@ private:
     [[nodiscard]] Ordinal getStackPointerValue() const noexcept;
     void checkPendingInterrupts() noexcept;
     void extract(const Instruction& inst) noexcept;
+    void mov(const Instruction& inst) noexcept;
+    void movl(const Instruction& inst) noexcept;
+    void movt(const Instruction& inst) noexcept;
+    void movq(const Instruction& inst) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);

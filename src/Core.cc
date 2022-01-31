@@ -598,30 +598,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             arithmeticGeneric<ArithmeticOperation::Rotate, TreatAsOrdinal>(instruction);
             break;
         case Opcode::mov:
-            setDestinationFromSrcDest(instruction,
-                                      valueFromSrc1Register(instruction, TreatAsOrdinal{}),
-                                      TreatAsOrdinal {});
+            mov(instruction);
             break;
         case Opcode::movl:
-            [this, &instruction]() {
-                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                const auto& src = getSourceDoubleRegister(instruction.getSrc1());
-                dest.copy(src);
-            }();
+            movl(instruction);
             break;
         case Opcode::movt:
-            [this, &instruction]() {
-                auto& dest = getTripleRegister(instruction.getSrcDest(false));
-                const auto& src = getTripleRegister(instruction.getSrc1());
-                dest.copy(src);
-            }();
+            movt(instruction);
             break;
         case Opcode::movq:
-            [this, &instruction]() {
-                auto& dest = getQuadRegister(instruction.getSrcDest(false));
-                const auto& src = getQuadRegister(instruction.getSrc1());
-                dest.copy(src);
-            }();
+            movq(instruction);
             break;
         case Opcode::alterbit:
             [this, &instruction]() {
@@ -1510,4 +1496,28 @@ Core::extract(const Instruction &instruction) noexcept {
     // taken from the Hx manual as it isn't insane
     auto shiftAmount = bitpos > 32 ? 32 : bitpos;
     dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
+}
+void
+Core::mov(const Instruction &inst) noexcept {
+    setDestinationFromSrcDest(inst,
+                              valueFromSrc1Register(inst, TreatAsOrdinal{}),
+                              TreatAsOrdinal {});
+}
+void
+Core::movl(const Instruction &instruction) noexcept {
+    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+    const auto& src = getSourceDoubleRegister(instruction.getSrc1());
+    dest.copy(src);
+}
+void
+Core::movt(const Instruction &instruction) noexcept {
+    auto& dest = getTripleRegister(instruction.getSrcDest(false));
+    const auto& src = getTripleRegister(instruction.getSrc1());
+    dest.copy(src);
+}
+void
+Core::movq(const Instruction &instruction) noexcept {
+    auto& dest = getQuadRegister(instruction.getSrcDest(false));
+    const auto& src = getQuadRegister(instruction.getSrc1());
+    dest.copy(src);
 }
