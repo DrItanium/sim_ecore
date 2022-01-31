@@ -890,29 +890,29 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     }
 }
 Ordinal
-Core::getSystemProcedureTableBase() {
+Core::getSystemProcedureTableBase() noexcept {
     return load(getSystemAddressTableBase() + 120);
 }
 Ordinal
-Core::getFaultProcedureTableBase() {
+Core::getFaultProcedureTableBase() noexcept {
     return load(getSystemAddressTableBase() + 152);
 
 }
 Ordinal
-Core::getTraceTablePointer() {
+Core::getTraceTablePointer() noexcept {
     return load(getSystemAddressTableBase() + 168);
 }
 Ordinal
-Core::getInterruptTableBase() {
+Core::getInterruptTableBase() noexcept {
     return load(getPRCBPtrBase() + 20);
 }
 Ordinal
-Core::getFaultTableBase() {
+Core::getFaultTableBase() noexcept {
     return load(getPRCBPtrBase() + 40);
 }
 
 Ordinal
-Core::getInterruptStackPointer() {
+Core::getInterruptStackPointer() noexcept {
     return load(getPRCBPtrBase() + 24);
 }
 /*
