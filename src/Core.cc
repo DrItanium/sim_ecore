@@ -1516,8 +1516,7 @@ Core::modac(const Instruction &instruction) noexcept {
 }
 void
 Core::ediv(const Instruction &instruction) noexcept {
-    auto denomord = getRegister(instruction.getSrc1()).getOrdinal();
-    if (denomord == 0) {
+    if (auto denomord = valueFromSrc1Register(instruction, TreatAsOrdinal{}); denomord == 0) {
         // raise an arithmetic zero divide fault
         generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
     } else {
