@@ -605,6 +605,9 @@ private:
     void cmpdeci(const Instruction& inst) noexcept;
     void cmpinco(const Instruction& inst) noexcept;
     void cmpinci(const Instruction& inst) noexcept;
+    void atadd(const Instruction& inst) noexcept;
+    void atmod(const Instruction& inst) noexcept;
+    void chkbit(const Instruction& inst) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);

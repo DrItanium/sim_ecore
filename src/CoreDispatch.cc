@@ -301,42 +301,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             syncf();
             break;
         case Opcode::atadd:
-            [this, &instruction]() {
-                // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
-                // The initial value from memory is stored in dst (internally src/dst).
-                syncf();
-                auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force alignment to word boundary
-                lockBus();
-                auto temp = load(addr);
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                store(addr, temp + src);
-                unlockBus();
-                setDestinationFromSrcDest(instruction, temp, TreatAsOrdinal{});
-            }();
+            atadd(instruction);
             break;
         case Opcode::atmod:
-            [this, &instruction]() {
-                // copies the src/dest value (logical version) into the memory location specifeid by src1.
-                // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
-                // value from memory is stored in src/dest
-                syncf();
-
-                auto addr = sourceFromSrc1(instruction).getWordAligned(); // force alignment to word boundary
-                lockBus();
-                auto temp = load(addr);
-                auto& dest = destinationFromSrcDest(instruction);
-                auto mask = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                store(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
-                unlockBus();
-                dest.setOrdinal(temp);
-            }();
+            atmod(instruction);
             break;
         case Opcode::chkbit:
-            [this, &instruction]() {
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                auto bitpos = bitPositions[valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111];
-                ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
-            }();
+            chkbit(instruction);
             break;
         case Opcode::addc:
             addc(instruction);
