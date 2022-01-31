@@ -1495,7 +1495,7 @@ Core::scanbyte(const Instruction &instruction) noexcept {
 void
 Core::scanbit(const Instruction &instruction) noexcept {
     // perform a sanity check
-    auto& dest = getRegister(instruction.getSrcDest(false));
+    auto& dest = destinationFromSrcDest(instruction);
     auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     dest.setOrdinal(0xFFFF'FFFF);
     ac_.setConditionCode(0);
@@ -1512,7 +1512,7 @@ Core::scanbit(const Instruction &instruction) noexcept {
 
 void
 Core::spanbit(const Instruction &instruction) noexcept {
-    auto& dest = getRegister(instruction.getSrcDest(false));
+    auto& dest = destinationFromSrcDest(instruction);
     auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     dest.setOrdinal(0xFFFF'FFFF);
     ac_.setConditionCode(0);
