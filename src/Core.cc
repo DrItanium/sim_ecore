@@ -377,10 +377,11 @@ Core::condFault(const Instruction &inst) noexcept {
     }
 }
 void
+Core::testOp(const Instruction &inst) noexcept {
+    getRegister(inst.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(inst.getEmbeddedMask()) ? 1 : 0);
+}
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
-    auto testOp = [this, &instruction](byte code) {
-        getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(code) ? 1 : 0);
-    };
     switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
         case Opcode::b:
@@ -432,7 +433,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::testne:
         case Opcode::testle:
         case Opcode::testo:
-            testOp(instruction.getEmbeddedMask());
+            testOp(instruction);
             break;
         case Opcode::bbc:
             // branch if bit is clear
