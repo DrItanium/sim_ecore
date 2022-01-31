@@ -394,8 +394,8 @@ private:
         auto src2 = valueFromSrc2Register(instruction, K{});
         ac_.setConditionCode(compareGeneric<T>(src1, src2));
     }
-    void cmpi(const Instruction& instruction) noexcept;
-    void cmpo(const Instruction& instruction) noexcept;
+    inline void cmpi(const Instruction& instruction) noexcept { cmpx(instruction, TreatAsInteger{}); }
+    inline void cmpo(const Instruction& instruction) noexcept { cmpx(instruction, TreatAsOrdinal{}); }
     void syncf() noexcept;
     void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
     void setDestination(RegisterIndex index, Integer value, TreatAsInteger);

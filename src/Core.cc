@@ -1174,12 +1174,3 @@ Core::modtc(const Instruction &instruction) noexcept {
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
 }
-
-void
-Core::cmpi(const Instruction& instruction) noexcept {
-    cmpx(instruction, TreatAsInteger{});
-}
-void
-Core::cmpo(const Instruction& instruction) noexcept {
-    cmpx(instruction, TreatAsOrdinal{});
-}
