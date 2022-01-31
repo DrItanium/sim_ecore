@@ -373,8 +373,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     auto testOp = [this, &instruction](byte code) {
         getRegister(instruction.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(code) ? 1 : 0);
     };
-    auto theOpcode = instruction.identifyOpcode();
-    switch (theOpcode) {
+    switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
         case Opcode::b:
             ipRelativeBranch(instruction);
