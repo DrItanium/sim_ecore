@@ -627,6 +627,11 @@ private:
     void modac(const Instruction& inst) noexcept;
     void modpc(const Instruction& inst) noexcept;
     void modtc(const Instruction& inst) noexcept;
+    void handleFaultReturn() noexcept;
+    void handleSupervisorReturnWithTraceSet() noexcept;
+    void handleSupervisorReturnWithTraceClear() noexcept;
+    void handleInterruptReturn() noexcept;
+    void handleLocalReturn() noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);
