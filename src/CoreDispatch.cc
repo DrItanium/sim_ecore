@@ -153,12 +153,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             getDoubleRegister(instruction.getSrcDest(false)).setLongOrdinal( loadLong(computeMemoryAddress(instruction)) );
             break;
         case Opcode::ldt:
-            load(computeMemoryAddress(instruction),
-                 getTripleRegister(instruction.getSrcDest(false)));
+            load(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(false)));
             break;
         case Opcode::ldq:
-            load(computeMemoryAddress(instruction),
-                 getQuadRegister(instruction.getSrcDest(false)));
+            load(computeMemoryAddress(instruction), getQuadRegister(instruction.getSrcDest(false)));
             break;
             // REG format
         case Opcode::addi:
@@ -327,40 +325,22 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             storeByte(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getByteOrdinal(0));
             break;
         case Opcode::stos:
-            [this, &instruction]() {
-                auto src = getSourceRegister(instruction.getSrcDest(true)).getShortOrdinal();
-                storeShort(computeMemoryAddress(instruction), src);
-            }();
+            storeShort(computeMemoryAddress(instruction), getSourceRegister(instruction.getSrcDest(true)).getShortOrdinal());
             break;
         case Opcode::stl:
-            [this, &instruction]() {
-                auto src = getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal();
-                storeLong(computeMemoryAddress(instruction), src);
-            }();
+            storeLong(computeMemoryAddress(instruction), getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal());
             break;
         case Opcode::stt:
-            [this, &instruction]() {
-                auto& src = getTripleRegister(instruction.getSrcDest(true));
-                store(computeMemoryAddress(instruction), src);
-            }();
+            store(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(true)));
             break;
         case Opcode::stq:
-            [this, &instruction]() {
-                auto& src = getQuadRegister(instruction.getSrcDest(true));
-                store(computeMemoryAddress(instruction), src);
-            }();
+            store(computeMemoryAddress(instruction), getQuadRegister(instruction.getSrcDest(true)));
             break;
         case Opcode::stib:
-            [this, &instruction]() {
-                auto src = static_cast<ByteInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger());
-                storeByteInteger(computeMemoryAddress(instruction), src);
-            }();
+            storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger()));
             break;
         case Opcode::stis:
-            [this, &instruction]() {
-                auto src = static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger());
-                storeShortInteger(computeMemoryAddress(instruction), src);
-            }();
+            storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger()));
             break;
         case Opcode::shri:
             arithmeticGeneric<ArithmeticOperation::ShiftRight, TreatAsInteger>(instruction);
