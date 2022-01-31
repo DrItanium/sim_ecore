@@ -410,15 +410,6 @@ void
 Core::setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
     getRegister(index).setInteger(value);
 }
-Integer
-Core::getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const {
-    return getSourceRegister(index).getInteger();
-}
-Ordinal
-Core::getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const {
-    return getSourceRegister(index).getOrdinal();
-
-}
 
 void
 Core::shro(const Instruction &inst) noexcept {

@@ -399,8 +399,6 @@ private:
     void syncf() noexcept;
     void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
     void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
-    [[nodiscard]] Integer getSourceRegisterValue(RegisterIndex index, TreatAsInteger) const;
-    [[nodiscard]] Ordinal getSourceRegisterValue(RegisterIndex index, TreatAsOrdinal) const;
     void cmpobx(const Instruction& instruction, uint8_t mask) noexcept;
     void cmpobx(const Instruction& instruction) noexcept { cmpobx(instruction, instruction.getEmbeddedMask()); }
     void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;
