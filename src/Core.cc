@@ -609,15 +609,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             movq(instruction);
             break;
         case Opcode::alterbit:
-            [this, &instruction]() {
-                auto bitpos = bitPositions[valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111];
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                if (auto& dest = destinationFromSrcDest(instruction); ac_.getConditionCode() & 0b010) {
-                    dest.setOrdinal(src | bitpos);
-                } else {
-                    dest.setOrdinal(src & ~bitpos);
-                }
-            }();
+            alterbit(instruction);
             break;
         case Opcode::ediv:
             [this, &instruction]() {
@@ -1524,4 +1516,17 @@ Core::spanbit(const Instruction &instruction) noexcept {
         }
         --index;
     }
+}
+
+void
+Core::alterbit(const Instruction &instruction) noexcept {
+    auto bitpos = bitPositions[valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111];
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    Ordinal result = src;
+    if (; ac_.getConditionCode() & 0b010) {
+        result |= bitpos;
+    } else {
+        result &= ~bitpos;
+    }
+    setDestinationFromSrcDest(instruction, result, TreatAsOrdinal{});
 }
