@@ -676,13 +676,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::modify:
-            [this, &instruction]() {
-                // this is my encode operation but expanded out
-                auto& dest = destinationFromSrcDest(instruction);
-                auto mask = getRegister(instruction.getSrc1()).getOrdinal();
-                auto src = getRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal(modify(mask, src, dest.getOrdinal()));
-            }();
+            modify(instruction);
             break;
         case Opcode::call:
             call(instruction);
@@ -1529,4 +1523,12 @@ Core::alterbit(const Instruction &instruction) noexcept {
         result &= ~bitpos;
     }
     setDestinationFromSrcDest(instruction, result, TreatAsOrdinal{});
+}
+void
+Core::modify(const Instruction &instruction) noexcept {
+    // this is my encode operation but expanded out
+    auto& dest = destinationFromSrcDest(instruction);
+    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    dest.setOrdinal(::modify(mask, src, dest.getOrdinal()));
 }
