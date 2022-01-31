@@ -601,6 +601,10 @@ private:
     void emul(const Instruction& inst) noexcept;
     void ediv(const Instruction& inst) noexcept;
     void testOp(const Instruction& inst) noexcept;
+    void cmpdeco(const Instruction& inst) noexcept;
+    void cmpdeci(const Instruction& inst) noexcept;
+    void cmpinco(const Instruction& inst) noexcept;
+    void cmpinci(const Instruction& inst) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);

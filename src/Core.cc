@@ -449,32 +449,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             cmpi(instruction);
             break;
         case Opcode::cmpdeco:
-            [this, &instruction]() {
-                auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                cmpo(instruction);
-                setDestinationFromSrcDest(instruction, src2 - 1, TreatAsOrdinal{});
-            }();
+            cmpdeco(instruction);
             break;
         case Opcode::cmpdeci:
-            [this, &instruction]() {
-                auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
-                cmpi(instruction);
-                setDestinationFromSrcDest(instruction, src2 - 1, TreatAsInteger{});
-            }();
+            cmpdeci(instruction);
             break;
         case Opcode::cmpinco:
-            [this, &instruction]() {
-                auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                cmpo(instruction);
-                setDestinationFromSrcDest(instruction, src2 + 1, TreatAsOrdinal{});
-            }();
+            cmpinco(instruction);
             break;
         case Opcode::cmpinci:
-            [this, &instruction]() {
-                auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
-                cmpi(instruction);
-                setDestinationFromSrcDest(instruction, src2 + 1, TreatAsInteger{});
-            }();
+            cmpinci(instruction);
             break;
             // just like with the others, intel encoded the mask for cmpo operations into the opcode itself
             // we can just extract it
@@ -1548,3 +1532,32 @@ Core::emul(const Instruction &instruction) noexcept {
     // taken from the manual
     setDestinationFromSrcDest(instruction, src2 * src1, TreatAsLongOrdinal{});
 }
+
+void
+Core::cmpdeci(const Instruction &instruction) noexcept {
+    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
+    cmpi(instruction);
+    setDestinationFromSrcDest(instruction, src2 - 1, TreatAsInteger{});
+}
+
+void
+Core::cmpdeco(const Instruction &instruction) noexcept {
+    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    cmpo(instruction);
+    setDestinationFromSrcDest(instruction, src2 - 1, TreatAsOrdinal{});
+}
+
+void
+Core::cmpinci(const Instruction &instruction) noexcept {
+    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
+    cmpi(instruction);
+    setDestinationFromSrcDest(instruction, src2 + 1, TreatAsInteger{});
+}
+
+void
+Core::cmpinco(const Instruction &instruction) noexcept {
+    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    cmpo(instruction);
+    setDestinationFromSrcDest(instruction, src2 + 1, TreatAsOrdinal{});
+}
+
