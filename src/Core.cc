@@ -662,14 +662,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }();
             break;
         case Opcode::extract:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto bitpos = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                auto len = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                // taken from the Hx manual as it isn't insane
-                auto shiftAmount = bitpos > 32 ? 32 : bitpos;
-                dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
-            }();
+            extract(instruction);
             break;
         case Opcode::flushreg:
             flushreg();
@@ -1508,4 +1501,13 @@ Core::shrdi(const Instruction &instruction) noexcept {
 void
 Core::checkPendingInterrupts() noexcept {
     /// @todo implement if it makes sense
+}
+void
+Core::extract(const Instruction &instruction) noexcept {
+    auto& dest = destinationFromSrcDest(instruction);
+    auto bitpos = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto len = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    // taken from the Hx manual as it isn't insane
+    auto shiftAmount = bitpos > 32 ? 32 : bitpos;
+    dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
 }
