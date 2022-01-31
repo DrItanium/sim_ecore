@@ -612,31 +612,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             alterbit(instruction);
             break;
         case Opcode::ediv:
-            [this, &instruction]() {
-                auto denomord = getRegister(instruction.getSrc1()).getOrdinal();
-                if (denomord == 0) {
-                    // raise an arithmetic zero divide fault
-                    generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
-                } else {
-                    auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
-                    auto denominator = static_cast<LongOrdinal>(denomord);
-                    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                    // taken from the manual
-                    auto remainder = static_cast<Ordinal>(numerator - (numerator / denominator) * denominator);
-                    auto quotient = static_cast<Ordinal>(numerator / denominator);
-                    dest.setOrdinal(remainder, 0);
-                    dest.setOrdinal(quotient, 1);
-                }
-            }();
+            ediv(instruction);
             break;
         case Opcode::emul:
-            [this, &instruction]() {
-                auto src2 = static_cast<LongOrdinal>(valueFromSrc2Register(instruction, TreatAsOrdinal{}));
-                auto src1 = static_cast<LongOrdinal>(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
-                auto& dest = getDoubleRegister(instruction.getSrcDest(false));
-                // taken from the manual
-                dest.setLongOrdinal(src2 * src1);
-            }();
+            emul(instruction);
             break;
         case Opcode::extract:
             extract(instruction);
@@ -650,7 +629,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::mark:
             mark(instruction);
             break;
-
         case Opcode::modac:
             modac(instruction);
             break;
@@ -1535,4 +1513,29 @@ Core::modac(const Instruction &instruction) noexcept {
     auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     dest.setOrdinal(ac_.modify(mask, src));
+}
+void
+Core::ediv(const Instruction &instruction) noexcept {
+    auto denomord = getRegister(instruction.getSrc1()).getOrdinal();
+    if (denomord == 0) {
+        // raise an arithmetic zero divide fault
+        generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
+    } else {
+        auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
+        auto denominator = static_cast<LongOrdinal>(denomord);
+        auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+        // taken from the manual
+        auto remainder = static_cast<Ordinal>(numerator - (numerator / denominator) * denominator);
+        auto quotient = static_cast<Ordinal>(numerator / denominator);
+        dest.setOrdinal(remainder, 0);
+        dest.setOrdinal(quotient, 1);
+    }
+}
+void
+Core::emul(const Instruction &instruction) noexcept {
+    auto src2 = static_cast<LongOrdinal>(valueFromSrc2Register(instruction, TreatAsOrdinal{}));
+    auto src1 = static_cast<LongOrdinal>(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
+    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
+    // taken from the manual
+    dest.setLongOrdinal(src2 * src1);
 }
