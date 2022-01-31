@@ -21,7 +21,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Core.h"
-#include <Arduino.h>
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     switch (instruction.identifyOpcode()) {
@@ -409,20 +408,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             }( );
             break;
         case Opcode::setbit:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal(src | bitpos);
-            }();
+            setbit(instruction);
             break;
         case Opcode::clrbit:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
-                auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
-                dest.setOrdinal(src & ~bitpos);
-            }();
+            clrbit(instruction);
             break;
         case Opcode::calls:
             calls(instruction);

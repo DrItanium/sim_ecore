@@ -1152,3 +1152,18 @@ Core::chkbit(const Instruction &instruction) noexcept {
     auto bitpos = bitPositions[valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111];
     ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
 }
+
+void
+Core::setbit(const Instruction &instruction) noexcept {
+    auto& dest = getRegister(instruction.getSrcDest(false));
+    auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+    auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+    dest.setOrdinal(src | bitpos);
+}
+void
+Core::clrbit(const Instruction &instruction) noexcept {
+    auto& dest = getRegister(instruction.getSrcDest(false));
+    auto bitpos = bitPositions[getSourceRegister(instruction.getSrc1()).getOrdinal() & 0b11111];
+    auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+    dest.setOrdinal(src & ~bitpos);
+}

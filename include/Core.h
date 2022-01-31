@@ -608,6 +608,8 @@ private:
     void atadd(const Instruction& inst) noexcept;
     void atmod(const Instruction& inst) noexcept;
     void chkbit(const Instruction& inst) noexcept;
+    void setbit(const Instruction& inst) noexcept;
+    void clrbit(const Instruction& inst) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);
