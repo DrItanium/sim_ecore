@@ -589,6 +589,9 @@ private:
     void movl(const Instruction& inst) noexcept;
     void movt(const Instruction& inst) noexcept;
     void movq(const Instruction& inst) noexcept;
+    void scanbit(const Instruction& inst) noexcept;
+    void scanbyte(const Instruction& inst) noexcept;
+    void spanbit(const Instruction& inst) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);

@@ -709,47 +709,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             arithmeticGeneric<ArithmeticOperation::ShiftLeft, TreatAsInteger>(instruction);
             break;
         case Opcode::scanbyte:
-            [this, &instruction]() {
-                auto& src1 = getRegister(instruction.getSrc1());
-                auto& src2 = getRegister(instruction.getSrc2());
-                auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.getByteOrdinal(which) == src2.getByteOrdinal(which); };
-                ac_.setConditionCode((bytesEqual(0) || bytesEqual(1) || bytesEqual(2) || bytesEqual(3)) ? 0b010 : 0b000);
-            }();
+            scanbyte(instruction);
             break;
         case Opcode::scanbit:
-            [this, &instruction]() {
-                // perform a sanity check
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                dest.setOrdinal(0xFFFF'FFFF);
-                ac_.setConditionCode(0);
-                Ordinal index = 31;
-                for (auto mask : reverseBitPositions) {
-                    if ((src & mask) != 0) {
-                        dest.setOrdinal(index);
-                        ac_.setConditionCode(0b010);
-                        return;
-                    }
-                    --index;
-                }
-            }();
+            scanbit(instruction);
             break;
         case Opcode::spanbit:
-            [this, &instruction]() {
-                auto& dest = getRegister(instruction.getSrcDest(false));
-                auto src = getSourceRegister(instruction.getSrc1()).getOrdinal();
-                dest.setOrdinal(0xFFFF'FFFF);
-                ac_.setConditionCode(0);
-                Ordinal index = 31;
-                for (auto mask : reverseBitPositions) {
-                    if ((src & mask) == 0) {
-                        dest.setOrdinal(index);
-                        ac_.setConditionCode(0b010);
-                        return;
-                    }
-                    --index;
-                }
-            }();
+            spanbit(instruction);
             break;
         case Opcode::syncf:
             syncf();
@@ -1518,4 +1484,45 @@ Core::movq(const Instruction &instruction) noexcept {
     auto& dest = getQuadRegister(instruction.getSrcDest(false));
     const auto& src = getQuadRegister(instruction.getSrc1());
     dest.copy(src);
+}
+void
+Core::scanbyte(const Instruction &instruction) noexcept {
+    auto& src1 = getRegister(instruction.getSrc1());
+    auto& src2 = getRegister(instruction.getSrc2());
+    auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.getByteOrdinal(which) == src2.getByteOrdinal(which); };
+    ac_.setConditionCode((bytesEqual(0) || bytesEqual(1) || bytesEqual(2) || bytesEqual(3)) ? 0b010 : 0b000);
+}
+void
+Core::scanbit(const Instruction &instruction) noexcept {
+    // perform a sanity check
+    auto& dest = getRegister(instruction.getSrcDest(false));
+    auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    dest.setOrdinal(0xFFFF'FFFF);
+    ac_.setConditionCode(0);
+    Ordinal index = 31;
+    for (auto mask : reverseBitPositions) {
+        if ((src & mask) != 0) {
+            dest.setOrdinal(index);
+            ac_.setConditionCode(0b010);
+            return;
+        }
+        --index;
+    }
+}
+
+void
+Core::spanbit(const Instruction &instruction) noexcept {
+    auto& dest = getRegister(instruction.getSrcDest(false));
+    auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    dest.setOrdinal(0xFFFF'FFFF);
+    ac_.setConditionCode(0);
+    Ordinal index = 31;
+    for (auto mask : reverseBitPositions) {
+        if ((src & mask) == 0) {
+            dest.setOrdinal(index);
+            ac_.setConditionCode(0b010);
+            return;
+        }
+        --index;
+    }
 }
