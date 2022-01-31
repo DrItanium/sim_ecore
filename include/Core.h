@@ -597,7 +597,6 @@ private:
     void alterbit(const Instruction& inst) noexcept;
     void modify(const Instruction& inst) noexcept;
     void modi(const Instruction& inst) noexcept;
-    void modac(const Instruction& inst) noexcept;
     void emul(const Instruction& inst) noexcept;
     void ediv(const Instruction& inst) noexcept;
     void testOp(const Instruction& inst) noexcept;
@@ -610,6 +609,9 @@ private:
     void chkbit(const Instruction& inst) noexcept;
     void setbit(const Instruction& inst) noexcept;
     void clrbit(const Instruction& inst) noexcept;
+    void modac(const Instruction& inst) noexcept;
+    void modpc(const Instruction& inst) noexcept;
+    void modtc(const Instruction& inst) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);

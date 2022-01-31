@@ -381,31 +381,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             synmovq(instruction);
             break;
         case Opcode::modpc:
-            [this, &instruction]() {
-                auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-                auto& dest = destinationFromSrcDest(instruction);
-                if (mask != 0) {
-                    if (!pc_.inSupervisorMode()) {
-                        generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
-                    } else {
-                        auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                        dest.setOrdinal(pc_.modify(mask, src));
-                        ProcessControls tmp(dest.getOrdinal());
-                        if (tmp.getPriority() > pc_.getPriority()) {
-                            /// @todo check for pending interrupts
-                        }
-                    }
-                } else {
-                    dest.setOrdinal(pc_.getValue());
-                }
-            }( );
+            modpc(instruction);
             break;
         case Opcode::modtc:
-            [this, &instruction]() {
-                auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-                auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-                setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
-            }( );
+            modtc(instruction);
             break;
         case Opcode::setbit:
             setbit(instruction);

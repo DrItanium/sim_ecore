@@ -1167,3 +1167,30 @@ Core::clrbit(const Instruction &instruction) noexcept {
     auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
     dest.setOrdinal(src & ~bitpos);
 }
+
+void
+Core::modpc(const Instruction &instruction) noexcept {
+    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto& dest = destinationFromSrcDest(instruction);
+    if (mask != 0) {
+        if (!pc_.inSupervisorMode()) {
+            generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
+        } else {
+            auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+            dest.setOrdinal(pc_.modify(mask, src));
+            ProcessControls tmp(dest.getOrdinal());
+            if (tmp.getPriority() > pc_.getPriority()) {
+                /// @todo check for pending interrupts
+            }
+        }
+    } else {
+        dest.setOrdinal(pc_.getValue());
+    }
+}
+
+void
+Core::modtc(const Instruction &instruction) noexcept {
+    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
+}
