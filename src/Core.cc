@@ -1314,15 +1314,19 @@ Core::synmov(const Instruction &instruction) noexcept {
     // load from memory and then store to another address in a synchronous fashion
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     auto addr = sourceFromSrc1(instruction).getWordAligned(); // align
+#if 0
     Serial.print(F("synmov(0x"));
     Serial.print(addr, HEX);
     Serial.print(F(", 0x"));
     Serial.print(src, HEX);
     Serial.println(F(")"));
+#endif
     auto result = load(src);
     Register temp(result);
+#if 0
     Serial.print(F("result: 0x"));
     Serial.println(result, HEX);
+#endif
     synchronizedStore(addr, temp);
     /// @todo figure out how to support bad access conditions
     ac_.setConditionCode(0b010);
@@ -1394,8 +1398,8 @@ Core::shrdi(const Instruction &instruction) noexcept {
     auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
     if (auto& dest = destinationFromSrcDest(instruction); len < 32) {
         auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
-        /// @todo fix this dependency on implementation defined behavior with the divide
-        dest.setInteger(src / bitPositions[len]);
+        /// @todo verify that this does what we expect
+        dest.setInteger(src / static_cast<Integer>(bitPositions[len]));
     } else {
         dest.setInteger(0);
     }
