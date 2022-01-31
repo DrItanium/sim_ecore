@@ -813,8 +813,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stos:
             [this, &instruction]() {
                 auto src = getSourceRegister(instruction.getSrcDest(true)).getShortOrdinal();
-                auto addr = computeMemoryAddress(instruction);
-                storeShort(addr, src);
+                storeShort(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::stl:
@@ -838,15 +837,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::stib:
             [this, &instruction]() {
                 auto src = static_cast<ByteInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger());
-                auto address = computeMemoryAddress(instruction);
-                storeByteInteger(address, src);
+                storeByteInteger(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::stis:
             [this, &instruction]() {
                 auto src = static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger());
-                auto address = computeMemoryAddress(instruction);
-                storeShortInteger(address, src);
+                storeShortInteger(computeMemoryAddress(instruction), src);
             }();
             break;
         case Opcode::shri:
@@ -1497,6 +1494,7 @@ Core::extract(const Instruction &instruction) noexcept {
     auto shiftAmount = bitpos > 32 ? 32 : bitpos;
     dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
 }
+/// @todo figure out how to reduce code size on this
 void
 Core::mov(const Instruction &inst) noexcept {
     setDestinationFromSrcDest(inst,
