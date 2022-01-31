@@ -90,17 +90,6 @@ Core::cycle() noexcept {
         Serial.println(getRIP().getOrdinal(), HEX);
     }
 }
-template<typename T>
-byte
-compareGeneric(T src1, T src2) noexcept {
-    if (src1 < src2) {
-        return 0b100;
-    } else if (src1 == src2) {
-        return 0b010;
-    } else {
-        return 0b001;
-    }
-}
 namespace {
     Register BadRegister(-1);
     DoubleRegister BadRegisterDouble(-1);
@@ -124,6 +113,9 @@ namespace {
     };
     constexpr Ordinal getBitPosition(Ordinal value) noexcept {
         return bitPositions[value & 0b11111];
+    }
+    constexpr Ordinal getReverseBitPosition(Ordinal value) noexcept {
+        return reverseBitPositions[value & 0b11111];
     }
 }
 
@@ -320,12 +312,6 @@ Core::lda(const Instruction &inst) noexcept {
     setDestinationFromSrcDest(inst, computeMemoryAddress(inst), TreatAsOrdinal{});
 }
 void
-Core::cmpo(const Instruction& instruction) noexcept {
-    auto src1 = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    ac_.setConditionCode(compareGeneric(src1, src2));
-}
-void
 Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
     cmpo(instruction);
     if ((mask & ac_.getConditionCode()) != 0) {
@@ -469,12 +455,6 @@ Core::flushreg() noexcept {
             saveRegisterFrame(frame, dest);
         });
     }
-}
-void
-Core::cmpi(const Instruction& instruction) noexcept {
-    auto src1 = valueFromSrc1Register(instruction, TreatAsInteger{});
-    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
-    ac_.setConditionCode(compareGeneric(src1, src2));
 }
 void
 Core::cmpibx(const Instruction &instruction, uint8_t mask) noexcept {
@@ -1120,10 +1100,10 @@ Core::atadd(const Instruction& instruction) noexcept {
     // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
     // The initial value from memory is stored in dst (internally src/dst).
     syncf();
-    auto addr = getSourceRegister(instruction.getSrc1()).getWordAligned(); // force alignment to word boundary
+    auto addr = sourceFromSrc1(instruction).getWordAligned(); // force alignment to word boundary
     lockBus();
     auto temp = load(addr);
-    auto src = getSourceRegister(instruction.getSrc2()).getOrdinal();
+    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     store(addr, temp + src);
     unlockBus();
     setDestinationFromSrcDest(instruction, temp, TreatAsOrdinal{});
@@ -1141,7 +1121,7 @@ Core::atmod(const Instruction &instruction) noexcept {
     lockBus();
     auto temp = load(addr);
     auto& dest = destinationFromSrcDest(instruction);
-    auto mask = getSourceRegister(instruction.getSrc2()).getOrdinal();
+    auto mask = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     store(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
     unlockBus();
     dest.setOrdinal(temp);
@@ -1193,4 +1173,13 @@ Core::modtc(const Instruction &instruction) noexcept {
     auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
+}
+
+void
+Core::cmpi(const Instruction& instruction) noexcept {
+    cmpx(instruction, TreatAsInteger{});
+}
+void
+Core::cmpo(const Instruction& instruction) noexcept {
+    cmpx(instruction, TreatAsOrdinal{});
 }

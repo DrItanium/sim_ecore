@@ -377,6 +377,23 @@ private:
     void ipRelativeBranch(const Instruction& inst) noexcept;
     [[nodiscard]] Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
+    template<typename T>
+    static constexpr byte compareGeneric(T src1, T src2) noexcept {
+        if (src1 < src2) {
+            return 0b100;
+        } else if (src1 == src2) {
+            return 0b010;
+        } else {
+            return 0b001;
+        }
+    }
+    template<typename T>
+    void cmpx(const Instruction& instruction, TreatAs<T>) noexcept {
+        using K = TreatAs<T>;
+        auto src1 = valueFromSrc1Register(instruction, K{});
+        auto src2 = valueFromSrc2Register(instruction, K{});
+        ac_.setConditionCode(compareGeneric<T>(src1, src2));
+    }
     void cmpi(const Instruction& instruction) noexcept;
     void cmpo(const Instruction& instruction) noexcept;
     void syncf() noexcept;
