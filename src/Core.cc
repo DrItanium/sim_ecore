@@ -1067,34 +1067,6 @@ Core::emul(const Instruction &instruction) noexcept {
 }
 
 void
-Core::cmpdeci(const Instruction &instruction) noexcept {
-    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
-    cmpi(instruction);
-    setDestinationFromSrcDest(instruction, src2 - 1, TreatAsInteger{});
-}
-
-void
-Core::cmpdeco(const Instruction &instruction) noexcept {
-    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    cmpo(instruction);
-    setDestinationFromSrcDest(instruction, src2 - 1, TreatAsOrdinal{});
-}
-
-void
-Core::cmpinci(const Instruction &instruction) noexcept {
-    auto src2 = valueFromSrc2Register(instruction, TreatAsInteger{});
-    cmpi(instruction);
-    setDestinationFromSrcDest(instruction, src2 + 1, TreatAsInteger{});
-}
-
-void
-Core::cmpinco(const Instruction &instruction) noexcept {
-    auto src2 = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    cmpo(instruction);
-    setDestinationFromSrcDest(instruction, src2 + 1, TreatAsOrdinal{});
-}
-
-void
 Core::atadd(const Instruction& instruction) noexcept {
     // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
     // The initial value from memory is stored in dst (internally src/dst).

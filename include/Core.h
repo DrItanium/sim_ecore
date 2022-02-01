@@ -394,8 +394,26 @@ private:
         auto src2 = valueFromSrc2Register(instruction, K{});
         ac_.setConditionCode(compareGeneric<T>(src1, src2));
     }
+    template<typename T>
+    void cmpdecx(const Instruction& instruction, TreatAs<T>) noexcept {
+        using K = TreatAs<T>;
+        auto src2 = valueFromSrc2Register(instruction, K{});
+        cmpx(instruction, K{});
+        setDestinationFromSrcDest(instruction, src2 - 1, K{});
+    }
+    template<typename T>
+    void cmpincx(const Instruction& instruction, TreatAs<T>) noexcept {
+        using K = TreatAs<T>;
+        auto src2 = valueFromSrc2Register(instruction, K{});
+        cmpx(instruction, K{});
+        setDestinationFromSrcDest(instruction, src2 + 1, K{});
+    }
     inline void cmpi(const Instruction& instruction) noexcept { cmpx(instruction, TreatAsInteger{}); }
     inline void cmpo(const Instruction& instruction) noexcept { cmpx(instruction, TreatAsOrdinal{}); }
+    inline void cmpdeco(const Instruction& inst) noexcept { cmpdecx(inst, TreatAsOrdinal{}); }
+    inline void cmpdeci(const Instruction& inst) noexcept { cmpdecx(inst, TreatAsInteger{}); }
+    inline void cmpinco(const Instruction& inst) noexcept { cmpincx(inst, TreatAsOrdinal{}); }
+    inline void cmpinci(const Instruction& inst) noexcept { cmpincx(inst, TreatAsInteger{}); }
     void syncf() noexcept;
     void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
     void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
@@ -615,10 +633,6 @@ private:
     void emul(const Instruction& inst) noexcept;
     void ediv(const Instruction& inst) noexcept;
     void testOp(const Instruction& inst) noexcept;
-    void cmpdeco(const Instruction& inst) noexcept;
-    void cmpdeci(const Instruction& inst) noexcept;
-    void cmpinco(const Instruction& inst) noexcept;
-    void cmpinci(const Instruction& inst) noexcept;
     void atadd(const Instruction& inst) noexcept;
     void atmod(const Instruction& inst) noexcept;
     void chkbit(const Instruction& inst) noexcept;
