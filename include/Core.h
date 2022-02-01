@@ -369,8 +369,6 @@ private:
     void setFramePointer(Ordinal value) noexcept;
     [[nodiscard]] Ordinal getFramePointerValue() const noexcept;
     void lda(const Instruction& inst) noexcept;
-    void shro(const Instruction& inst) noexcept;
-    void shlo(const Instruction& inst) noexcept;
     void flushreg() noexcept;
     void ipRelativeBranch(const Instruction& inst) noexcept;
     [[nodiscard]] Instruction loadInstruction(Address baseAddress) noexcept;
@@ -644,7 +642,6 @@ private:
     void modtc(const Instruction& inst) noexcept;
     template<bool shiftLeft>
     void shxo(const Instruction& inst) noexcept {
-        constexpr bool ShiftLeft = shiftLeft;
         auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
         Ordinal result = 0;
         if (len < 32) {
@@ -656,6 +653,8 @@ private:
         }
         setDestinationFromSrcDest(inst, result, TreatAsOrdinal{});
     }
+    inline void shro(const Instruction& inst) noexcept { shxo<false>(inst); }
+    inline void shlo(const Instruction& inst) noexcept { shxo<true>(inst); }
 private:
     void handleFaultReturn() noexcept;
     void handleSupervisorReturnWithTraceSet() noexcept;
