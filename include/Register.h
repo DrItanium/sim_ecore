@@ -78,8 +78,6 @@ public:
     void increment(Ordinal advance, TreatAsOrdinal) noexcept { ord_ += advance; }
     void decrement(Integer advance, TreatAsInteger) noexcept { integer_ -= advance; }
     void decrement(Ordinal advance, TreatAsOrdinal) noexcept { ord_ -= advance; }
-    [[nodiscard]] constexpr auto getReal() const noexcept { return real_; }
-    void setReal(Real value) noexcept { real_ = value; }
 private:
     Ordinal ord_ = 0;
     Integer integer_;
