@@ -155,7 +155,14 @@ Literal1_0f = 0b010'10110,
     FP = Global15,
 };
 static_assert(static_cast<uint8_t>(RegisterIndex::Literal0) == 0b1'00000, "Literal 0 needs to be 0b100000 to accurately reflect the i960 design");
-
+constexpr uint8_t chop(RegisterIndex value) noexcept {
+#ifdef NUMERICS_ARCHITECTURE
+    constexpr byte MaskValue = 0b0111'1111;
+#else
+    constexpr byte MaskValue = 0b0011'1111;
+#endif
+    return static_cast<byte>(value) & MaskValue;
+}
 /**
  * @brief Convert the given byte value into a literal; the value must be in the range [0,32) with this function only reading the bottom 5 bits
  * @param value The 8-bit literal
