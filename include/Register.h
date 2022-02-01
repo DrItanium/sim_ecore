@@ -35,17 +35,19 @@ public:
     [[nodiscard]] constexpr auto getDoubleWordAligned() const noexcept { return ord_ & 0xFFFF'FFF8; }
     [[nodiscard]] constexpr auto getQuadWordAligned() const noexcept { return ord_ & 0xFFFF'FFF0; }
     [[nodiscard]] constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
-    [[nodiscard]] constexpr auto getShortInteger(int which = 0) const noexcept { return sints_[which&0b01]; }
     [[nodiscard]] constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
-    [[nodiscard]] constexpr auto getByteInteger(int which = 0) const noexcept { return bints_[which&0b11]; }
     [[nodiscard]] constexpr auto getOrdinal() const noexcept { return get<Ordinal>(); }
     [[nodiscard]] constexpr auto getInteger() const noexcept { return get<Integer>(); }
     [[nodiscard]] constexpr Integer get(TreatAsInteger) const noexcept { return integer_; }
     [[nodiscard]] constexpr Ordinal get(TreatAsOrdinal) const noexcept { return ord_; }
     [[nodiscard]] constexpr ByteInteger get(TreatAsByteInteger) const noexcept { return static_cast<ByteInteger>(integer_); }
+    [[nodiscard]] constexpr ByteInteger get(int which, TreatAsByteInteger) const noexcept { return bints_[which&0b11]; }
     [[nodiscard]] constexpr ByteOrdinal get(TreatAsByteOrdinal) const noexcept { return static_cast<ByteOrdinal>(ord_); }
+    [[nodiscard]] constexpr ByteOrdinal get(int which, TreatAsByteOrdinal) const noexcept { return bords_[which&0b11]; }
     [[nodiscard]] constexpr ShortInteger get(TreatAsShortInteger) const noexcept { return static_cast<ShortInteger>(integer_); }
+    [[nodiscard]] constexpr auto get(int which, TreatAsShortInteger) const noexcept { return sints_[which&0b01]; }
     [[nodiscard]] constexpr ShortOrdinal get(TreatAsShortOrdinal) const noexcept { return static_cast<ShortOrdinal>(ord_); }
+    [[nodiscard]] constexpr auto get(int which, TreatAsShortOrdinal) const noexcept { return sords_[which&0b01]; }
     [[nodiscard]] constexpr Real get(TreatAsReal) const noexcept { return real_; }
     template<typename T>
     [[nodiscard]] constexpr T get() const noexcept {
@@ -66,7 +68,6 @@ public:
     void set(T value) noexcept {
         set(value, TreatAs<T>{});
     }
-    inline void setInteger(Integer value) noexcept { set<Integer>(value); }
 
     void increment(Integer advance, TreatAsInteger) noexcept { integer_ += advance; }
     void increment(Ordinal advance, TreatAsOrdinal) noexcept { ord_ += advance; }
