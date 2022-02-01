@@ -134,7 +134,7 @@ Core::begin() noexcept {
 void
 Core::generateFault(FaultType faultKind) {
     Serial.print(F("FAULT GENERATED AT 0x"));
-    Serial.print(ip_.getOrdinal(), HEX);
+    Serial.print(ip_.get<Ordinal>(), HEX);
     Serial.println(F("! HALTING!!"));
     while (true) {
         delay(1000);

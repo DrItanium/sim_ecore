@@ -34,10 +34,6 @@ public:
     [[nodiscard]] constexpr auto getWordAligned() const noexcept { return ord_ & 0xFFFF'FFFC; }
     [[nodiscard]] constexpr auto getDoubleWordAligned() const noexcept { return ord_ & 0xFFFF'FFF8; }
     [[nodiscard]] constexpr auto getQuadWordAligned() const noexcept { return ord_ & 0xFFFF'FFF0; }
-    [[nodiscard]] constexpr auto getShortOrdinal(int which = 0) const noexcept { return sords_[which&0b01]; }
-    [[nodiscard]] constexpr auto getByteOrdinal(int which = 0) const noexcept { return bords_[which&0b11]; }
-    [[nodiscard]] constexpr auto getOrdinal() const noexcept { return get<Ordinal>(); }
-    [[nodiscard]] constexpr auto getInteger() const noexcept { return get<Integer>(); }
     [[nodiscard]] constexpr Integer get(TreatAsInteger) const noexcept { return integer_; }
     [[nodiscard]] constexpr Ordinal get(TreatAsOrdinal) const noexcept { return ord_; }
     [[nodiscard]] constexpr ByteInteger get(TreatAsByteInteger) const noexcept { return static_cast<ByteInteger>(integer_); }
@@ -120,19 +116,19 @@ public:
     explicit PreviousFramePointer(Register& targetRegister) : reg_(targetRegister) {}
     explicit PreviousFramePointer(const Register& targetRegister) : reg_(const_cast<Register&>(targetRegister)) {}
     [[nodiscard]] constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.get<Ordinal>() & 0b1000); }
-    void enablePrereturnTraceFlag() const noexcept { reg_.set<Ordinal>(reg_.getOrdinal() | 0b1000); }
+    void enablePrereturnTraceFlag() const noexcept { reg_.set<Ordinal>(reg_.get<Ordinal>() | 0b1000); }
     void disablePrereturnTraceFlag() const noexcept {
         reg_.set<Ordinal>(reg_.get<Ordinal>() & ~static_cast<Ordinal>(0b1000));
     }
     void setPrereturnTraceFlag(bool value) const noexcept {
         value ? enablePrereturnTraceFlag() : disablePrereturnTraceFlag();
     }
-    [[nodiscard]] constexpr auto getReturnType() const noexcept { return static_cast<ReturnType>(reg_.getOrdinal() & 0b111); }
+    [[nodiscard]] constexpr auto getReturnType() const noexcept { return static_cast<ReturnType>(reg_.get<Ordinal>() & 0b111); }
     [[nodiscard]] constexpr Ordinal getAddress() const noexcept {
         // according to the i960Sx manual, the lowest 6 bits are ignored but the lowest 4 bits are always confirmed
-        return reg_.getOrdinal() & ~0b1'111;
+        return reg_.get<Ordinal>() & ~0b1'111;
     }
-    [[nodiscard]] constexpr auto getWhole() const noexcept { return reg_.getOrdinal(); }
+    [[nodiscard]] constexpr auto getWhole() const noexcept { return reg_.get<Ordinal>(); }
     void setWhole(Ordinal value) noexcept { reg_.set<Ordinal>(value); }
     void setReturnType(Ordinal value) noexcept { reg_.set<Ordinal>((reg_.get<Ordinal>() & ~0b111) | (value & 0b111)); }
     void setAddress(Ordinal value) noexcept {

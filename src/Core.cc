@@ -104,18 +104,18 @@ void
 Core::cycle() noexcept {
     if constexpr (EnableEmulatorTrace) {
         Serial.print(F("\trip(before): 0x"));
-        Serial.println(getRIP().getOrdinal(), HEX);
+        Serial.println(getRIP().get<Ordinal>(), HEX);
     }
     advanceIPBy = 4;
-    auto instruction = loadInstruction(ip_.getOrdinal());
+    auto instruction = loadInstruction(ip_.get<Ordinal>());
     executeInstruction(instruction);
-    //executeInstruction(loadInstruction(ip_.getOrdinal()));
+    //executeInstruction(loadInstruction(ip_.get<Ordinal>()));
     if (advanceIPBy > 0)  {
-        ip_.set<Ordinal>(ip_.getOrdinal() + advanceIPBy);
+        ip_.set<Ordinal>(ip_.get<Ordinal>() + advanceIPBy);
     }
     if constexpr (EnableEmulatorTrace) {
         Serial.print(F("\trip(after): 0x"));
-        Serial.println(getRIP().getOrdinal(), HEX);
+        Serial.println(getRIP().get<Ordinal>(), HEX);
     }
 }
 
@@ -212,7 +212,7 @@ Core::loadInstruction(Address baseAddress) noexcept {
 void
 Core::saveRegisterFrame(const RegisterFrame &theFrame, Address baseAddress) noexcept {
     for (byte i = 0; i < 16; ++i, baseAddress += 4) {
-        store(baseAddress, theFrame.getRegister(i).getOrdinal());
+        store(baseAddress, theFrame.getRegister(i).get<Ordinal>());
     }
 }
 
@@ -273,7 +273,7 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
         case MEMFormatMode::MEMB_RegisterIndirectWithIndex:
             return valueFromAbaseRegister(instruction, TreatAsOrdinal{}) + scaledValueFromIndexRegister(instruction, TreatAsOrdinal{});
         case MEMFormatMode::MEMB_IPWithDisplacement:
-            return static_cast<Ordinal>(ip_.getInteger() + instruction.getDisplacement() + 8);
+            return static_cast<Ordinal>(ip_.get<Integer>() + instruction.getDisplacement() + 8);
         case MEMFormatMode::MEMB_AbsoluteDisplacement:
             return instruction.getDisplacement(); // this will return the optional displacement
         case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement: {
@@ -464,7 +464,7 @@ Core::call(const Instruction& instruction) noexcept {
     auto fp = getFramePointerValue();
     setRIP();
     enterCall(temp);
-    ip_.set<Integer>(ip_.getInteger() + instruction.getDisplacement());
+    ip_.set<Integer>(ip_.get<Integer>() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
     getPFP().setAddress(fp);
     setFramePointer(temp);
@@ -845,7 +845,7 @@ Core::unlockBus() noexcept {
 void
 Core::ipRelativeBranch(const Instruction& inst) noexcept {
     advanceIPBy = 0;
-    ip_.set<Integer>(ip_.getInteger() + inst.getDisplacement());
+    ip_.set<Integer>(ip_.get<Integer>() + inst.getDisplacement());
 }
 void
 Core::absoluteBranch(Ordinal value) noexcept {
@@ -926,7 +926,7 @@ void
 Core::scanbyte(const Instruction &instruction) noexcept {
     const auto& src1 = sourceFromSrc1(instruction);
     const auto& src2 = sourceFromSrc2(instruction);
-    auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.getByteOrdinal(which) == src2.getByteOrdinal(which); };
+    auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.get(which, TreatAsByteOrdinal{}) == src2.get(which, TreatAsByteOrdinal{}); };
     ac_.setConditionCode((bytesEqual(0) ||
                           bytesEqual(1) ||
                           bytesEqual(2) ||

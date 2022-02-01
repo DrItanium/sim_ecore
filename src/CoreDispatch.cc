@@ -287,13 +287,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger {});
             break;
         case Opcode::st:
-            store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getOrdinal());
+            store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).get<Ordinal>());
             break;
         case Opcode::stob:
-            storeByte(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getByteOrdinal(0));
+            storeByte(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).get(0, TreatAsByteOrdinal{}));
             break;
         case Opcode::stos:
-            storeShort(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getShortOrdinal());
+            storeShort(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).get<ShortOrdinal>());
             break;
         case Opcode::stl:
             storeLong(computeMemoryAddress(instruction), longSourceFromSrcDest(instruction).getLongOrdinal());
@@ -305,10 +305,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             store(computeMemoryAddress(instruction), getQuadRegister(instruction.getSrcDest(true)));
             break;
         case Opcode::stib:
-            storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger()));
+            storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(getSourceRegister(instruction.getSrcDest(true)).get<Integer>()));
             break;
         case Opcode::stis:
-            storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger()));
+            storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).get<Integer>()));
             break;
         case Opcode::shrdi:
             shrdi(instruction);

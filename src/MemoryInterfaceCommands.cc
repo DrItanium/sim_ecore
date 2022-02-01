@@ -444,7 +444,7 @@ void Core::synchronizedStore(Address destination, const Register& value) noexcep
             Serial.println(F("Writing To Interrupt Control Register!!!"));
         }
     } else {
-        store(destination, value.getOrdinal());
+        store(destination, value.get<Ordinal>());
     }
 }
 
