@@ -134,35 +134,26 @@ enum class RegisterIndex : uint8_t {
     Literal29,
     Literal30,
     Literal31,
-#ifdef NUMERICS_ARCHITECTURE
-    // floating point literals and registers have to be handled a tad
-// differently they must be converted from the standard bits to this
-// extended format to make it unique. The instruction bits itself will
-// denote if the instruction operates on float data or not
-FP0 = 0b010'00000,
-FP1,
-FP2,
-FP3,
-// reserved entries here
-Literal0_0f = 0b010'10000,
-// reserved
-Literal1_0f = 0b010'10110,
-#endif
     Bad = 0b1111'1111,
     PFP = Local0,
     SP960 = Local1,
     RIP = Local2,
     FP = Global15,
+    // floating point numbers reuse existing infrastructure but introduce a new theoretical dimension via instruction type
+    // If the type is non-fp, then it is lower 32 are registers, upper 32 are literals
+    // If the type is fp, then the lower 32 are registers and the upper 32 are devoted to either one of the four fp regs or +0.0 and +1.0
+    //      all other values are marked as reserved. To save on encoding space, we will be aliasing the floating point specific names to literals
+    //
+    // Previously, I was providing these registers with a unique index but this introduces new problems with special function registers
+    // and such. This is the cleanest way to add floating point register references without doing really goofy mappings
+    FP0 = Literal0,
+    FP1 = Literal1,
+    FP2 = Literal2,
+    FP3 = Literal3,
+    Literal0_0f = Literal16, // 0b110000
+    Literal1_0f = Literal22, // 0b110110
 };
 static_assert(static_cast<uint8_t>(RegisterIndex::Literal0) == 0b1'00000, "Literal 0 needs to be 0b100000 to accurately reflect the i960 design");
-constexpr uint8_t chop(RegisterIndex value) noexcept {
-#ifdef NUMERICS_ARCHITECTURE
-    constexpr byte MaskValue = 0b0111'1111;
-#else
-    constexpr byte MaskValue = 0b0011'1111;
-#endif
-    return static_cast<byte>(value) & MaskValue;
-}
 /**
  * @brief Convert the given byte value into a literal; the value must be in the range [0,32) with this function only reading the bottom 5 bits
  * @param value The 8-bit literal
