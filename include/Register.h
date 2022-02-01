@@ -73,11 +73,6 @@ public:
     void set(T value) noexcept {
         set(value, TreatAs<T>{});
     }
-
-    void increment(Integer advance, TreatAsInteger) noexcept { integer_ += advance; }
-    void increment(Ordinal advance, TreatAsOrdinal) noexcept { ord_ += advance; }
-    void decrement(Integer advance, TreatAsInteger) noexcept { integer_ -= advance; }
-    void decrement(Ordinal advance, TreatAsOrdinal) noexcept { ord_ -= advance; }
 private:
     Ordinal ord_ = 0;
     Integer integer_;
