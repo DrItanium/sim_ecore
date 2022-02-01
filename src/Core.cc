@@ -628,7 +628,6 @@ Core::handleInterruptReturn() noexcept {
     ac_.setValue(y);
     if (pc_.inSupervisorMode()) {
         pc_.setValue(x);
-        /// @todo check_pending_interrupts
         checkPendingInterrupts();
     }
 }
@@ -1131,7 +1130,7 @@ Core::modpc(const Instruction &instruction) noexcept {
             dest.setOrdinal(pc_.modify(mask, src));
             ProcessControls tmp(dest.getOrdinal());
             if (tmp.getPriority() > pc_.getPriority()) {
-                /// @todo check for pending interrupts
+                checkPendingInterrupts();
             }
         }
     } else {
