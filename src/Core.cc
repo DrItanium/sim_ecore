@@ -31,6 +31,7 @@ Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdin
 Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).getInteger(); }
 Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).getOrdinal(); }
 Integer Core::valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc2(instruction).getInteger(); }
+LongOrdinal  Core::valueFromSrc2Register(const Instruction &instruction, TreatAsLongOrdinal) const noexcept { return getDoubleRegister(instruction.getSrc2()).getLongOrdinal(); }
 const Register&
 Core::sourceFromSrc1(const Instruction& instruction) const noexcept {
     return getSourceRegister(instruction.getSrc1());
@@ -943,9 +944,8 @@ Core::mov(const Instruction &inst) noexcept {
 }
 void
 Core::movl(const Instruction &instruction) noexcept {
-    auto& dest = getDoubleRegister(instruction.getSrcDest(false));
     const auto& src = getSourceDoubleRegister(instruction.getSrc1());
-    dest.copy(src);
+    longDestinationFromSrcDest(instruction).copy(src);
 }
 void
 Core::movt(const Instruction &instruction) noexcept {
@@ -1047,7 +1047,7 @@ Core::ediv(const Instruction &instruction) noexcept {
         // raise an arithmetic zero divide fault
         generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
     } else {
-        auto numerator = getDoubleRegister(instruction.getSrc2()).getLongOrdinal();
+        auto numerator = valueFromSrc2Register(instruction, TreatAsLongOrdinal{});
         auto denominator = static_cast<LongOrdinal>(denomord);
         auto& dest = longDestinationFromSrcDest(instruction);
         // taken from the manual

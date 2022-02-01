@@ -433,6 +433,7 @@ private:
     [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
     [[nodiscard]] Integer valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept;
     [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
+    [[nodiscard]] LongOrdinal valueFromSrc2Register(const Instruction& instruction, TreatAsLongOrdinal) const noexcept;
     [[nodiscard]] Integer valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept;
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
