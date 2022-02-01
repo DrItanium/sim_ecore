@@ -44,11 +44,35 @@ using ByteInteger = int8_t;
 
 using Address = Ordinal;
 using FullOpcode = uint16_t;
-#ifdef NUMERICS_ARCHITECTURE
 using Real = float;
 using LongReal = double;
+#ifdef NUMERICS_ARCHITECTURE
 // right now, we can just exploit the fact that extended real and long real are different sizes on x86_64, just like i960
 using ExtendedReal = long double;
+#endif
+/**
+ * @brief A class meant to make tag dispatch easy
+ * @tparam T The type desired through tag dispatch
+ */
+template <typename T>
+struct TreatAs final {
+    /**
+     * @brief A way to identify the target type in template metaprogramming
+     */
+    using UnderlyingType = T;
+};
+using TreatAsOrdinal = TreatAs<Ordinal>;
+using TreatAsInteger = TreatAs<Integer>;
+using TreatAsLongOrdinal = TreatAs<LongOrdinal>;
+using TreatAsLongInteger = TreatAs<LongInteger>;
+using TreatAsShortOrdinal = TreatAs<ShortOrdinal>;
+using TreatAsShortInteger = TreatAs<ShortInteger>;
+using TreatAsByteOrdinal = TreatAs<ByteOrdinal>;
+using TreatAsByteInteger = TreatAs<ByteInteger>;
+using TreatAsReal = TreatAs<Real>;
+using TreatAsLongReal = TreatAs<LongReal>;
+#ifdef NUMERICS_ARCHITECTURE
+using TreatAsExtendedReal = TreatAs<ExtendedReal>;
 #endif
 constexpr Ordinal bitsNeeded(Ordinal n) noexcept {
     // taken from https://stackoverflow.com/questions/23781506/compile-time-computing-of-number-of-bits-needed-to-encode-n-different-states
@@ -191,48 +215,38 @@ constexpr auto isLocalRegister(RegisterIndex index) noexcept {
 constexpr auto isGlobalRegister(RegisterIndex index) noexcept {
     return isRegister(index) && !isLocalRegister(index);
 }
-#ifdef NUMERICS_ARCHITECTURE
-constexpr auto toFloatingPointForm(RegisterIndex index) noexcept {
-    if (isLiteral(index)) {
-        switch (index) {
-            case RegisterIndex::Literal0: return RegisterIndex::FP0;
-            case RegisterIndex::Literal1: return RegisterIndex::FP1;
-            case RegisterIndex::Literal2: return RegisterIndex::FP2;
-            case RegisterIndex::Literal3: return RegisterIndex::FP3;
-            case RegisterIndex::Literal16: return RegisterIndex::Literal0_0f;
-            case RegisterIndex::Literal22: return RegisterIndex::Literal1_0f;
-            default: return RegisterIndex::Bad;
-        }
-    } else {
-        return index;
-    }
-}
 
-constexpr auto isFloatingPointRegister(RegisterIndex index) noexcept {
-    switch (index) {
-        case RegisterIndex::FP0:
-            case RegisterIndex::FP1:
-                case RegisterIndex::FP2:
-                    case RegisterIndex::FP3:
-                        return true;
-                        default:
-                            return false;
-    }
-}
-
-constexpr auto isFloatingPointLiteral(RegisterIndex index) noexcept {
-    return index == RegisterIndex::Literal0_0f || index == RegisterIndex::Literal1_0f;
-}
-static_assert(toFloatingPointForm(RegisterIndex::Bad) == RegisterIndex::Bad, "toFloatingPointForm is not passing through correctly!");
-#endif
-
-constexpr Ordinal getLiteralOrdinal(RegisterIndex index) noexcept {
+constexpr Ordinal getLiteral(RegisterIndex index, TreatAsOrdinal) noexcept {
     if (isLiteral(index)) {
         return static_cast<Ordinal>(static_cast<uint8_t>(index) & 0b11111);
     } else {
         return 0xFFFF'FFFF;
     }
 }
+constexpr Integer getLiteral(RegisterIndex index, TreatAsInteger) noexcept {
+    if (isLiteral(index)) {
+        return static_cast<Integer>(static_cast<uint8_t>(index) & 0b11111);
+    } else {
+        return -1;
+    }
+}
+
+constexpr Real getLiteral(RegisterIndex index, TreatAsReal) noexcept {
+    switch (index) {
+        case RegisterIndex::Literal0_0f: return 0.0f;
+        case RegisterIndex::Literal1_0f: return 1.0f;
+        default: return NAN;
+    }
+}
+
+constexpr LongReal getLiteral(RegisterIndex index, TreatAsLongReal) noexcept {
+    switch (index) {
+        case RegisterIndex::Literal0_0f: return 0.0;
+        case RegisterIndex::Literal1_0f: return 1.0;
+        default: return NAN;
+    }
+}
+
 
 constexpr unsigned long long int operator "" _KB(unsigned long long value) noexcept {
     return value * 1024;
@@ -247,32 +261,6 @@ constexpr unsigned long long int operator "" _KHz(unsigned long long value) noex
 constexpr unsigned long long int operator "" _MHz(unsigned long long value) noexcept {
     return value * 1000 * 1000;
 }
-/**
- * @brief A class meant to make tag dispatch easy
- * @tparam T The type desired through tag dispatch
- */
-template <typename T>
-struct TreatAs final {
-    /**
-     * @brief A way to identify the target type in template metaprogramming
-     */
-    using UnderlyingType = T;
-};
-using TreatAsOrdinal = TreatAs<Ordinal>;
-using TreatAsInteger = TreatAs<Integer>;
-using TreatAsLongOrdinal = TreatAs<LongOrdinal>;
-using TreatAsLongInteger = TreatAs<LongInteger>;
-using TreatAsShortOrdinal = TreatAs<ShortOrdinal>;
-using TreatAsShortInteger = TreatAs<ShortInteger>;
-using TreatAsByteOrdinal = TreatAs<ByteOrdinal>;
-using TreatAsByteInteger = TreatAs<ByteInteger>;
-struct TreatAsTripleOrdinal final { };
-struct TreatAsQuadOrdinal final { };
-#ifdef NUMERICS_ARCHITECTURE
-using TreatAsReal = TreatAs<Real>;
-using TreatAsLongReal = TreatAs<LongReal>;
-using TreatAsExtendedReal = TreatAs<ExtendedReal>;
-#endif
 /**
  * @brief A 32-bit quantity that can be viewed in different ways, in most cases this is how most implementations will view their cache lines or memory storage
  */
