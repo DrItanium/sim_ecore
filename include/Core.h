@@ -423,6 +423,7 @@ private:
     [[nodiscard]] Register& destinationFromSrcDest(const Instruction& instruction) noexcept;
     [[nodiscard]] const Register& sourceFromSrcDest(const Instruction& instruction) const noexcept;
     [[nodiscard]] DoubleRegister& longDestinationFromSrcDest(const Instruction& instruction) noexcept;
+    [[nodiscard]] const DoubleRegister& longSourceFromSrcDest(const Instruction& instruction) const noexcept;
     void setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal);
     void setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger);
     void setDestinationFromSrcDest(const Instruction& instruction, LongOrdinal value, TreatAsLongOrdinal);
@@ -582,10 +583,11 @@ private:
     void addc(const Instruction& inst) noexcept { withCarryOperationGeneric(inst, ArithmeticWithCarryOperation::Add); }
     void subc(const Instruction& inst) noexcept { withCarryOperationGeneric(inst, ArithmeticWithCarryOperation::Subtract); }
     template<typename T>
-    void concmpGeneric(const Instruction& instruction) noexcept {
+    void concmpGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
+        using K = TreatAs<T>;
         if ((ac_.getConditionCode() & 0b100) == 0) {
-            auto src1 = valueFromSrc1Register(instruction, T{});
-            auto src2 = valueFromSrc2Register(instruction, T{});
+            auto src1 = valueFromSrc1Register(instruction, K{});
+            auto src2 = valueFromSrc2Register(instruction, K{});
             ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
         }
     }

@@ -116,10 +116,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             cmpibx(instruction);
             break;
         case Opcode::concmpi:
-            concmpGeneric<TreatAsInteger>(instruction);
+            concmpGeneric(instruction, TreatAsInteger{});
             break;
         case Opcode::concmpo:
-            concmpGeneric<TreatAsOrdinal>(instruction);
+            concmpGeneric(instruction, TreatAsOrdinal{});
             break;
             // MEM Format
         case Opcode::ldob:
@@ -316,10 +316,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             storeByte(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getByteOrdinal(0));
             break;
         case Opcode::stos:
-            storeShort(computeMemoryAddress(instruction), getSourceRegister(instruction.getSrcDest(true)).getShortOrdinal());
+            storeShort(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).getShortOrdinal());
             break;
         case Opcode::stl:
-            storeLong(computeMemoryAddress(instruction), getDoubleRegister(instruction.getSrcDest(true)).getLongOrdinal());
+            storeLong(computeMemoryAddress(instruction), longSourceFromSrcDest(instruction).getLongOrdinal());
             break;
         case Opcode::stt:
             store(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(true)));

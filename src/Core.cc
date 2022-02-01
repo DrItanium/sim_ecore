@@ -64,6 +64,10 @@ DoubleRegister&
 Core::longDestinationFromSrcDest(const Instruction& instruction) noexcept {
     return getDoubleRegister(instruction.getSrcDest(false));
 }
+const DoubleRegister&
+Core::longSourceFromSrcDest(const Instruction &instruction) const noexcept {
+    return getDoubleRegister(instruction.getSrcDest(true));
+}
 void
 Core::syncf() noexcept {
     if (ac_.getNoImpreciseFaults()) {
