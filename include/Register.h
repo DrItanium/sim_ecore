@@ -247,10 +247,11 @@ public:
         }
     }
     void setValue(Ordinal value) noexcept { ord_ = value; }
+    [[nodiscard]] constexpr byte getConditionCode() const noexcept { return static_cast<byte>(conditionCode); }
+    void setConditionCode(byte value) noexcept { conditionCode = value; }
 #define X(name, field, type) \
 constexpr type get ## name () const noexcept { return field ; } \
 void set ## name( type value) noexcept { field  = value ; }
-    X(ConditionCode, conditionCode, Ordinal);
     X(NoImpreciseFaults, noImpreciseFaults, bool);
 #ifdef NUMERICS_ARCHITECTURE
     X(ArithmeticStatus, arithmeticStatus, Ordinal);

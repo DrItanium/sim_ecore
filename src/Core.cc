@@ -325,8 +325,14 @@ Core::bbs(const Instruction& instruction) noexcept {
 }
 void
 Core::condBranch(const Instruction& inst) noexcept {
-    if ((ac_.getConditionCode() & inst.getEmbeddedMask()) != 0) {
-        ipRelativeBranch(inst);
+    if (auto mask = inst.getEmbeddedMask(); mask != 0b000) {
+        if ((ac_.getConditionCode() & mask) != 0) {
+            ipRelativeBranch(inst);
+        }
+    } else {
+        if (ac_.getConditionCode() == 0) {
+            ipRelativeBranch(inst);
+        }
     }
 }
 void
