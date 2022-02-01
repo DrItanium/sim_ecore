@@ -409,24 +409,12 @@ Core::setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
 
 void
 Core::shro(const Instruction &inst) noexcept {
-    auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
-    if (auto& dest = destinationFromSrcDest(inst); len < 32) {
-        auto src = valueFromSrc2Register(inst, TreatAsOrdinal{});
-        dest.setOrdinal(src >> len);
-    } else {
-        dest.setOrdinal(0);
-    }
+    shxo<false>(inst);
 }
 
 void
 Core::shlo(const Instruction &inst) noexcept {
-    auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
-    if (auto& dest = destinationFromSrcDest(inst); len < 32) {
-        auto src = valueFromSrc2Register(inst, TreatAsOrdinal{});
-        dest.setOrdinal(src << len);
-    } else {
-        dest.setOrdinal(0);
-    }
+    shxo<true>(inst);
 }
 
 

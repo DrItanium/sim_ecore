@@ -642,6 +642,20 @@ private:
     void modac(const Instruction& inst) noexcept;
     void modpc(const Instruction& inst) noexcept;
     void modtc(const Instruction& inst) noexcept;
+    template<bool shiftLeft>
+    void shxo(const Instruction& inst) noexcept {
+        constexpr bool ShiftLeft = shiftLeft;
+        auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
+        Ordinal result = 0;
+        if (len < 32) {
+            if constexpr(auto src = valueFromSrc2Register(inst, TreatAsOrdinal{}); shiftLeft) {
+                result = src << len;
+            } else {
+                result = src >> len;
+            }
+        }
+        setDestinationFromSrcDest(inst, result, TreatAsOrdinal{});
+    }
 private:
     void handleFaultReturn() noexcept;
     void handleSupervisorReturnWithTraceSet() noexcept;
