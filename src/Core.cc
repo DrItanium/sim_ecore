@@ -115,9 +115,6 @@ namespace {
     constexpr Ordinal getBitPosition(Ordinal value) noexcept {
         return bitPositions[value & 0b11111];
     }
-    constexpr Ordinal getReverseBitPosition(Ordinal value) noexcept {
-        return reverseBitPositions[value & 0b11111];
-    }
 }
 
 Register&
@@ -192,31 +189,6 @@ Core::getDoubleRegister(RegisterIndex targetIndex) const {
     }
 }
 
-const TripleRegister&
-Core::getTripleRegister(RegisterIndex targetIndex) const {
-    if (isLocalRegister(targetIndex)) {
-        return getLocals().getTripleRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isGlobalRegister(targetIndex)) {
-        return globals.getTripleRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
-        return TripleOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
-    } else {
-        return BadRegisterTriple;
-    }
-}
-
-const QuadRegister&
-Core::getQuadRegister(RegisterIndex targetIndex) const {
-    if (isLocalRegister(targetIndex)) {
-        return getLocals().getQuadRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isGlobalRegister(targetIndex)) {
-        return globals.getQuadRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
-        return QuadOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
-    } else {
-        return BadRegisterQuad;
-    }
-}
 
 Instruction
 Core::loadInstruction(Address baseAddress) noexcept {
