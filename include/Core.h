@@ -344,11 +344,11 @@ private:
 private:
 
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
-    [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const;
+    [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const noexcept;
     [[nodiscard]] const Register& getSourceRegister(RegisterIndex targetIndex) const noexcept;
     [[nodiscard]] DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
-    [[nodiscard]] const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const;
-    [[nodiscard]] const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const { return getDoubleRegister(targetIndex); }
+    [[nodiscard]] const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const noexcept;
+    [[nodiscard]] const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const noexcept { return getDoubleRegister(targetIndex); }
     [[nodiscard]] TripleRegister& getTripleRegister(RegisterIndex targetIndex);
     [[nodiscard]] QuadRegister& getQuadRegister(RegisterIndex targetIndex);
     [[nodiscard]] Register& getStackPointer() noexcept { return getRegister(RegisterIndex::SP960); }

@@ -172,7 +172,7 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
 }
 
 const Register&
-Core::getRegister(RegisterIndex targetIndex) const {
+Core::getRegister(RegisterIndex targetIndex) const noexcept {
     if (isLocalRegister(targetIndex)) {
         return getLocals().getRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
@@ -186,7 +186,7 @@ Core::getRegister(RegisterIndex targetIndex) const {
 }
 
 const DoubleRegister&
-Core::getDoubleRegister(RegisterIndex targetIndex) const {
+Core::getDoubleRegister(RegisterIndex targetIndex) const noexcept {
     if (isLocalRegister(targetIndex)) {
         return getLocals().getDoubleRegister(static_cast<uint8_t>(targetIndex));
     } else if (isGlobalRegister(targetIndex)) {
