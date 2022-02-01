@@ -26,11 +26,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
         case Opcode::b:
-            ipRelativeBranch(instruction);
+            b(instruction);
             break;
         case Opcode::bal:
-            setDestination(RegisterIndex::Global14, ip_.getOrdinal() + 4, TreatAsOrdinal{});
-            ipRelativeBranch(instruction);
+            bal(instruction);
             break;
             // branch instruction opcodes are 0x100-0x170, we shift right by four and then mask the lowest three bits to get the mask
             // intel encoded the mask directly into the encoding :)

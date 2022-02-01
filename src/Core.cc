@@ -1131,3 +1131,8 @@ Core::modtc(const Instruction &instruction) noexcept {
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
 }
+void
+Core::bal(const Instruction &inst) noexcept {
+    setDestination(RegisterIndex::Global14, ip_.getOrdinal() + 4, TreatAsOrdinal{});
+    ipRelativeBranch(inst);
+}
