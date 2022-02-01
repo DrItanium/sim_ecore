@@ -25,6 +25,29 @@
 namespace
 {
     constexpr bool EnableEmulatorTrace = false;
+    Register BadRegister(-1);
+    DoubleRegister BadRegisterDouble(-1);
+    TripleRegister BadRegisterTriple(-1);
+    QuadRegister BadRegisterQuad(-1);
+    constexpr Ordinal bitPositions[32] {
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
+            X(0), X(4), X(8), X(12),
+            X(16), X(20), X(24), X(28)
+#undef X
+#undef Z
+    };
+    constexpr Ordinal reverseBitPositions[32] {
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
+            X(28), X(24), X(20), X(16),
+            X(12), X(8), X(4), X(0),
+#undef X
+#undef Z
+    };
+    constexpr Ordinal getBitPosition(Ordinal value) noexcept {
+        return bitPositions[value & 0b11111];
+    }
 }
 const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
 Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).getOrdinal(); }
@@ -95,31 +118,6 @@ Core::cycle() noexcept {
         Serial.println(getRIP().getOrdinal(), HEX);
     }
 }
-namespace {
-    Register BadRegister(-1);
-    DoubleRegister BadRegisterDouble(-1);
-    TripleRegister BadRegisterTriple(-1);
-    QuadRegister BadRegisterQuad(-1);
-    constexpr Ordinal bitPositions[32] {
-#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
-#define X(base) Z(base, 0), Z(base, 1), Z(base, 2), Z(base, 3)
-            X(0), X(4), X(8), X(12),
-            X(16), X(20), X(24), X(28)
-#undef X
-#undef Z
-    };
-    constexpr Ordinal reverseBitPositions[32] {
-#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
-#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
-            X(28), X(24), X(20), X(16),
-            X(12), X(8), X(4), X(0),
-#undef X
-#undef Z
-    };
-    constexpr Ordinal getBitPosition(Ordinal value) noexcept {
-        return bitPositions[value & 0b11111];
-    }
-}
 
 Register&
 Core::getRegister(RegisterIndex targetIndex) {
@@ -128,6 +126,8 @@ Core::getRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getRegister(static_cast<uint8_t>(targetIndex));
     } else {
+        /// @todo figure out what to return on a fault failure?
+        generateFault(FaultType::Operation_InvalidOperand);
         return BadRegister;
     }
 }
@@ -139,6 +139,8 @@ Core::getDoubleRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getDoubleRegister(static_cast<int>(targetIndex));
     } else {
+        /// @todo figure out what to return on a fault failure?
+        generateFault(FaultType::Operation_InvalidOperand);
         return BadRegisterDouble;
     }
 }
@@ -151,6 +153,8 @@ Core::getTripleRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getTripleRegister(static_cast<int>(targetIndex));
     } else {
+        /// @todo figure out what to return on a fault failure?
+        generateFault(FaultType::Operation_InvalidOperand);
         return BadRegisterTriple;
     }
 }
@@ -162,6 +166,7 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
     } else if (isGlobalRegister(targetIndex)) {
         return globals.getQuadRegister(static_cast<int>(targetIndex));
     } else {
+        generateFault(FaultType::Operation_InvalidOperand);
         return BadRegisterQuad;
     }
 }
@@ -175,6 +180,7 @@ Core::getRegister(RegisterIndex targetIndex) const {
     } else if (isLiteral(targetIndex)) {
         return OrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
+        //generateFault(FaultType::Operation_InvalidOperand);
         return BadRegister;
     }
 }
@@ -189,6 +195,7 @@ Core::getDoubleRegister(RegisterIndex targetIndex) const {
         /// @todo implement double register literal support, according to the docs it is allowed
         return LongOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
     } else {
+        //generateFault(FaultType::Operation_InvalidOperand);
         return BadRegisterDouble;
     }
 }
