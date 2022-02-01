@@ -331,8 +331,14 @@ Core::condBranch(const Instruction& inst) noexcept {
 }
 void
 Core::condFault(const Instruction &inst) noexcept {
-    if (auto mask = inst.getEmbeddedMask(); (ac_.getConditionCode()& mask) != 0) {
-        generateFault(FaultType::Constraint_Range);
+    if (auto mask = inst.getEmbeddedMask(); mask != 0b000) {
+       if ((ac_.getConditionCode() & mask) != 0) {
+           generateFault(FaultType::Constraint_Range);
+       }
+    } else {
+        if (ac_.getConditionCode() == 0) {
+            generateFault(FaultType::Constraint_Range);
+        }
     }
 }
 void

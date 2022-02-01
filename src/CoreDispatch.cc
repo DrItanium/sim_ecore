@@ -48,13 +48,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::bo:
             condBranch(instruction);
             break;
-        case Opcode::faultno:
-            if (ac_.getConditionCode() == 0) {
-                generateFault(FaultType::Constraint_Range);
-            }
-            break;
             // like with the branch instructions, intel stashed the mask directly into the opcode itself
             // so do the same thing (except for 0b000 because that has a special meaning)
+        case Opcode::faultno:
         case Opcode::faultg:
         case Opcode::faulte:
         case Opcode::faultge:
