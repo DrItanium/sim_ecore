@@ -422,7 +422,7 @@ Core::loadQuad(Address destination) noexcept {
 void Core::synchronizedStore(Address destination, const DoubleRegister& value) noexcept {
     // there is a lookup for an interrupt control register, in the Sx manual, we are going to ignore that for now
     synchronizeMemoryRequests();
-    storeLong(destination, value.getLongOrdinal());
+    storeLong(destination, value.get(TreatAsLongOrdinal{}));
 }
 void Core::synchronizedStore(Address destination, const QuadRegister& value) noexcept {
     synchronizeMemoryRequests();

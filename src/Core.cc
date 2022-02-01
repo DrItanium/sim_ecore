@@ -54,7 +54,7 @@ Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdin
 Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).get<Integer>(); }
 Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).get<Ordinal>(); }
 Integer Core::valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc2(instruction).get<Integer>(); }
-LongOrdinal  Core::valueFromSrc2Register(const Instruction &instruction, TreatAsLongOrdinal) const noexcept { return getDoubleRegister(instruction.getSrc2()).getLongOrdinal(); }
+LongOrdinal  Core::valueFromSrc2Register(const Instruction &instruction, TreatAsLongOrdinal) const noexcept { return getDoubleRegister(instruction.getSrc2()).get(TreatAsLongOrdinal{}); }
 const Register&
 Core::sourceFromSrc1(const Instruction& instruction) const noexcept {
     return getSourceRegister(instruction.getSrc1());
@@ -81,7 +81,7 @@ Core::setDestinationFromSrcDest(const Instruction& instruction, Integer value, T
 }
 void
 Core::setDestinationFromSrcDest(const Instruction& instruction, LongOrdinal value, TreatAsLongOrdinal) {
-    getDoubleRegister(instruction.getSrcDest(false)).setLongOrdinal(value);
+    getDoubleRegister(instruction.getSrcDest(false)).set(value, TreatAsLongOrdinal{});
 }
 DoubleRegister&
 Core::longDestinationFromSrcDest(const Instruction& instruction) noexcept {
@@ -766,13 +766,13 @@ Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCa
     auto carry = ac_.getCarryBit() ? 1 : 0;
     DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ? addWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry) : subtractWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry));
     auto& dest = destinationFromSrcDest(instruction);
-    dest.set<Ordinal>(result.getOrdinal(0));
+    dest.set<Ordinal>(result.get(0, TreatAsOrdinal{}));
     ac_.setConditionCode(0);
     if (overflowDetected(src2, src1, dest)) {
         // set the overflow bit in ac
         ac_.setOverflowBit(true);
     }
-    ac_.setCarryBit(result.getOrdinal(1) != 0);
+    ac_.setCarryBit(result.get(1, TreatAsOrdinal{}) != 0);
     // set the carry out bit
 }
 void Core::synld(const Instruction& instruction) noexcept {
@@ -1019,8 +1019,8 @@ Core::ediv(const Instruction &instruction) noexcept {
         // taken from the manual
         auto remainder = static_cast<Ordinal>(numerator - (numerator / denominator) * denominator);
         auto quotient = static_cast<Ordinal>(numerator / denominator);
-        dest.setOrdinal(remainder, 0);
-        dest.setOrdinal(quotient, 1);
+        dest.set(remainder, 0, TreatAsOrdinal{});
+        dest.set(quotient, 1, TreatAsOrdinal{});
     }
 }
 void

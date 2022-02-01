@@ -341,12 +341,6 @@ public:
     void set(LongReal value, TreatAsLongReal) noexcept { lreal_ = value; }
     void set(Ordinal value, int which, TreatAsOrdinal) noexcept {parts_[which & 0b01] = value; }
 
-    [[nodiscard]] constexpr auto getLongOrdinal() const noexcept { return get(TreatAsLongOrdinal{}); }
-    [[nodiscard]] constexpr auto getOrdinal(int which = 0) const noexcept { return get(which, TreatAsOrdinal{}); }
-    void setLongOrdinal(LongOrdinal value) noexcept {
-        set(value, TreatAsLongOrdinal{});
-    }
-    void setOrdinal(Ordinal value, int which = 0) noexcept { set(value, which, TreatAsOrdinal{}); }
     /**
      * @brief Copy the contents of another double register to this one
      * @param other The other double register to get contents from

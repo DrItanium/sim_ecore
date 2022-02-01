@@ -156,7 +156,7 @@ Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
         a.relinquishOwnership();
         // at this point we want all of the locals to be cleared, this is the only time
         for (auto& reg : a.getUnderlyingFrame().dprs) {
-            reg.setLongOrdinal(0);
+            reg.set(0, TreatAsLongOrdinal{});
         }
     }
     setFramePointer(thePointer);
@@ -201,7 +201,7 @@ Core::storeSystemBase(const IACMessage &message) noexcept {
     // The address of the system address table is stored in the word starting at the byte specified in field 3,
     // and the address of the PRCB is stored in the next word in memory (field 3 address plus 4)
     DoubleRegister pack(getSystemAddressTableBase(), getPRCBPtrBase());
-    storeLong(message.getField3(), pack.getLongOrdinal());
+    storeLong(message.getField3(), pack.get(TreatAsLongOrdinal{}));
 }
 void
 Core::generateSystemInterrupt(const IACMessage &message) noexcept {

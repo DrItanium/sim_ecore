@@ -296,7 +296,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             storeShort(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).get<ShortOrdinal>());
             break;
         case Opcode::stl:
-            storeLong(computeMemoryAddress(instruction), longSourceFromSrcDest(instruction).getLongOrdinal());
+            storeLong(computeMemoryAddress(instruction), longSourceFromSrcDest(instruction).get(TreatAsLongOrdinal{}));
             break;
         case Opcode::stt:
             store(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(true)));
