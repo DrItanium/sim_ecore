@@ -1064,8 +1064,8 @@ Core::atmod(const Instruction &instruction) noexcept {
 }
 void
 Core::chkbit(const Instruction &instruction) noexcept {
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    auto bitpos = getBitPosition(valueFromSrc1Register<Ordinal>(instruction));
     ac_.setConditionCode((src & bitpos) == 0 ? 0b000 : 0b010);
 }
 
