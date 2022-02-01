@@ -151,7 +151,7 @@ public:
     }
     [[nodiscard]] constexpr RegisterIndex getSrcDest(bool treatAsSource) const noexcept {
         if (isREGFormat()) {
-            return makeRegisterIndex(reg.srcDest, treatAsSource ? reg.m3 : 0);
+            return makeRegisterIndex(reg.srcDest, treatAsSource ? static_cast<bool>(reg.m3) : false);
         } else if (isMEMFormat()) {
             return makeRegister(mem.srcDest);
         } else {
