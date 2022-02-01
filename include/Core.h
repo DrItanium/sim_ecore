@@ -429,6 +429,9 @@ private:
     [[nodiscard]] const Register& sourceFromSrc2(const Instruction& instruction) const noexcept;
     [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
     [[nodiscard]] Integer valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept;
     template<typename T>
     [[nodiscard]] T valueFromSrc1Register(const Instruction& instruction) const noexcept {
         return valueFromSrc1Register(instruction, TreatAs<T>{});
@@ -436,6 +439,9 @@ private:
     [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
     [[nodiscard]] LongOrdinal valueFromSrc2Register(const Instruction& instruction, TreatAsLongOrdinal) const noexcept;
     [[nodiscard]] Integer valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept;
+    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept;
     template<typename T>
     [[nodiscard]] T valueFromSrc2Register(const Instruction& instruction) const noexcept {
         return valueFromSrc2Register(instruction, TreatAs<T>{});

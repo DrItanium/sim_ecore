@@ -51,8 +51,15 @@ namespace
 }
 const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
 Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).get<Ordinal>(); }
+Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept { return sourceFromSrc1(instruction).get(TreatAsWordAlignedOrdinal{}); }
+Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept { return sourceFromSrc1(instruction).get(TreatAsQuadAlignedOrdinal{}); }
+Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept { return sourceFromSrc1(instruction).get(TreatAsDoubleAlignedOrdinal{}); }
 Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).get<Integer>(); }
+
 Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).get<Ordinal>(); }
+Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept { return sourceFromSrc2(instruction).get(TreatAsWordAlignedOrdinal{}); }
+Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept { return sourceFromSrc2(instruction).get(TreatAsQuadAlignedOrdinal{}); }
+Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept { return sourceFromSrc2(instruction).get(TreatAsDoubleAlignedOrdinal{}); }
 Integer Core::valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc2(instruction).get<Integer>(); }
 LongOrdinal  Core::valueFromSrc2Register(const Instruction &instruction, TreatAsLongOrdinal) const noexcept { return getDoubleRegister(instruction.getSrc2()).get(TreatAsLongOrdinal{}); }
 const Register&
@@ -781,7 +788,7 @@ void Core::synld(const Instruction& instruction) noexcept {
     // for synchronization. It also allows access to internal memory mapped items.
     // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
     // with condition code assignments and forced alignments
-    auto address = sourceFromSrc1(instruction).getWordAligned(); // force word alignment
+    auto address = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
     // load basically takes care of accessing different registers and such even memory mapped ones
     setDestinationFromSrcDest(instruction, load(address), TreatAsOrdinal{});
     // there is a _fail_ condition where a bad access condition will result in 0b000
@@ -794,7 +801,7 @@ void
 Core::synmov(const Instruction &instruction) noexcept {
     // load from memory and then store to another address in a synchronous fashion
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    auto addr = sourceFromSrc1(instruction).getWordAligned(); // align
+    auto addr = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
 #if 0
     Serial.print(F("synmov(0x"));
     Serial.print(addr, HEX);
@@ -815,7 +822,7 @@ Core::synmov(const Instruction &instruction) noexcept {
 void
 Core::synmovl(const Instruction &instruction) noexcept {
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
-    auto addr = sourceFromSrc1(instruction).getDoubleWordAligned(); // align
+    auto addr = valueFromSrc1Register(instruction, TreatAsDoubleAlignedOrdinal{});
     DoubleRegister temp(loadLong(src));
     synchronizedStore(addr, temp);
     /// @todo figure out how to support bad access conditions
@@ -825,7 +832,7 @@ Core::synmovl(const Instruction &instruction) noexcept {
 void
 Core::synmovq(const Instruction &instruction) noexcept {
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
-    auto addr = sourceFromSrc1(instruction).getQuadWordAligned(); // align
+    auto addr = valueFromSrc1Register(instruction, TreatAsQuadAlignedOrdinal{});
     QuadRegister temp = loadQuad(src);
     synchronizedStore(addr, temp);
     /// @todo figure out how to support bad access conditions
@@ -1036,7 +1043,7 @@ Core::atadd(const Instruction& instruction) noexcept {
     // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
     // The initial value from memory is stored in dst (internally src/dst).
     syncf();
-    auto addr = sourceFromSrc1(instruction).getWordAligned(); // force alignment to word boundary
+    auto addr = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
     lockBus();
     auto temp = load(addr);
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
@@ -1052,8 +1059,7 @@ Core::atmod(const Instruction &instruction) noexcept {
     // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
     // value from memory is stored in src/dest
     syncf();
-
-    auto addr = sourceFromSrc1(instruction).getWordAligned(); // force alignment to word boundary
+    auto addr = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
     lockBus();
     auto temp = load(addr);
     auto& dest = destinationFromSrcDest(instruction);
