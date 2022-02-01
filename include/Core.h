@@ -642,9 +642,8 @@ private:
     void modtc(const Instruction& inst) noexcept;
     template<bool shiftLeft>
     void shxo(const Instruction& inst) noexcept {
-        auto len = valueFromSrc1Register(inst, TreatAsOrdinal{});
         Ordinal result = 0;
-        if (len < 32) {
+        if (auto len = valueFromSrc1Register(inst, TreatAsOrdinal{}); len < 32) {
             if constexpr(auto src = valueFromSrc2Register(inst, TreatAsOrdinal{}); shiftLeft) {
                 result = src << len;
             } else {
