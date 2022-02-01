@@ -46,6 +46,7 @@ public:
     [[nodiscard]] constexpr ByteOrdinal get(TreatAsByteOrdinal) const noexcept { return static_cast<ByteOrdinal>(ord_); }
     [[nodiscard]] constexpr ShortInteger get(TreatAsShortInteger) const noexcept { return static_cast<ShortInteger>(integer_); }
     [[nodiscard]] constexpr ShortOrdinal get(TreatAsShortOrdinal) const noexcept { return static_cast<ShortOrdinal>(ord_); }
+    [[nodiscard]] constexpr Real get(TreatAsReal) const noexcept { return real_; }
     template<typename T>
     [[nodiscard]] constexpr T get() const noexcept {
         return get(TreatAs<T>{});
@@ -60,17 +61,19 @@ public:
     void set(ByteOrdinal value, TreatAsByteOrdinal) noexcept { set(value, TreatAsOrdinal{}); }
     void set(ShortInteger value, TreatAsShortInteger) noexcept { set(value, TreatAsInteger{}); }
     void set(ShortOrdinal value, TreatAsShortOrdinal) noexcept { set(value, TreatAsOrdinal{}); }
-    void setOrdinal(Ordinal value) noexcept { ord_ = value; }
-    void setInteger(Integer value) noexcept { integer_ = value; }
+    void set(Real value, TreatAsReal) noexcept { real_ = value; }
+    template<typename T>
+    void set(T value) noexcept {
+        set(value, TreatAs<T>{});
+    }
+    inline void setInteger(Integer value) noexcept { set<Integer>(value); }
 
     void increment(Integer advance, TreatAsInteger) noexcept { integer_ += advance; }
     void increment(Ordinal advance, TreatAsOrdinal) noexcept { ord_ += advance; }
     void decrement(Integer advance, TreatAsInteger) noexcept { integer_ -= advance; }
     void decrement(Ordinal advance, TreatAsOrdinal) noexcept { ord_ -= advance; }
-#ifdef NUMERICS_ARCHTIECTURE
     [[nodiscard]] constexpr auto getReal() const noexcept { return real_; }
     void setReal(Real value) noexcept { real_ = value; }
-#endif
 private:
     Ordinal ord_ = 0;
     Integer integer_;
@@ -78,9 +81,7 @@ private:
     ShortInteger sints_[sizeof(Integer)/sizeof(ShortInteger)];
     ByteOrdinal bords_[sizeof(Ordinal)/sizeof(ByteOrdinal)];
     ByteInteger bints_[sizeof(Integer)/sizeof(ByteInteger)];
-#ifdef NUMERICS_ARCHITECTURE
     Real real_;
-#endif
 };
 
 /**
@@ -117,9 +118,11 @@ public:
 public:
     explicit PreviousFramePointer(Register& targetRegister) : reg_(targetRegister) {}
     explicit PreviousFramePointer(const Register& targetRegister) : reg_(const_cast<Register&>(targetRegister)) {}
-    [[nodiscard]] constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.getOrdinal() & 0b1000); }
-    void enablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() | 0b1000); }
-    void disablePrereturnTraceFlag() const noexcept { reg_.setOrdinal(reg_.getOrdinal() & ~static_cast<Ordinal>(0b1000)); }
+    [[nodiscard]] constexpr bool getPrereturnTraceFlag() const noexcept { return (reg_.get<Ordinal>() & 0b1000); }
+    void enablePrereturnTraceFlag() const noexcept { reg_.set<Ordinal>(reg_.getOrdinal() | 0b1000); }
+    void disablePrereturnTraceFlag() const noexcept {
+        reg_.set<Ordinal>(reg_.get<Ordinal>() & ~static_cast<Ordinal>(0b1000));
+    }
     void setPrereturnTraceFlag(bool value) const noexcept {
         value ? enablePrereturnTraceFlag() : disablePrereturnTraceFlag();
     }
@@ -129,11 +132,11 @@ public:
         return reg_.getOrdinal() & ~0b1'111;
     }
     [[nodiscard]] constexpr auto getWhole() const noexcept { return reg_.getOrdinal(); }
-    void setWhole(Ordinal value) noexcept { reg_.setOrdinal(value); }
-    void setReturnType(Ordinal value) noexcept { reg_.setOrdinal((reg_.getOrdinal() & ~0b111) | (value & 0b111)); }
+    void setWhole(Ordinal value) noexcept { reg_.set<Ordinal>(value); }
+    void setReturnType(Ordinal value) noexcept { reg_.set<Ordinal>((reg_.get<Ordinal>() & ~0b111) | (value & 0b111)); }
     void setAddress(Ordinal value) noexcept {
-        auto lowerBits = reg_.getOrdinal() & 0b1'111;
-        reg_.setOrdinal((value & ~0b1'111) | lowerBits);
+        auto lowerBits = reg_.get<Ordinal>() & 0b1'111;
+        reg_.set<Ordinal>((value & ~0b1'111) | lowerBits);
     }
 private:
     Register& reg_;

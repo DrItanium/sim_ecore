@@ -50,10 +50,10 @@ namespace
     }
 }
 const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
-Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).getOrdinal(); }
-Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).getInteger(); }
-Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).getOrdinal(); }
-Integer Core::valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc2(instruction).getInteger(); }
+Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).get<Ordinal>(); }
+Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).get<Integer>(); }
+Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).get<Ordinal>(); }
+Integer Core::valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc2(instruction).get<Integer>(); }
 LongOrdinal  Core::valueFromSrc2Register(const Instruction &instruction, TreatAsLongOrdinal) const noexcept { return getDoubleRegister(instruction.getSrc2()).getLongOrdinal(); }
 const Register&
 Core::sourceFromSrc1(const Instruction& instruction) const noexcept {
@@ -73,7 +73,7 @@ Core::sourceFromSrcDest(const Instruction& instruction) const noexcept {
 }
 void
 Core::setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal) {
-    destinationFromSrcDest(instruction).setOrdinal(value);
+    destinationFromSrcDest(instruction).set<Ordinal>(value);
 }
 void
 Core::setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger) {
@@ -111,7 +111,7 @@ Core::cycle() noexcept {
     executeInstruction(instruction);
     //executeInstruction(loadInstruction(ip_.getOrdinal()));
     if (advanceIPBy > 0)  {
-        ip_.setOrdinal(ip_.getOrdinal() + advanceIPBy);
+        ip_.set<Ordinal>(ip_.getOrdinal() + advanceIPBy);
     }
     if constexpr (EnableEmulatorTrace) {
         Serial.print(F("\trip(after): 0x"));
@@ -219,7 +219,7 @@ Core::saveRegisterFrame(const RegisterFrame &theFrame, Address baseAddress) noex
 void
 Core::restoreRegisterFrame(RegisterFrame &theFrame, Address baseAddress) noexcept {
     for (auto& reg : theFrame.gprs) {
-        reg.setOrdinal(load(baseAddress));
+        reg.set<Ordinal>(load(baseAddress));
         baseAddress += 4;
     }
 }
@@ -234,19 +234,19 @@ Core::getIndexRegister(const Instruction& inst) const noexcept {
 }
 Ordinal
 Core::valueFromAbaseRegister(const Instruction& inst, TreatAsOrdinal) const noexcept {
-    return getAbaseRegister(inst).getOrdinal();
+    return getAbaseRegister(inst).get<Ordinal>();
 }
 Integer
 Core::valueFromAbaseRegister(const Instruction& inst, TreatAsInteger) const noexcept {
-    return getAbaseRegister(inst).getInteger();
+    return getAbaseRegister(inst).get<Integer>();
 }
 Ordinal
 Core::valueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept {
-    return getIndexRegister(inst).getOrdinal();
+    return getIndexRegister(inst).get<Ordinal>();
 }
 Integer
 Core::valueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept {
-    return getIndexRegister(inst).getInteger();
+    return getIndexRegister(inst).get<Integer>();
 }
 Ordinal
 Core::scaledValueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept {
@@ -360,7 +360,7 @@ Core::condFault(const Instruction &inst) noexcept {
 }
 void
 Core::testOp(const Instruction &inst) noexcept {
-    getRegister(inst.getSrc1(true)).setOrdinal(ac_.conditionCodeIs(inst.getEmbeddedMask()) ? 1 : 0);
+    getRegister(inst.getSrc1(true)).set<Ordinal>(ac_.conditionCodeIs(inst.getEmbeddedMask()) ? 1 : 0);
 }
 
 Ordinal
@@ -389,22 +389,14 @@ Ordinal
 Core::getInterruptStackPointer() noexcept {
     return load(getPRCBPtrBase() + 24);
 }
-/*
-void
-Core::clearLocalRegisters() noexcept {
-    for (auto& reg : getLocals().gprs) {
-        reg.setOrdinal(0);
-    }
-}
- */
 
 void
 Core::setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
-    getRegister(index).setOrdinal(value);
+    getRegister(index).set<Ordinal>(value);
 }
 void
 Core::setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
-    getRegister(index).setInteger(value);
+    getRegister(index).set<Integer>(value);
 }
 
 Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1), stackAlignMask_(c_ - 1), frameAlignmentMask_(~stackAlignMask_) {
@@ -452,15 +444,15 @@ Core::getNextCallFrameStart() noexcept {
 }
 void
 Core::setRIP() noexcept {
-    getRIP().setOrdinal(ip_.getOrdinal() + advanceIPBy);
+    getRIP().set<Ordinal>(ip_.get<Ordinal>() + advanceIPBy);
 }
 void
 Core::setStackPointer(Ordinal value) noexcept {
-    getStackPointer().setOrdinal(value);
+    getStackPointer().set<Ordinal>(value);
 }
 Ordinal
 Core::getStackPointerValue() const noexcept {
-    return getStackPointer().getOrdinal();
+    return getStackPointer().get<Ordinal>();
 }
 void
 Core::call(const Instruction& instruction) noexcept {
@@ -541,7 +533,7 @@ void
 Core::restoreStandardFrame() noexcept {
     // load the previous frame and get RIP out of that
     exitCall();
-    absoluteBranch(getRIP().getOrdinal());
+    absoluteBranch(getRIP().get<Ordinal>());
 }
 void
 Core::handleFaultReturn() noexcept {
@@ -672,7 +664,7 @@ Core::exitCall() noexcept {
         if (getCurrentPack().valid()) {
             Serial.println(F("CURRENT PACK IS VALID"));
             Serial.print(F("RIP: 0x"));
-            Serial.println(getRIP().getOrdinal(), HEX);
+            Serial.println(getRIP().get<Ordinal>(), HEX);
         } else {
             Serial.println(F("CURRENT PACK IS INVALID"));
         }
@@ -712,7 +704,7 @@ Core::enterCall(Address newFP) noexcept {
         if (getCurrentPack().valid()) {
             Serial.println(F("CURRENT PACK IS VALID"));
             Serial.print(F("RIP: 0x"));
-            Serial.println(getRIP().getOrdinal(), HEX);
+            Serial.println(getRIP().get<Ordinal>(), HEX);
         } else {
             Serial.println(F("CURRENT PACK IS INVALID"));
         }
@@ -772,9 +764,9 @@ Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCa
     auto& src1 = sourceFromSrc1(instruction);
     auto& src2 = sourceFromSrc2(instruction);
     auto carry = ac_.getCarryBit() ? 1 : 0;
-    DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ? addWithCarry(src2.getOrdinal(), src1.getOrdinal(), carry) : subtractWithCarry(src2.getOrdinal(), src1.getOrdinal(), carry));
+    DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ? addWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry) : subtractWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry));
     auto& dest = destinationFromSrcDest(instruction);
-    dest.setOrdinal(result.getOrdinal(0));
+    dest.set<Ordinal>(result.getOrdinal(0));
     ac_.setConditionCode(0);
     if (overflowDetected(src2, src1, dest)) {
         // set the overflow bit in ac
@@ -858,12 +850,12 @@ Core::ipRelativeBranch(const Instruction& inst) noexcept {
 void
 Core::absoluteBranch(Ordinal value) noexcept {
     advanceIPBy = 0; // we want to go to the exact position specified so do not advance
-    ip_.setOrdinal(value);
+    ip_.set<Ordinal>(value);
 }
 void
 Core::balx(const Instruction& inst) noexcept {
     auto address = computeMemoryAddress(inst);
-    setDestinationFromSrcDest(inst, ip_.getOrdinal() + advanceIPBy, TreatAsOrdinal{});
+    setDestinationFromSrcDest(inst, ip_.get<Ordinal>() + advanceIPBy, TreatAsOrdinal{});
     absoluteBranch(address);
 }
 void
@@ -904,7 +896,7 @@ Core::extract(const Instruction &instruction) noexcept {
     auto len = valueFromSrc2Register(instruction, TreatAsOrdinal{});
     // taken from the Hx manual as it isn't insane
     auto shiftAmount = bitpos > 32 ? 32 : bitpos;
-    dest.setOrdinal((dest.getOrdinal() >> shiftAmount) & ~(0xFFFF'FFFF << len));
+    dest.set<Ordinal>((dest.get<Ordinal>() >> shiftAmount) & ~(0xFFFF'FFFF << len));
 }
 /// @todo figure out how to reduce code size on this
 void
@@ -945,12 +937,12 @@ Core::scanbit(const Instruction &instruction) noexcept {
     // perform a sanity check
     auto& dest = destinationFromSrcDest(instruction);
     auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-    dest.setOrdinal(0xFFFF'FFFF);
+    dest.set<Ordinal>(0xFFFF'FFFF);
     ac_.setConditionCode(0);
     Ordinal index = 31;
     for (auto mask : reverseBitPositions) {
         if ((src & mask) != 0) {
-            dest.setOrdinal(index);
+            dest.set<Ordinal>(index);
             ac_.setConditionCode(0b010);
             return;
         }
@@ -962,12 +954,12 @@ void
 Core::spanbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
     auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-    dest.setOrdinal(0xFFFF'FFFF);
+    dest.set<Ordinal>(0xFFFF'FFFF);
     ac_.setConditionCode(0);
     Ordinal index = 31;
     for (auto mask : reverseBitPositions) {
         if ((src & mask) == 0) {
-            dest.setOrdinal(index);
+            dest.set<Ordinal>(index);
             ac_.setConditionCode(0b010);
             return;
         }
@@ -993,7 +985,7 @@ Core::modify(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
     auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    dest.setOrdinal(::modify(mask, src, dest.getOrdinal()));
+    dest.set<Ordinal>(::modify(mask, src, dest.get<Ordinal>()));
 }
 void
 Core::modi(const Instruction &instruction) noexcept {
@@ -1013,7 +1005,7 @@ Core::modac(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
     auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    dest.setOrdinal(ac_.modify(mask, src));
+    dest.set<Ordinal>(ac_.modify(mask, src));
 }
 void
 Core::ediv(const Instruction &instruction) noexcept {
@@ -1066,9 +1058,9 @@ Core::atmod(const Instruction &instruction) noexcept {
     auto temp = load(addr);
     auto& dest = destinationFromSrcDest(instruction);
     auto mask = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    store(addr, (dest.getOrdinal() & mask) | (temp & ~mask));
+    store(addr, (dest.get<Ordinal>() & mask) | (temp & ~mask));
     unlockBus();
-    dest.setOrdinal(temp);
+    dest.set<Ordinal>(temp);
 }
 void
 Core::chkbit(const Instruction &instruction) noexcept {
@@ -1082,14 +1074,14 @@ Core::setbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
     auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    dest.setOrdinal(src | bitpos);
+    dest.set<Ordinal>(src | bitpos);
 }
 void
 Core::clrbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
     auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
     auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    dest.setOrdinal(src & ~bitpos);
+    dest.set<Ordinal>(src & ~bitpos);
 }
 
 void
@@ -1101,14 +1093,14 @@ Core::modpc(const Instruction &instruction) noexcept {
             generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
         } else {
             auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-            dest.setOrdinal(pc_.modify(mask, src));
-            ProcessControls tmp(dest.getOrdinal());
+            dest.set<Ordinal>(pc_.modify(mask, src));
+            ProcessControls tmp(dest.get<Ordinal>());
             if (tmp.getPriority() > pc_.getPriority()) {
                 checkPendingInterrupts();
             }
         }
     } else {
-        dest.setOrdinal(pc_.getValue());
+        dest.set<Ordinal>(pc_.getValue());
     }
 }
 
@@ -1120,6 +1112,6 @@ Core::modtc(const Instruction &instruction) noexcept {
 }
 void
 Core::bal(const Instruction &inst) noexcept {
-    setDestination(RegisterIndex::Global14, ip_.getOrdinal() + 4, TreatAsOrdinal{});
+    setDestination(RegisterIndex::Global14, ip_.get<Ordinal>() + 4, TreatAsOrdinal{});
     ipRelativeBranch(inst);
 }
