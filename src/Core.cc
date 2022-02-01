@@ -77,7 +77,7 @@ Core::setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, T
 }
 void
 Core::setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger) {
-    destinationFromSrcDest(instruction).setInteger(value);
+    destinationFromSrcDest(instruction).set<Integer>(value);
 }
 void
 Core::setDestinationFromSrcDest(const Instruction& instruction, LongOrdinal value, TreatAsLongOrdinal) {
@@ -464,7 +464,7 @@ Core::call(const Instruction& instruction) noexcept {
     auto fp = getFramePointerValue();
     setRIP();
     enterCall(temp);
-    ip_.setInteger(ip_.getInteger() + instruction.getDisplacement());
+    ip_.set<Integer>(ip_.getInteger() + instruction.getDisplacement());
     /// @todo expand pfp and fp to accurately model how this works
     getPFP().setAddress(fp);
     setFramePointer(temp);
@@ -845,7 +845,7 @@ Core::unlockBus() noexcept {
 void
 Core::ipRelativeBranch(const Instruction& inst) noexcept {
     advanceIPBy = 0;
-    ip_.setInteger(ip_.getInteger() + inst.getDisplacement());
+    ip_.set<Integer>(ip_.getInteger() + inst.getDisplacement());
 }
 void
 Core::absoluteBranch(Ordinal value) noexcept {
@@ -880,9 +880,9 @@ Core::shrdi(const Instruction &instruction) noexcept {
     if (auto& dest = destinationFromSrcDest(instruction); len < 32) {
         auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
         /// @todo verify that this does what we expect
-        dest.setInteger(src / static_cast<Integer>(bitPositions[len]));
+        dest.set<Integer>(src / static_cast<Integer>(bitPositions[len]));
     } else {
-        dest.setInteger(0);
+        dest.set<Integer>(0);
     }
 }
 void
