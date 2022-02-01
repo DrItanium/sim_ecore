@@ -132,17 +132,17 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::balx:
             balx(instruction);
             break;
-        case Opcode::ldos:
-            setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal {});
-            break;
         case Opcode::lda:
             lda(instruction);
+            break;
+        case Opcode::ldos:
+            setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::ld:
             setDestinationFromSrcDest(instruction, load(computeMemoryAddress(instruction)), TreatAsOrdinal {});
             break;
         case Opcode::ldl:
-            getDoubleRegister(instruction.getSrcDest(false)).setLongOrdinal( loadLong(computeMemoryAddress(instruction)) );
+            setDestinationFromSrcDest(instruction, loadLong(computeMemoryAddress(instruction)), TreatAsLongOrdinal {});
             break;
         case Opcode::ldt:
             load(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(false)));
