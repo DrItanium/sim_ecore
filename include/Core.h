@@ -466,11 +466,11 @@ private:
         ShiftRight,
     };
     template<ArithmeticOperation op, typename T>
-    void arithmeticGeneric(const Instruction& instruction) noexcept {
-        using K = typename T::UnderlyingType;
-        K result = static_cast<K>(0);
-        auto src2 = valueFromSrc2Register(instruction, T{});
-        auto src1 = valueFromSrc1Register(instruction, T{});
+    void arithmeticGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
+        using K = TreatAs<T>;
+        T result = static_cast<T>(0);
+        auto src2 = valueFromSrc2Register(instruction, K{});
+        auto src1 = valueFromSrc1Register(instruction, K{});
         switch (op) {
             case ArithmeticOperation::Add:
                 result = src2 + src1;
@@ -518,7 +518,7 @@ private:
                 result = src2 >> src1;
                 break;
         }
-        setDestinationFromSrcDest(instruction, result, T{});
+        setDestinationFromSrcDest(instruction, result, K{});
     }
     enum class LogicalOp : byte {
         And,

@@ -151,28 +151,28 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             break;
             // REG format
         case Opcode::addi:
-            arithmeticGeneric<ArithmeticOperation::Add, TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Add>(instruction, TreatAsInteger{});
             break;
         case Opcode::addo:
-            arithmeticGeneric<ArithmeticOperation::Add, TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Add>(instruction, TreatAsOrdinal{});
             break;
         case Opcode::subi:
-            arithmeticGeneric<ArithmeticOperation::Subtract, TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Subtract>(instruction, TreatAsInteger{});
             break;
         case Opcode::subo:
-            arithmeticGeneric<ArithmeticOperation::Subtract, TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Subtract>(instruction, TreatAsOrdinal{});
             break;
         case Opcode::muli:
-            arithmeticGeneric<ArithmeticOperation::Multiply, TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Multiply>(instruction, TreatAsInteger{});
             break;
         case Opcode::mulo:
-            arithmeticGeneric<ArithmeticOperation::Multiply, TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Multiply>(instruction, TreatAsOrdinal{});
             break;
         case Opcode::divo:
-            arithmeticGeneric<ArithmeticOperation::Divide, TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Divide>(instruction, TreatAsOrdinal{});
             break;
         case Opcode::divi:
-            arithmeticGeneric<ArithmeticOperation::Divide, TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Divide>(instruction, TreatAsInteger{});
             break;
         case Opcode::notbit:
             notbit(instruction);
@@ -211,13 +211,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             logicalOpGeneric<LogicalOp::NotOr>(instruction);
             break;
         case Opcode::remi:
-            arithmeticGeneric<ArithmeticOperation::Remainder, TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Remainder>(instruction, TreatAsInteger{});
             break;
         case Opcode::remo:
-            arithmeticGeneric<ArithmeticOperation::Remainder, TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Remainder>(instruction, TreatAsOrdinal{});
             break;
         case Opcode::rotate:
-            arithmeticGeneric<ArithmeticOperation::Rotate, TreatAsOrdinal>(instruction);
+            arithmeticGeneric<ArithmeticOperation::Rotate>(instruction, TreatAsOrdinal{});
             break;
         case Opcode::mov:
             mov(instruction);
@@ -274,7 +274,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             shro(instruction);
             break;
         case Opcode::shli:
-            arithmeticGeneric<ArithmeticOperation::ShiftLeft, TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::ShiftLeft>(instruction, TreatAsInteger{});
             break;
         case Opcode::scanbyte:
             scanbyte(instruction);
@@ -334,7 +334,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).getInteger()));
             break;
         case Opcode::shri:
-            arithmeticGeneric<ArithmeticOperation::ShiftRight, TreatAsInteger>(instruction);
+            arithmeticGeneric<ArithmeticOperation::ShiftRight>(instruction, TreatAsInteger{});
             break;
         case Opcode::shrdi:
             shrdi(instruction);
