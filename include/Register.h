@@ -332,14 +332,21 @@ union DoubleRegister {
 public:
     constexpr explicit DoubleRegister(LongOrdinal value = 0) noexcept : lord_(value) { }
     constexpr DoubleRegister(Ordinal lower, Ordinal upper) noexcept : parts_{lower, upper} { }
-    constexpr auto getLongOrdinal() const noexcept { return lord_; }
-    constexpr auto getLongInteger() const noexcept { return lint_; }
-    constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which & 0b01]; }
+    [[nodiscard]] constexpr auto get(TreatAsLongOrdinal) const noexcept { return lord_; }
+    [[nodiscard]] constexpr auto get(TreatAsLongInteger) const noexcept { return lint_; }
+    [[nodiscard]] constexpr auto get(int which, TreatAsOrdinal) const noexcept { return parts_[which & 0b01]; }
+    [[nodiscard]] constexpr auto get(TreatAsLongReal) const noexcept { return lreal_; }
+    void set(LongOrdinal value, TreatAsLongOrdinal) noexcept { lord_ = value; }
+    void set(LongInteger value, TreatAsLongInteger) noexcept { lint_ = value; }
+    void set(LongReal value, TreatAsLongReal) noexcept { lreal_ = value; }
+    void set(Ordinal value, int which, TreatAsOrdinal) noexcept {parts_[which & 0b01] = value; }
+
+    [[nodiscard]] constexpr auto getLongOrdinal() const noexcept { return get(TreatAsLongOrdinal{}); }
+    [[nodiscard]] constexpr auto getOrdinal(int which = 0) const noexcept { return get(which, TreatAsOrdinal{}); }
     void setLongOrdinal(LongOrdinal value) noexcept {
-        lord_ = value;
+        set(value, TreatAsLongOrdinal{});
     }
-    void setLongInteger(LongInteger value) noexcept { lint_ = value; }
-    void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b01] = value; }
+    void setOrdinal(Ordinal value, int which = 0) noexcept { set(value, which, TreatAsOrdinal{}); }
     /**
      * @brief Copy the contents of another double register to this one
      * @param other The other double register to get contents from
@@ -347,17 +354,11 @@ public:
     void copy(const DoubleRegister& other) noexcept {
         lord_ = other.lord_;
     }
-#ifdef NUMERICS_ARCHITECTURE
-    constexpr auto getLongReal() const noexcept { return lreal_; }
-void setLongReal(LongReal value) noexcept { lreal_ = value; }
-#endif
 private:
     LongOrdinal lord_ = 0;
     LongInteger lint_;
     Ordinal parts_[sizeof(LongOrdinal)/ sizeof(Ordinal)];
-#ifdef NUMERICS_ARCHITECTURE
     LongReal lreal_;
-#endif
 };
 static_assert(sizeof(Register) * 2 == sizeof(DoubleRegister), "Register is not half the size of DoubleRegister ");
 
