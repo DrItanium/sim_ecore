@@ -132,7 +132,8 @@ Core::begin() noexcept {
 }
 
 void
-Core::generateFault(FaultType faultKind) {
+Core::generateFault(FaultType faultKind) noexcept {
+    /// @todo implement proper fault handling support instead of this terminate system
     Serial.print(F("FAULT GENERATED AT 0x"));
     Serial.print(ip_.get<Ordinal>(), HEX);
     Serial.println(F("! HALTING!!"));
@@ -184,6 +185,7 @@ Core::getPRCBPtrBase() const noexcept {
 void
 Core::purgeInstructionCache(const IACMessage &message) noexcept {
     // do nothing as we don't have an instruction cache
+    // this is not the register cache!
     /// @todo implement
 }
 
@@ -239,6 +241,7 @@ Core::processIACMessage(const IACMessage &message) noexcept {
         case 0x41: // Test pending interrupts
             testPendingInterrupts(message);
             break;
+            // Custom IAC messages start here
         case 0x00: // do normal boot startup
             Serial.println(F("BOOTING!"));
             boot();
