@@ -46,13 +46,13 @@ public:
     [[nodiscard]] constexpr Integer get(TreatAsInteger) const noexcept { return integer_; }
     [[nodiscard]] constexpr Ordinal get(TreatAsOrdinal) const noexcept { return ord_; }
     [[nodiscard]] constexpr ByteInteger get(TreatAsByteInteger) const noexcept { return static_cast<ByteInteger>(integer_); }
-    [[nodiscard]] constexpr ByteInteger get(int which, TreatAsByteInteger) const noexcept { return bints_[which&0b11]; }
+    [[nodiscard]] constexpr ByteInteger get(byte which, TreatAsByteInteger) const noexcept { return bints_[which&0b11]; }
     [[nodiscard]] constexpr ByteOrdinal get(TreatAsByteOrdinal) const noexcept { return static_cast<ByteOrdinal>(ord_); }
-    [[nodiscard]] constexpr ByteOrdinal get(int which, TreatAsByteOrdinal) const noexcept { return bords_[which&0b11]; }
+    [[nodiscard]] constexpr ByteOrdinal get(byte which, TreatAsByteOrdinal) const noexcept { return bords_[which&0b11]; }
     [[nodiscard]] constexpr ShortInteger get(TreatAsShortInteger) const noexcept { return static_cast<ShortInteger>(integer_); }
-    [[nodiscard]] constexpr auto get(int which, TreatAsShortInteger) const noexcept { return sints_[which&0b01]; }
+    [[nodiscard]] constexpr auto get(byte which, TreatAsShortInteger) const noexcept { return sints_[which&0b01]; }
     [[nodiscard]] constexpr ShortOrdinal get(TreatAsShortOrdinal) const noexcept { return static_cast<ShortOrdinal>(ord_); }
-    [[nodiscard]] constexpr auto get(int which, TreatAsShortOrdinal) const noexcept { return sords_[which&0b01]; }
+    [[nodiscard]] constexpr auto get(byte which, TreatAsShortOrdinal) const noexcept { return sords_[which&0b01]; }
     [[nodiscard]] constexpr Real get(TreatAsReal) const noexcept { return real_; }
     template<typename T>
     [[nodiscard]] constexpr T get() const noexcept {
@@ -60,10 +60,10 @@ public:
     }
     void set(Integer value, TreatAsInteger) noexcept { integer_ = value; }
     void set(Ordinal value, TreatAsOrdinal) noexcept { ord_ = value; }
-    void set(ByteInteger value, int which, TreatAsByteInteger) noexcept { bints_[which&0b11] = value; }
-    void set(ByteOrdinal value, int which, TreatAsByteOrdinal) noexcept { bords_[which&0b11] = value; }
-    void set(ShortInteger value, int which, TreatAsShortInteger) noexcept { sints_[which&0b1] = value; }
-    void set(ShortOrdinal value, int which, TreatAsShortOrdinal) noexcept { sords_[which&0b1] = value; }
+    void set(ByteInteger value, byte which, TreatAsByteInteger) noexcept { bints_[which&0b11] = value; }
+    void set(ByteOrdinal value, byte which, TreatAsByteOrdinal) noexcept { bords_[which&0b11] = value; }
+    void set(ShortInteger value, byte which, TreatAsShortInteger) noexcept { sints_[which&0b1] = value; }
+    void set(ShortOrdinal value, byte which, TreatAsShortOrdinal) noexcept { sords_[which&0b1] = value; }
     void set(ByteInteger value, TreatAsByteInteger) noexcept { set(value, TreatAsInteger{}); }
     void set(ByteOrdinal value, TreatAsByteOrdinal) noexcept { set(value, TreatAsOrdinal{}); }
     void set(ShortInteger value, TreatAsShortInteger) noexcept { set(value, TreatAsInteger{}); }
@@ -421,12 +421,12 @@ public:
     constexpr DoubleRegister(Ordinal lower, Ordinal upper) noexcept : parts_{lower, upper} { }
     [[nodiscard]] constexpr auto get(TreatAsLongOrdinal) const noexcept { return lord_; }
     [[nodiscard]] constexpr auto get(TreatAsLongInteger) const noexcept { return lint_; }
-    [[nodiscard]] constexpr auto get(int which, TreatAsOrdinal) const noexcept { return parts_[which & 0b01]; }
+    [[nodiscard]] constexpr auto get(byte which, TreatAsOrdinal) const noexcept { return parts_[which & 0b01]; }
     [[nodiscard]] constexpr auto get(TreatAsLongReal) const noexcept { return lreal_; }
     void set(LongOrdinal value, TreatAsLongOrdinal) noexcept { lord_ = value; }
     void set(LongInteger value, TreatAsLongInteger) noexcept { lint_ = value; }
     void set(LongReal value, TreatAsLongReal) noexcept { lreal_ = value; }
-    void set(Ordinal value, int which, TreatAsOrdinal) noexcept {parts_[which & 0b01] = value; }
+    void set(Ordinal value, byte which, TreatAsOrdinal) noexcept {parts_[which & 0b01] = value; }
 
     /**
      * @brief Copy the contents of another double register to this one
@@ -447,13 +447,14 @@ static_assert(sizeof(Register) * 2 == sizeof(DoubleRegister), "Register is not h
 union TripleRegister {
 public:
     constexpr explicit TripleRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0) noexcept : parts_{a, b, c, 0}{ }
-    constexpr auto getOrdinal(byte which = 0) const noexcept { return parts_[which % 3]; } // very expensive!
+    [[nodiscard]] constexpr auto getOrdinal(byte which = 0) const noexcept { return parts_[which % 3]; } // very expensive!
     void setOrdinal(Ordinal value, byte which = 0) noexcept { parts_[which % 3] = value; }
     /**
      * @brief Copy the contents of another triple register into this one
      * @param src The source triple register to take from
      */
     void copy(const TripleRegister& src) noexcept  {
+        // do not copy the fourth element over despite the alignment
         for (byte i = 0;i < 3; ++i) {
             parts_[i] = src.parts_[i];
         }
@@ -475,10 +476,10 @@ union QuadRegister {
 public:
     constexpr explicit QuadRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0, Ordinal d = 0) noexcept : parts_{a, b, c, d}{ }
     constexpr explicit QuadRegister(LongOrdinal lower, LongOrdinal upper) noexcept : halves_{lower, upper} { }
-    constexpr auto getOrdinal(int which = 0) const noexcept { return parts_[which & 0b11]; } // very expensive!
-    void setOrdinal(Ordinal value, int which = 0) noexcept { parts_[which & 0b11] = value; }
-    constexpr auto getHalf(int which = 0) const noexcept { return halves_[which & 0b01];}
-    void setHalf(LongOrdinal value, int which = 0) noexcept { halves_[which & 0b01] = value; }
+    constexpr auto getOrdinal(byte which = 0) const noexcept { return parts_[which & 0b11]; } // very expensive!
+    void setOrdinal(Ordinal value, byte which = 0) noexcept { parts_[which & 0b11] = value; }
+    constexpr auto getHalf(byte which = 0) const noexcept { return halves_[which & 0b01];}
+    void setHalf(LongOrdinal value, byte which = 0) noexcept { halves_[which & 0b01] = value; }
     [[nodiscard]] constexpr auto getLowerHalf() const noexcept { return halves_[0]; }
     [[nodiscard]] constexpr auto getUpperHalf() const noexcept { return halves_[1]; }
     void setLowerHalf(LongOrdinal value) noexcept {
