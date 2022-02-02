@@ -261,47 +261,6 @@ constexpr unsigned long long int operator "" _KHz(unsigned long long value) noex
 constexpr unsigned long long int operator "" _MHz(unsigned long long value) noexcept {
     return value * 1000 * 1000;
 }
-/**
- * @brief A 32-bit quantity that can be viewed in different ways, in most cases this is how most implementations will view their cache lines or memory storage
- */
-union SplitWord32 {
-    template<typename T>
-    static constexpr uint8_t NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);
-    template<typename T>
-    static constexpr uint8_t NumThingsPerOrdinalMask = NumThingsPerOrdinal<T> - 1;
-    static constexpr uint8_t NumShortOrdinalsPerOrdinal = NumThingsPerOrdinal<ShortOrdinal >;
-    static constexpr uint8_t NumShortIntegersPerOrdinal = NumThingsPerOrdinal<ShortInteger>;
-    static constexpr uint8_t NumByteOrdinalsPerOrdinal = NumThingsPerOrdinal<ByteOrdinal >;
-    static constexpr uint8_t NumByteIntegersPerOrdinal = NumThingsPerOrdinal<ByteInteger>;
-    static constexpr uint8_t NumShortOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ShortOrdinal >;
-    static constexpr uint8_t NumShortIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ShortInteger>;
-    static constexpr uint8_t NumByteOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ByteOrdinal >;
-    static constexpr uint8_t NumByteIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ByteInteger>;
-public:
-    constexpr SplitWord32(Ordinal value = 0) noexcept : raw(value) { }
-    constexpr SplitWord32(ShortOrdinal lower, ShortOrdinal upper) noexcept : ordinalShorts{lower, upper} { }
-    constexpr SplitWord32(ByteOrdinal lowest, ByteOrdinal lower, ByteOrdinal higher, ByteOrdinal highest)  noexcept : ordinalBytes{lowest, lower, higher, highest} { }
-    [[nodiscard]] constexpr Ordinal get() const noexcept { return raw; }
-    void set(Ordinal value) noexcept { raw = value; }
-    constexpr ShortOrdinal getShortOrdinal(uint8_t which) const noexcept { return ordinalShorts[which & NumShortOrdinalsPerOrdinalMask]; }
-    constexpr ShortInteger getShortInteger(uint8_t which) const noexcept {return integerShorts[which & NumShortIntegersPerOrdinalMask]; }
-    void setShortOrdinal(ShortOrdinal value, uint8_t which) noexcept { ordinalShorts[which & NumShortOrdinalsPerOrdinalMask] = value; }
-    void setShortInteger(ShortInteger value, uint8_t which) noexcept { integerShorts[which & NumShortIntegersPerOrdinalMask] = value; }
-    constexpr ByteOrdinal getByteOrdinal(uint8_t which) const noexcept {return ordinalBytes[which & NumByteOrdinalsPerOrdinalMask]; }
-    constexpr ByteInteger getByteInteger(uint8_t which) const noexcept {return integerBytes[which & NumByteIntegersPerOrdinalMask]; }
-    void setByteOrdinal(ByteOrdinal value, uint8_t which) noexcept { ordinalBytes[which & NumByteOrdinalsPerOrdinalMask] = value; }
-    void setByteInteger(ByteInteger value, uint8_t which) noexcept { integerBytes[which & NumByteIntegersPerOrdinalMask] = value; }
-    void clear() noexcept {
-        raw = 0;
-    }
-private:
-    Ordinal raw;
-    ShortOrdinal ordinalShorts[NumShortOrdinalsPerOrdinal];
-    ShortInteger integerShorts[NumShortIntegersPerOrdinal];
-    ByteOrdinal ordinalBytes[NumByteOrdinalsPerOrdinal];
-    ByteInteger integerBytes[NumByteIntegersPerOrdinal];
-};
-static_assert(sizeof(SplitWord32) == sizeof(Ordinal), "SplitWord32 must be the same size as a ordinal");
 
 constexpr uint32_t bytesNeeded(uint32_t value) noexcept {
     if (value == 0) {

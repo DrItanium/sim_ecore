@@ -225,6 +225,8 @@ namespace {
         [[nodiscard]] static byte availableForWrite() noexcept { return Serial.availableForWrite(); }
         [[nodiscard]] static byte available() noexcept { return Serial.available(); }
         [[nodiscard]] static byte getStatus() noexcept { return Serial ? 0xFF : 0x00; }
+        [[nodiscard]] static byte getClockRate(byte index) noexcept { return clockRate_.get(index, TreatAsByteOrdinal{}); }
+        static void setClockRate(byte value, byte index) noexcept { clockRate_.set(value, index, TreatAsByteOrdinal{}); }
         inline static void setStatus(byte value) noexcept {
             setStatus(value != 0);
         }
@@ -242,7 +244,7 @@ namespace {
         }
         static void begin() noexcept {
             if (!Serial) {
-                Serial.begin(clockRate_.get());
+                Serial.begin(clockRate_.get<Ordinal>());
             }
         }
         static void write(byte offset, byte value) noexcept {
@@ -254,16 +256,16 @@ namespace {
                     setStatus(value);
                     break;
                 case Registers::ClockFrequency00:
-                    clockRate_.setByteOrdinal(value, 0);
+                    setClockRate(value, 0);
                     break;
                 case Registers::ClockFrequency01:
-                    clockRate_.setByteOrdinal(value, 1);
+                    setClockRate(value, 1);
                     break;
                 case Registers::ClockFrequency10:
-                    clockRate_.setByteOrdinal(value, 2);
+                    setClockRate(value, 2);
                     break;
                 case Registers::ClockFrequency11:
-                    clockRate_.setByteOrdinal(value, 3);
+                    setClockRate(value, 3);
                     break;
                 default:
                     break;
@@ -275,16 +277,16 @@ namespace {
                 case Registers::Status: return getStatus();
                 case Registers::Available: return available();
                 case Registers::AvailableForWrite: return availableForWrite();
-                case Registers::ClockFrequency00: return clockRate_.getByteOrdinal(0);
-                case Registers::ClockFrequency01: return clockRate_.getByteOrdinal(1);
-                case Registers::ClockFrequency10: return clockRate_.getByteOrdinal(2);
-                case Registers::ClockFrequency11: return clockRate_.getByteOrdinal(3);
+                case Registers::ClockFrequency00: return getClockRate(0);
+                case Registers::ClockFrequency01: return getClockRate(1);
+                case Registers::ClockFrequency10: return getClockRate(2);
+                case Registers::ClockFrequency11: return getClockRate(3);
                 default:
                     return 0;
             }
         }
     private:
-        static inline SplitWord32 clockRate_ { 115200 };
+        static inline Register clockRate_ { 115200 };
     };
     class GPIOInterface {
     public:
