@@ -130,7 +130,12 @@ public:
     template<typename T>
     [[nodiscard]] constexpr T remainder(const Register& other, TreatAs<T>) const noexcept {
         using K = TreatAs<T>;
+        // taken from the i960Sx manual and adapted for the emulator core
+        // auto src2 = get(K{});
+        // auto src1 = other.get(K{});
+        // return src2 - ((src2 / src1) * src1);
         return get(K{}) % other.get(K{});
+
     }
 
 private:
@@ -381,12 +386,6 @@ private:
 };
 static_assert (sizeof(ArithmeticControls) == sizeof(Ordinal), "ArithmeticControls must be the width of a single Ordinal");
 
-constexpr Ordinal modify(Ordinal mask, Ordinal src, Ordinal srcDest) noexcept {
-    return (src & mask) | (srcDest & ~mask);
-}
-constexpr Ordinal rotate(Ordinal src, Ordinal length) noexcept {
-    return (src << length)  | (src >> ((-length) & 31u));
-}
 
 
 

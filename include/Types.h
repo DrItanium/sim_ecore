@@ -310,4 +310,10 @@ constexpr uint32_t bytesNeeded(uint32_t value) noexcept {
         return bytesNeeded(value - 1) * 2;
     }
 }
+constexpr Ordinal modify(Ordinal mask, Ordinal src, Ordinal srcDest) noexcept {
+    return (src & mask) | (srcDest & ~mask);
+}
+constexpr Ordinal rotate(Ordinal src, Ordinal length) noexcept {
+    return (src << length)  | (src >> ((-length) & 31u));
+}
 #endif //SIM3_TYPES_H

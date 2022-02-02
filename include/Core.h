@@ -498,9 +498,7 @@ private:
                 result = sourceFromSrc2(instruction).divide(sourceFromSrc1(instruction), K{});
                 break;
             case ArithmeticOperation::Remainder:
-                // taken from the i960Sx manual
-                //auto result = src2 - ((src2 / src1) * src1);
-                result = src2 % src1;
+                result = sourceFromSrc2(instruction).remainder(sourceFromSrc1(instruction), K{});
                 break;
             case ArithmeticOperation::Rotate:
                 result = rotate(src2, src1);
