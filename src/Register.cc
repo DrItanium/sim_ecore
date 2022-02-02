@@ -46,8 +46,20 @@ TraceControls::modify(Ordinal mask, Ordinal src) noexcept {
 Ordinal operator&(const Register& src2, const Register& src1) noexcept {
     return src2.get<Ordinal>() & src1.get<Ordinal>();
 }
+Ordinal operator&(Ordinal src2, const Register& src1) noexcept {
+    return src2 & src1.get<Ordinal>();
+}
+Ordinal operator&(const Register& src2, Ordinal src1) noexcept {
+    return src2.get<Ordinal>() & src1;
+}
 Ordinal operator|(const Register& src2, const Register& src1) noexcept {
     return src2.get<Ordinal>() | src1.get<Ordinal>();
+}
+Ordinal operator|(Ordinal src2, const Register& src1) noexcept {
+    return src2 | src1.get<Ordinal>();
+}
+Ordinal operator|(const Register& src2, Ordinal src1) noexcept {
+    return src2.get<Ordinal>() | src1;
 }
 Ordinal operator^(const Register& src2, const Register& src1) noexcept {
     return src2.get<Ordinal>() ^ src1.get<Ordinal>();

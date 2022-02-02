@@ -169,7 +169,11 @@ private:
     Real real_;
 };
 Ordinal operator&(const Register& src2, const Register& src1) noexcept;
+Ordinal operator&(Ordinal src2, const Register& src1) noexcept;
+Ordinal operator&(const Register& src2, Ordinal src1) noexcept;
 Ordinal operator|(const Register& src2, const Register& src1) noexcept;
+Ordinal operator|(Ordinal src2, const Register& src1) noexcept;
+Ordinal operator|(const Register& src2, Ordinal src1) noexcept;
 Ordinal operator^(const Register& src2, const Register& src1) noexcept;
 Ordinal operator~(const Register& value) noexcept;
 

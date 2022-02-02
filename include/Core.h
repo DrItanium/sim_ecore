@@ -546,8 +546,8 @@ private:
     template<LogicalOp op>
     void logicalOpGeneric(const Instruction& inst) noexcept {
         Ordinal result = 0;
-        auto src2 = valueFromSrc2Register(inst, TreatAsOrdinal{});
-        auto src1 = valueFromSrc1Register(inst, TreatAsOrdinal{});
+        const auto& src2 = sourceFromSrc2(inst);
+        const auto& src1 = sourceFromSrc1(inst);
         switch (op) {
             case LogicalOp::And: result = src2 & src1; break;
             case LogicalOp::Or: result = src2 | src1; break;
