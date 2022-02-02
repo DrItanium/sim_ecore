@@ -264,7 +264,7 @@ constexpr unsigned long long int operator "" _MHz(unsigned long long value) noex
 /**
  * @brief A 32-bit quantity that can be viewed in different ways, in most cases this is how most implementations will view their cache lines or memory storage
  */
-union MemoryCell32 {
+union SplitWord32 {
     template<typename T>
     static constexpr uint8_t NumThingsPerOrdinal = sizeof(Ordinal) / sizeof(T);
     template<typename T>
@@ -278,9 +278,9 @@ union MemoryCell32 {
     static constexpr uint8_t NumByteOrdinalsPerOrdinalMask = NumThingsPerOrdinalMask<ByteOrdinal >;
     static constexpr uint8_t NumByteIntegersPerOrdinalMask = NumThingsPerOrdinalMask<ByteInteger>;
 public:
-    constexpr MemoryCell32(Ordinal value = 0) noexcept : raw(value) { }
-    constexpr MemoryCell32(ShortOrdinal lower, ShortOrdinal upper) noexcept : ordinalShorts{lower, upper} { }
-    constexpr MemoryCell32(ByteOrdinal lowest, ByteOrdinal lower, ByteOrdinal higher, ByteOrdinal highest)  noexcept : ordinalBytes{lowest, lower, higher, highest} { }
+    constexpr SplitWord32(Ordinal value = 0) noexcept : raw(value) { }
+    constexpr SplitWord32(ShortOrdinal lower, ShortOrdinal upper) noexcept : ordinalShorts{lower, upper} { }
+    constexpr SplitWord32(ByteOrdinal lowest, ByteOrdinal lower, ByteOrdinal higher, ByteOrdinal highest)  noexcept : ordinalBytes{lowest, lower, higher, highest} { }
     constexpr Ordinal getOrdinalValue() const noexcept { return raw; }
     void setOrdinalValue(Ordinal value) noexcept { raw = value; }
     constexpr ShortOrdinal getShortOrdinal(uint8_t which) const noexcept { return ordinalShorts[which & NumShortOrdinalsPerOrdinalMask]; }
@@ -301,7 +301,7 @@ private:
     ByteOrdinal ordinalBytes[NumByteOrdinalsPerOrdinal];
     ByteInteger integerBytes[NumByteIntegersPerOrdinal];
 };
-static_assert(sizeof(MemoryCell32) == sizeof(Ordinal), "MemoryCell32 must be the same size as a long ordinal");
+static_assert(sizeof(SplitWord32) == sizeof(Ordinal), "SplitWord32 must be the same size as a ordinal");
 
 constexpr uint32_t bytesNeeded(uint32_t value) noexcept {
     if (value == 0) {
