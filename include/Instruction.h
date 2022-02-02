@@ -76,7 +76,7 @@ constexpr auto isMEMFormat(uint8_t opcode) noexcept {
     return opcode >= 0x80;
 }
 // based off of the i960 instruction set
-union Instruction {
+struct Instruction {
 public:
     constexpr explicit Instruction(LongOrdinal value = 0) noexcept : wholeValue_(value) { }
     /**
@@ -207,63 +207,72 @@ private:
         return isMEMFormat() && ((mem.modeMajor & 1u) != 0);
     }
 private:
+    union
+    {
+        struct
+        {
+            Ordinal lower: 24;
+            Ordinal opcode: 8;
+        };
+        struct
+        {
+            Ordinal src1: 5;
+            Ordinal s1: 1;
+            Ordinal s2: 1;
+            Ordinal opcodeExt: 4;
+            Ordinal m1: 1;
+            Ordinal m2: 1;
+            Ordinal m3: 1;
+            Ordinal src2: 5;
+            Ordinal srcDest: 5;
+            Ordinal opcode: 8;
+        } reg;
+        struct
+        {
+            // normally the bottom two bits are ignored by the processor (at least on the Sx) and are forced to zero
+            // so it is immediately word aligned. No need to actually keep it that accurate
+            Integer displacement: 13;
+            Ordinal m1: 1;
+            Ordinal src2: 5;
+            Ordinal src1: 5;
+            Ordinal opcode: 8;
+        } cobr;
+        struct
+        {
+            // normally the bottom two bits are ignored by the processor (at least on the Sx) and are forced to zero
+            // so it is immediately word aligned. No need to actually keep it that accurate
+            Integer displacement: 24;
+            Ordinal opcode: 8;
+        } ctrl;
+        struct
+        {
+            Ordinal differentiationBlock: 12;
+            Ordinal modeMajor: 2;
+            Ordinal abase: 5;
+            Ordinal srcDest: 5;
+            Ordinal opcode: 8;
+        } mem;
+        struct
+        {
+            Ordinal offset: 12;
+            Ordinal mode: 2;
+            Ordinal abase: 5;
+            Ordinal srcDest: 5;
+            Ordinal opcode: 8;
+        } mema;
 
-    struct {
-        Ordinal lower : 24;
-        Ordinal opcode : 8;
+        struct
+        {
+            Ordinal index: 5;
+            Ordinal unused0: 2;
+            Ordinal scale: 3;
+            Ordinal mode: 4;
+            Ordinal abase: 5;
+            Ordinal srcDest: 5;
+            Ordinal opcode: 8;
+            Integer optionalDisplacement;
+        } memb;
+        LongOrdinal wholeValue_;
     };
-    struct {
-        Ordinal src1: 5;
-        Ordinal s1: 1;
-        Ordinal s2: 1;
-        Ordinal opcodeExt: 4;
-        Ordinal m1: 1;
-        Ordinal m2: 1;
-        Ordinal m3: 1;
-        Ordinal src2: 5;
-        Ordinal srcDest: 5;
-        Ordinal opcode: 8;
-    } reg;
-    struct {
-        // normally the bottom two bits are ignored by the processor (at least on the Sx) and are forced to zero
-        // so it is immediately word aligned. No need to actually keep it that accurate
-        Integer displacement: 13;
-        Ordinal m1: 1;
-        Ordinal src2: 5;
-        Ordinal src1: 5;
-        Ordinal opcode: 8;
-    } cobr;
-    struct {
-        // normally the bottom two bits are ignored by the processor (at least on the Sx) and are forced to zero
-        // so it is immediately word aligned. No need to actually keep it that accurate
-        Integer displacement: 24;
-        Ordinal opcode: 8;
-    } ctrl;
-    struct {
-        Ordinal differentiationBlock: 12;
-        Ordinal modeMajor: 2;
-        Ordinal abase: 5;
-        Ordinal srcDest: 5;
-        Ordinal opcode: 8;
-    } mem;
-    struct {
-        Ordinal offset: 12;
-        Ordinal mode: 2;
-        Ordinal abase: 5;
-        Ordinal srcDest: 5;
-        Ordinal opcode: 8;
-    } mema;
-
-    struct {
-        Ordinal index: 5;
-        Ordinal unused0: 2;
-        Ordinal scale: 3;
-        Ordinal mode: 4;
-        Ordinal abase: 5;
-        Ordinal srcDest: 5;
-        Ordinal opcode: 8;
-        Integer optionalDisplacement;
-    } memb;
-    LongOrdinal wholeValue_;
 };
 #endif //SIM3_INSTRUCTION_H
