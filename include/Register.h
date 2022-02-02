@@ -127,6 +127,11 @@ public:
         using K = TreatAs<T>;
         return get(K{}) >= other.get(K{});
     }
+    template<typename T>
+    [[nodiscard]] constexpr T remainder(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) % other.get(K{});
+    }
 
 private:
     Ordinal ord_ = 0;

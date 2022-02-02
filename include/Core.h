@@ -485,17 +485,17 @@ private:
         auto src1 = valueFromSrc1Register(instruction, K{});
         switch (op) {
             case ArithmeticOperation::Add:
-                result = src2 + src1;
+                result = sourceFromSrc2(instruction).add(sourceFromSrc1(instruction), K{});
                 break;
             case ArithmeticOperation::Subtract:
-                result = src2 - src1;
+                result = sourceFromSrc2(instruction).subtract(sourceFromSrc1(instruction), K{});
                 break;
             case ArithmeticOperation::Multiply:
-                result = src2 * src1;
+                result = sourceFromSrc2(instruction).multiply(sourceFromSrc1(instruction), K{});
                 break;
             case ArithmeticOperation::Divide:
                 /// @todo check denominator and do proper handling
-                result = src2 / src1;
+                result = sourceFromSrc2(instruction).divide(sourceFromSrc1(instruction), K{});
                 break;
             case ArithmeticOperation::Remainder:
                 // taken from the i960Sx manual
