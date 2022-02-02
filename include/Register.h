@@ -76,8 +76,7 @@ public:
     // not using C++ operators because I need to do tag dispatch to select appropriate type, otherwise I would totally do that.
     template<typename T>
     [[nodiscard]] constexpr T add(const Register& other, TreatAs<T>) const noexcept {
-        using K = TreatAs<T>;
-        return get(K{}) + other.get(K{});
+        return get<T>() + other.get<T>();
     }
     template<typename T>
     [[nodiscard]] constexpr T subtract(const Register& other, TreatAs<T>) const noexcept {
@@ -157,16 +156,14 @@ public:
         return ::rotate(value, len);
     }
 
-    // the bitwise arithmetic operations are ordinal only so we can safely implement them using operator overloading
-
 private:
     Ordinal ord_ = 0;
     Integer integer_;
+    Real real_;
     ShortOrdinal sords_[sizeof(Ordinal)/sizeof(ShortOrdinal)];
     ShortInteger sints_[sizeof(Integer)/sizeof(ShortInteger)];
     ByteOrdinal bords_[sizeof(Ordinal)/sizeof(ByteOrdinal)];
     ByteInteger bints_[sizeof(Integer)/sizeof(ByteInteger)];
-    Real real_;
 };
 Ordinal operator&(const Register& src2, const Register& src1) noexcept;
 Ordinal operator&(Ordinal src2, const Register& src1) noexcept;
@@ -187,8 +184,8 @@ public:
     void setAddress(Address address) noexcept {
         reg_.set(address & alignmentMask_, TreatAsOrdinal{});
     }
-    [[nodiscard]] Address getAddress() const noexcept {
-        return reg_.get(TreatAsOrdinal{}) & alignmentMask_;
+    [[nodiscard]] constexpr Address getAddress() const noexcept {
+        return reg_.get<Ordinal>() & alignmentMask_;
     }
 private:
     Register& reg_;
