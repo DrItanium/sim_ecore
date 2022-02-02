@@ -157,7 +157,7 @@ public:
         return ::rotate(value, len);
     }
 
-
+    // the bitwise arithmetic operations are ordinal only so we can safely implement them using operator overloading
 
 private:
     Ordinal ord_ = 0;
@@ -168,6 +168,10 @@ private:
     ByteInteger bints_[sizeof(Integer)/sizeof(ByteInteger)];
     Real real_;
 };
+Ordinal operator&(const Register& src2, const Register& src1) noexcept;
+Ordinal operator|(const Register& src2, const Register& src1) noexcept;
+Ordinal operator^(const Register& src2, const Register& src1) noexcept;
+Ordinal operator~(const Register& value) noexcept;
 
 /**
  * @brief Wrapper around a register to make it behave like the frame pointer should
