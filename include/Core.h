@@ -596,9 +596,9 @@ private:
     void concmpGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
         using K = TreatAs<T>;
         if ((ac_.getConditionCode() & 0b100) == 0) {
-            auto src1 = valueFromSrc1Register(instruction, K{});
-            auto src2 = valueFromSrc2Register(instruction, K{});
-            ac_.setConditionCode((src1 <= src2) ? 0b010 : 0b001);
+            const auto& src1 = sourceFromSrc1(instruction);
+            const auto& src2 = sourceFromSrc2(instruction);
+            ac_.setConditionCode(src1.lessThanOrEqual(src2, K{}) ? 0b010 : 0b001);
         }
     }
     void synld(const Instruction& inst) noexcept;

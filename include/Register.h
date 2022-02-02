@@ -73,7 +73,7 @@ public:
     void set(T value) noexcept {
         set(value, TreatAs<T>{});
     }
-
+    // not using C++ operators because I need to do tag dispatch to select appropriate type, otherwise I would totally do that.
     template<typename T>
     [[nodiscard]] constexpr T add(const Register& other, TreatAs<T>) const noexcept {
         using K = TreatAs<T>;
@@ -138,12 +138,26 @@ public:
     }
 
     template<typename T>
+    [[nodiscard]] constexpr T shiftLeft(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) << other.get(K{});
+    }
+
+    template<typename T>
+    [[nodiscard]] constexpr T shiftRight(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) >> other.get(K{});
+    }
+
+    template<typename T>
     [[nodiscard]] constexpr T rotate(const Register& other, TreatAs<T>) const noexcept {
         using K = TreatAs<T>;
         auto value = get(K{});
         auto len = other.get(K{});
         return ::rotate(value, len);
     }
+
+
 
 private:
     Ordinal ord_ = 0;
