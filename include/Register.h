@@ -73,6 +73,27 @@ public:
     void set(T value) noexcept {
         set(value, TreatAs<T>{});
     }
+
+    template<typename T>
+    [[nodiscard]] constexpr T add(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) + other.get(K{});
+    }
+    template<typename T>
+    [[nodiscard]] constexpr T subtract(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) - other.get(K{});
+    }
+    template<typename T>
+    [[nodiscard]] constexpr T multiply(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) * other.get(K{});
+    }
+    template<typename T>
+    [[nodiscard]] constexpr T divide(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) * other.get(K{});
+    }
 private:
     Ordinal ord_ = 0;
     Integer integer_;
