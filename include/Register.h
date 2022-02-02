@@ -94,6 +94,40 @@ public:
         using K = TreatAs<T>;
         return get(K{}) * other.get(K{});
     }
+    template<typename T>
+    [[nodiscard]] constexpr bool equals(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) == other.get(K{});
+    }
+    template<typename T>
+    [[nodiscard]] constexpr bool notEquals(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) != other.get(K{});
+    }
+
+    template<typename T>
+    [[nodiscard]] constexpr bool lessThan(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) < other.get(K{});
+    }
+
+    template<typename T>
+    [[nodiscard]] constexpr bool greaterThan(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) > other.get(K{});
+    }
+
+    template<typename T>
+    [[nodiscard]] constexpr bool lessThanOrEqual(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) <= other.get(K{});
+    }
+    template<typename T>
+    [[nodiscard]] constexpr bool greaterThanOrEqual(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        return get(K{}) >= other.get(K{});
+    }
+
 private:
     Ordinal ord_ = 0;
     Integer integer_;
