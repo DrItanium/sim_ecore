@@ -220,8 +220,6 @@ namespace {
         SerialConsole(const SerialConsole&) = delete;
         SerialConsole& operator=(const SerialConsole&) = delete;
         SerialConsole& operator=(SerialConsole&&) = delete;
-        static void setClockRate(uint32_t rate) noexcept { clockRate_ = rate; }
-        [[nodiscard]] static auto getClockRate() noexcept { return clockRate_; }
         static void putCharacter(byte value) noexcept { Serial.write(value); }
         [[nodiscard]] static byte getCharacter() noexcept { return static_cast<byte>(Serial.read()); }
         [[nodiscard]] static byte availableForWrite() noexcept { return Serial.availableForWrite(); }
@@ -244,7 +242,7 @@ namespace {
         }
         static void begin() noexcept {
             if (!Serial) {
-                Serial.begin(clockRate_);
+                Serial.begin(clockRate_.get());
             }
         }
         static void write(byte offset, byte value) noexcept {
@@ -256,16 +254,16 @@ namespace {
                     setStatus(value);
                     break;
                 case Registers::ClockFrequency00:
-                    clockRate_ = ((clockRate_ & 0xFFFFFF00) | static_cast<uint32_t>(value));
+                    clockRate_.setByteOrdinal(value, 0);
                     break;
                 case Registers::ClockFrequency01:
-                    clockRate_ = ((clockRate_ & 0xFFFF00FF) | (static_cast<uint32_t>(value)  << 8));
+                    clockRate_.setByteOrdinal(value, 1);
                     break;
                 case Registers::ClockFrequency10:
-                    clockRate_ = ((clockRate_ & 0xFF00FFFF) | (static_cast<uint32_t>(value)  << 16));
+                    clockRate_.setByteOrdinal(value, 2);
                     break;
                 case Registers::ClockFrequency11:
-                    clockRate_ = ((clockRate_ & 0x00FFFFFF) | (static_cast<uint32_t>(value)  << 24));
+                    clockRate_.setByteOrdinal(value, 3);
                     break;
                 default:
                     break;
@@ -277,16 +275,16 @@ namespace {
                 case Registers::Status: return getStatus();
                 case Registers::Available: return available();
                 case Registers::AvailableForWrite: return availableForWrite();
-                case Registers::ClockFrequency00: return static_cast<byte>(clockRate_);
-                case Registers::ClockFrequency01: return static_cast<byte>(clockRate_ >> 8);
-                case Registers::ClockFrequency10: return static_cast<byte>(clockRate_ >> 16);
-                case Registers::ClockFrequency11: return static_cast<byte>(clockRate_ >> 24);
+                case Registers::ClockFrequency00: return clockRate_.getByteOrdinal(0);
+                case Registers::ClockFrequency01: return clockRate_.getByteOrdinal(1);
+                case Registers::ClockFrequency10: return clockRate_.getByteOrdinal(2);
+                case Registers::ClockFrequency11: return clockRate_.getByteOrdinal(3);
                 default:
                     return 0;
             }
         }
     private:
-        static inline uint32_t clockRate_ {115200};
+        static inline SplitWord32 clockRate_ { 115200 };
     };
     class GPIOInterface {
     public:

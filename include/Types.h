@@ -281,8 +281,8 @@ public:
     constexpr SplitWord32(Ordinal value = 0) noexcept : raw(value) { }
     constexpr SplitWord32(ShortOrdinal lower, ShortOrdinal upper) noexcept : ordinalShorts{lower, upper} { }
     constexpr SplitWord32(ByteOrdinal lowest, ByteOrdinal lower, ByteOrdinal higher, ByteOrdinal highest)  noexcept : ordinalBytes{lowest, lower, higher, highest} { }
-    constexpr Ordinal getOrdinalValue() const noexcept { return raw; }
-    void setOrdinalValue(Ordinal value) noexcept { raw = value; }
+    [[nodiscard]] constexpr Ordinal get() const noexcept { return raw; }
+    void set(Ordinal value) noexcept { raw = value; }
     constexpr ShortOrdinal getShortOrdinal(uint8_t which) const noexcept { return ordinalShorts[which & NumShortOrdinalsPerOrdinalMask]; }
     constexpr ShortInteger getShortInteger(uint8_t which) const noexcept {return integerShorts[which & NumShortIntegersPerOrdinalMask]; }
     void setShortOrdinal(ShortOrdinal value, uint8_t which) noexcept { ordinalShorts[which & NumShortOrdinalsPerOrdinalMask] = value; }
