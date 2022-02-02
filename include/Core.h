@@ -481,30 +481,30 @@ private:
     void arithmeticGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
         using K = TreatAs<T>;
         T result = static_cast<T>(0);
-        auto src2 = valueFromSrc2Register(instruction, K{});
-        auto src1 = valueFromSrc1Register(instruction, K{});
+        auto& src2 = sourceFromSrc2(instruction);
+        auto& src1 = sourceFromSrc1(instruction);
         switch (op) {
             case ArithmeticOperation::Add:
-                result = sourceFromSrc2(instruction).add(sourceFromSrc1(instruction), K{});
+                result = src2.add(src1, K{});
                 break;
             case ArithmeticOperation::Subtract:
-                result = sourceFromSrc2(instruction).subtract(sourceFromSrc1(instruction), K{});
+                result = src2.subtract(src1, K{});
                 break;
             case ArithmeticOperation::Multiply:
-                result = sourceFromSrc2(instruction).multiply(sourceFromSrc1(instruction), K{});
+                result = src2.multiply(src1, K{});
                 break;
             case ArithmeticOperation::Divide:
                 /// @todo check denominator and do proper handling
-                result = sourceFromSrc2(instruction).divide(sourceFromSrc1(instruction), K{});
+                result = src2.divide(src1, K{});
                 break;
             case ArithmeticOperation::Remainder:
-                result = sourceFromSrc2(instruction).remainder(sourceFromSrc1(instruction), K{});
+                result = src2.remainder(src1, K{});
                 break;
             case ArithmeticOperation::Rotate:
-                result = rotate(src2, src1);
+                result = src2.rotate(src1, K{});
                 break;
             case ArithmeticOperation::ShiftLeft:
-                result = src2 << src1;
+                result = src2.get(K{}) << src1.get(K{});
                 break;
             case ArithmeticOperation::ShiftRight:
                 /*
@@ -525,7 +525,7 @@ private:
                  *
                  */
                 /// @todo perhaps implement the extra logic if necessary on shri
-                result = src2 >> src1;
+                result = src2.get(K{}) >> src1.get(K{});
                 break;
         }
         setDestinationFromSrcDest(instruction, result, K{});

@@ -135,7 +135,14 @@ public:
         // auto src1 = other.get(K{});
         // return src2 - ((src2 / src1) * src1);
         return get(K{}) % other.get(K{});
+    }
 
+    template<typename T>
+    [[nodiscard]] constexpr T rotate(const Register& other, TreatAs<T>) const noexcept {
+        using K = TreatAs<T>;
+        auto value = get(K{});
+        auto len = other.get(K{});
+        return ::rotate(value, len);
     }
 
 private:
