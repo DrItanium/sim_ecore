@@ -504,7 +504,7 @@ private:
                 result = src2.rotate(src1, K{});
                 break;
             case ArithmeticOperation::ShiftLeft:
-                result = src2.get(K{}) << src1.get(K{});
+                result = src2.shiftLeft(src1, K{});
                 break;
             case ArithmeticOperation::ShiftRight:
                 /*
@@ -525,7 +525,7 @@ private:
                  *
                  */
                 /// @todo perhaps implement the extra logic if necessary on shri
-                result = src2.get(K{}) >> src1.get(K{});
+                result = src2.shiftRight(src1, K{});
                 break;
         }
         setDestinationFromSrcDest(instruction, result, K{});
