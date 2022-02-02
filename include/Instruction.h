@@ -78,10 +78,7 @@ constexpr auto isMEMFormat(uint8_t opcode) noexcept {
 // based off of the i960 instruction set
 union Instruction {
 public:
-    constexpr Instruction(Ordinal lower, Ordinal upper) noexcept : parts{lower, upper} { }
     constexpr explicit Instruction(LongOrdinal value = 0) noexcept : wholeValue_(value) { }
-    void reset(LongOrdinal newValue) noexcept { wholeValue_ = newValue; }
-    constexpr auto getHalf(int offset) const noexcept { return parts[offset & 1]; }
     /**
      * @brief return the major opcode as an 8-bit quantity
      * @return The contents of the major opcode field without any modification
@@ -210,7 +207,6 @@ private:
         return isMEMFormat() && ((mem.modeMajor & 1u) != 0);
     }
 private:
-    Ordinal parts[sizeof(LongOrdinal)/sizeof(Ordinal)];
 
     struct {
         Ordinal lower : 24;
