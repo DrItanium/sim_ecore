@@ -75,3 +75,9 @@ TripleRegister::copy(const Operand<TripleRegister> &other) noexcept {
         parts_[i] = other.getValue(i);
     }
 }
+
+void
+QuadRegister::copy(const Operand<QuadRegister> &other) noexcept {
+    setUpperHalf(other.getValue(1));
+    setLowerHalf(other.getValue(0));
+}

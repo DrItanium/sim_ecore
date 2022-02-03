@@ -839,8 +839,7 @@ Core::movt(const Instruction &instruction) noexcept {
 void
 Core::movq(const Instruction &instruction) noexcept {
     auto& dest = getQuadRegister(instruction.getSrcDest(false));
-    const auto& src = getQuadRegister(instruction.getSrc1());
-    dest.copy(src);
+    dest.copy(sourceFromSrc1<QuadRegister>(instruction));
 }
 namespace {
     template<Ordinal mask>
@@ -850,12 +849,12 @@ namespace {
 }
 void
 Core::scanbyte(const Instruction &instruction) noexcept {
-    Ordinal src1 = valueFromSrc1Register<Ordinal>(instruction);
-    Ordinal src2 = valueFromSrc2Register<Ordinal>(instruction);
-    if (scanByte0<0x0000'00FF>(src1, src2) ||
-        scanByte0<0x0000'FF00>(src1, src2) ||
-        scanByte0<0x00FF'0000>(src1, src2) ||
-        scanByte0<0xFF00'0000>(src1, src2)) {
+    if (auto src1 = valueFromSrc1Register<Ordinal>(instruction),
+                src2 = valueFromSrc2Register<Ordinal>(instruction);
+            scanByte0<0x0000'00FF>(src1, src2) ||
+            scanByte0<0x0000'FF00>(src1, src2) ||
+            scanByte0<0x00FF'0000>(src1, src2) ||
+            scanByte0<0xFF00'0000>(src1, src2)) {
         ac_.setConditionCode(0b010);
     } else {
         ac_.clearConditionCode();

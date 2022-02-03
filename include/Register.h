@@ -472,6 +472,8 @@ static_assert(sizeof(Register) * 2 == sizeof(DoubleRegister), "Register is not h
 
 union TripleRegister {
 public:
+    using SelfOperand = Operand<TripleRegister>;
+public:
     constexpr explicit TripleRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0) noexcept : parts_{a, b, c, 0}{ }
     [[nodiscard]] constexpr auto getOrdinal(byte which = 0) const noexcept { return parts_[which % 3]; } // very expensive!
     void setOrdinal(Ordinal value, byte which = 0) noexcept { parts_[which % 3] = value; }
@@ -485,7 +487,7 @@ public:
             parts_[i] = src.parts_[i];
         }
     }
-    void copy(const Operand<TripleRegister>& other) noexcept;
+    void copy(const SelfOperand& other) noexcept;
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
 void setExtendedReal(LongReal value) noexcept { lreal_ = value; }
@@ -510,6 +512,8 @@ constexpr TripleRegister getLiteral(RegisterIndex index, TreatAs<TripleRegister>
 
 union QuadRegister {
 public:
+    using SelfOperand = Operand<QuadRegister>;
+public:
     constexpr explicit QuadRegister(Ordinal a = 0, Ordinal b = 0, Ordinal c = 0, Ordinal d = 0) noexcept : parts_{a, b, c, d}{ }
     constexpr explicit QuadRegister(LongOrdinal lower, LongOrdinal upper) noexcept : halves_{lower, upper} { }
     constexpr auto getOrdinal(byte which = 0) const noexcept { return parts_[which & 0b11]; } // very expensive!
@@ -533,6 +537,7 @@ public:
             parts_[i] = src.parts_[i];
         }
     }
+    void copy(const SelfOperand& other) noexcept;
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
 void setExtendedReal(LongReal value) noexcept { lreal_ = value; }
