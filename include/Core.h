@@ -357,21 +357,15 @@ private:
         }
     }
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
-    [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const noexcept;
-    [[nodiscard]] const Register& getSourceRegister(RegisterIndex targetIndex) const noexcept;
     [[nodiscard]] DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
     [[nodiscard]] const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const noexcept;
     [[nodiscard]] const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const noexcept { return getDoubleRegister(targetIndex); }
     [[nodiscard]] TripleRegister& getTripleRegister(RegisterIndex targetIndex);
     [[nodiscard]] QuadRegister& getQuadRegister(RegisterIndex targetIndex);
     [[nodiscard]] Register& getStackPointer() noexcept { return getRegister(RegisterIndex::SP960); }
-    [[nodiscard]] const Register& getStackPointer() const noexcept { return getRegister(RegisterIndex::SP960); }
     [[nodiscard]] FramePointer getFramePointer() noexcept { return FramePointer(getRegister(RegisterIndex::FP), frameAlignmentMask_); }
-    [[nodiscard]] FramePointer getFramePointer() const noexcept { return FramePointer(getRegister(RegisterIndex::FP), frameAlignmentMask_); }
     [[nodiscard]] PreviousFramePointer getPFP() noexcept { return PreviousFramePointer(getRegister(RegisterIndex::PFP)); }
-    [[nodiscard]] PreviousFramePointer getPFP() const noexcept { return PreviousFramePointer(getRegister(RegisterIndex::PFP)); }
     [[nodiscard]] Register& getRIP() noexcept { return getRegister(RegisterIndex::RIP); }
-    [[nodiscard]] const Register& getRIP() const noexcept { return getRegister(RegisterIndex::RIP); }
 private:
     /**
      * @brief Compute the next instruction location and store it in RIP

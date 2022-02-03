@@ -49,7 +49,6 @@ namespace
         return bitPositions[value & 0b11111];
     }
 }
-const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
 Register&
 Core::destinationFromSrcDest(const Instruction& instruction) noexcept {
     return getRegister(instruction.getSrcDest(false));
@@ -390,7 +389,7 @@ Core::setStackPointer(Ordinal value) noexcept {
 }
 Ordinal
 Core::getStackPointerValue() const noexcept {
-    return getStackPointer().get<Ordinal>();
+    return getOperand<Ordinal>(RegisterIndex::SP960).getValue();
 }
 void
 Core::call(const Instruction& instruction) noexcept {
@@ -569,7 +568,7 @@ Core::ret() noexcept {
 }
 Ordinal
 Core::getFramePointerValue() const noexcept {
-    return getFramePointer().getAddress();
+    return getOperand<Ordinal>(RegisterIndex::FP).getValue() & frameAlignmentMask_;
 }
 Ordinal
 Core::properFramePointerAddress() const noexcept {

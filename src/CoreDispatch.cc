@@ -305,10 +305,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             store(computeMemoryAddress(instruction), getQuadRegister(instruction.getSrcDest(true)));
             break;
         case Opcode::stib:
-            storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(getSourceRegister(instruction.getSrcDest(true)).get<Integer>()));
+            storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(sourceFromSrcDest<Integer>(instruction).getValue()));
             break;
         case Opcode::stis:
-            storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(getSourceRegister(instruction.getSrcDest(true)).get<Integer>()));
+            storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(sourceFromSrcDest<Integer>(instruction).getValue()));
             break;
         case Opcode::shrdi:
             shrdi(instruction);
