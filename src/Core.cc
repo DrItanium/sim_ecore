@@ -1001,7 +1001,7 @@ Core::ediv(const Instruction &instruction) noexcept {
         // raise an arithmetic zero divide fault
         generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
     } else {
-        auto numerator = valueFromSrc2Register(instruction, TreatAsLongOrdinal{});
+        auto numerator = valueFromSrc2Register<LongOrdinal>(instruction);
         auto denominator = static_cast<LongOrdinal>(denomord);
         auto& dest = longDestinationFromSrcDest(instruction);
         // taken from the manual
@@ -1013,8 +1013,8 @@ Core::ediv(const Instruction &instruction) noexcept {
 }
 void
 Core::emul(const Instruction &instruction) noexcept {
-    auto src2 = static_cast<LongOrdinal>(valueFromSrc2Register(instruction, TreatAsOrdinal{}));
-    auto src1 = static_cast<LongOrdinal>(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
+    auto src2 = static_cast<LongOrdinal>(valueFromSrc2Register<Ordinal>(instruction));
+    auto src1 = static_cast<LongOrdinal>(valueFromSrc1Register<Ordinal>(instruction));
     // taken from the manual
     setDestinationFromSrcDest(instruction, src2 * src1, TreatAsLongOrdinal{});
 }
@@ -1024,10 +1024,10 @@ Core::atadd(const Instruction& instruction) noexcept {
     // adds the src (src2 internally) value to the value in memory location specified with the addr (src1 in this case) operand.
     // The initial value from memory is stored in dst (internally src/dst).
     syncf();
-    auto addr = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
+    auto addr = wordAlign(valueFromSrc1Register<Ordinal>(instruction));
     lockBus();
     auto temp = load(addr);
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     store(addr, temp + src);
     unlockBus();
     setDestinationFromSrcDest(instruction, temp, TreatAsOrdinal{});
@@ -1040,11 +1040,11 @@ Core::atmod(const Instruction &instruction) noexcept {
     // The bits set in the mask (src2) operand select the bits to be modified in memory. The initial
     // value from memory is stored in src/dest
     syncf();
-    auto addr = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
+    auto addr = wordAlign(valueFromSrc1Register<Ordinal>(instruction));
     lockBus();
     auto temp = load(addr);
     auto& dest = destinationFromSrcDest(instruction);
-    auto mask = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto mask = valueFromSrc2Register<Ordinal>(instruction);
     store(addr, (dest.get<Ordinal>() & mask) | (temp & ~mask));
     unlockBus();
     dest.set<Ordinal>(temp);
@@ -1059,27 +1059,27 @@ Core::chkbit(const Instruction &instruction) noexcept {
 void
 Core::setbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
-    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto bitpos = getBitPosition(valueFromSrc1Register<Ordinal>(instruction));
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     dest.set<Ordinal>(src | bitpos);
 }
 void
 Core::clrbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
-    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto bitpos = getBitPosition(valueFromSrc1Register<Ordinal>(instruction));
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     dest.set<Ordinal>(src & ~bitpos);
 }
 
 void
 Core::modpc(const Instruction &instruction) noexcept {
-    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto mask = valueFromSrc1Register<Ordinal>(instruction);
     auto& dest = destinationFromSrcDest(instruction);
     if (mask != 0) {
         if (!pc_.inSupervisorMode()) {
             generateFault(FaultType::Type_Mismatch); /// @todo TYPE.MISMATCH
         } else {
-            auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+            auto src = valueFromSrc2Register<Ordinal>(instruction);
             dest.set<Ordinal>(pc_.modify(mask, src));
             ProcessControls tmp(dest.get<Ordinal>());
             if (tmp.getPriority() > pc_.getPriority()) {
@@ -1093,8 +1093,8 @@ Core::modpc(const Instruction &instruction) noexcept {
 
 void
 Core::modtc(const Instruction &instruction) noexcept {
-    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto mask = valueFromSrc1Register<Ordinal>(instruction);
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
 }
 void

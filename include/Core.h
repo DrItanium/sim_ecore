@@ -29,6 +29,7 @@
 #include "Types.h"
 #include "Instruction.h"
 #include "Register.h"
+#include "type_traits.h"
 
 template<typename T>
 inline volatile T& memory(const size_t address) noexcept {
@@ -333,14 +334,26 @@ private:
 
     template<typename T>
     [[nodiscard]] Operand<T> getOperand(RegisterIndex targetIndex) const noexcept {
-        if (isLocalRegister(targetIndex))  {
-            return Operand<T>{getLocals().getRegister(static_cast<uint8_t>(targetIndex))};
-        } else if (isGlobalRegister(targetIndex)) {
-            return Operand<T>{globals.getRegister(static_cast<uint8_t>(targetIndex))};
-        } else if (isLiteral(targetIndex)) {
-            return Operand<T>{getLiteral(targetIndex, TreatAs<T>{})};
+        if constexpr (is_same_v<T, LongOrdinal>) {
+            if (isLocalRegister(targetIndex)) {
+                return Operand<T>{getLocals().getDoubleRegister(static_cast<uint8_t>(targetIndex))};
+            } else if (isGlobalRegister(targetIndex)) {
+                return Operand<T>{globals.getDoubleRegister(static_cast<uint8_t>(targetIndex))};
+            } else if (isLiteral(targetIndex)) {
+                return Operand<T>{getLiteral(targetIndex, TreatAs<T>{})};
+            } else {
+                return Operand<T>{};
+            }
         } else {
-            return Operand<T>{};
+            if (isLocalRegister(targetIndex)) {
+                return Operand<T>{getLocals().getRegister(static_cast<uint8_t>(targetIndex))};
+            } else if (isGlobalRegister(targetIndex)) {
+                return Operand<T>{globals.getRegister(static_cast<uint8_t>(targetIndex))};
+            } else if (isLiteral(targetIndex)) {
+                return Operand<T>{getLiteral(targetIndex, TreatAs<T>{})};
+            } else {
+                return Operand<T>{};
+            }
         }
     }
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);

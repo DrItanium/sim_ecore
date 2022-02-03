@@ -246,6 +246,22 @@ constexpr ShortInteger getLiteral(RegisterIndex index, TreatAsShortInteger) noex
     return static_cast<ShortInteger>(getLiteral(index, TreatAsInteger{}));
 }
 
+constexpr LongOrdinal getLiteral(RegisterIndex index, TreatAsLongOrdinal) noexcept {
+    if (isLiteral(index)) {
+        return static_cast<LongOrdinal>(static_cast<uint8_t>(index) & 0b11111);
+    } else {
+        return 0xFFFF'FFFF'FFFF'FFFF;
+    }
+}
+
+constexpr LongInteger getLiteral(RegisterIndex index, TreatAsLongInteger) noexcept {
+    if (isLiteral(index)) {
+        return static_cast<LongInteger>(static_cast<uint8_t>(index) & 0b11111);
+    } else {
+        return -1;
+    }
+}
+
 constexpr Real getLiteral(RegisterIndex index, TreatAsReal) noexcept {
     switch (index) {
         case RegisterIndex::Literal0_0f: return 0.0f;
