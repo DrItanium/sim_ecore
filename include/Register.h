@@ -563,6 +563,11 @@ constexpr QuadRegister getLiteral(RegisterIndex index, TreatAs<QuadRegister>) no
 }
 
 union RegisterFrame {
+    static constexpr auto Size = sizeof(Register) * 16;
+    static constexpr auto NumRegisters = Size / sizeof(Register);
+    static constexpr auto NumDoubleRegisters = Size / sizeof(DoubleRegister);
+    static constexpr auto NumTripleRegisters = Size / sizeof(TripleRegister);
+    static constexpr auto NumQuadRegisters = Size / sizeof(QuadRegister);
     RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),
                                       Register(), Register(), Register(), Register(),
                                       Register(), Register(), Register(), Register(),
@@ -579,15 +584,14 @@ union RegisterFrame {
     [[nodiscard]] const QuadRegister& getQuadRegister(int index) const noexcept { return qprs[(index >> 2) & 0b11]; }
     QuadRegister& getQuadRegister(int index) noexcept { return qprs[(index >> 2) & 0b11]; }
 
-    [[nodiscard]] constexpr auto getNumRegisters() const noexcept { return 16; }
-    [[nodiscard]] constexpr auto getNumDoubleRegisters() const noexcept { return 8; }
-    [[nodiscard]] constexpr auto getNumTripleRegisters () const noexcept { return 4; }
-    [[nodiscard]] constexpr auto getNumQuadRegisters () const noexcept { return 4; }
-    static constexpr auto Size = sizeof(Register) * 16;
-    Register gprs[16];
-    DoubleRegister dprs[Size/(sizeof(DoubleRegister))];
-    TripleRegister tprs[Size/sizeof(TripleRegister)]; // this will have the same alignment as quad registers by ignoring the fourth ordinal
-    QuadRegister qprs[Size/sizeof(QuadRegister)];
+    [[nodiscard]] constexpr auto getNumRegisters() const noexcept { return NumRegisters; }
+    [[nodiscard]] constexpr auto getNumDoubleRegisters() const noexcept { return NumDoubleRegisters; }
+    [[nodiscard]] constexpr auto getNumTripleRegisters () const noexcept { return NumTripleRegisters; }
+    [[nodiscard]] constexpr auto getNumQuadRegisters () const noexcept { return NumQuadRegisters; }
+    Register gprs[NumRegisters];
+    DoubleRegister dprs[NumDoubleRegisters];
+    TripleRegister tprs[NumTripleRegisters]; // this will have the same alignment as quad registers by ignoring the fourth ordinal
+    QuadRegister qprs[NumQuadRegisters];
     // we put the extended reals in a different location
 };
 
