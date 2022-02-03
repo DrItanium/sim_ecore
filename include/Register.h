@@ -583,11 +583,11 @@ union RegisterFrame {
     [[nodiscard]] constexpr auto getNumDoubleRegisters() const noexcept { return 8; }
     [[nodiscard]] constexpr auto getNumTripleRegisters () const noexcept { return 4; }
     [[nodiscard]] constexpr auto getNumQuadRegisters () const noexcept { return 4; }
-
+    static constexpr auto Size = sizeof(Register) * 16;
     Register gprs[16];
-    DoubleRegister dprs[sizeof(gprs)/sizeof(DoubleRegister)];
-    TripleRegister tprs[sizeof(gprs)/sizeof(TripleRegister)]; // this will have the same alignment as quad registers by ignoring the fourth ordinal
-    QuadRegister qprs[sizeof(gprs)/sizeof(QuadRegister)];
+    DoubleRegister dprs[Size/(sizeof(DoubleRegister))];
+    TripleRegister tprs[Size/sizeof(TripleRegister)]; // this will have the same alignment as quad registers by ignoring the fourth ordinal
+    QuadRegister qprs[Size/sizeof(QuadRegister)];
     // we put the extended reals in a different location
 };
 
