@@ -793,8 +793,8 @@ Core::synmov(const Instruction &instruction) noexcept {
 }
 void
 Core::synmovl(const Instruction &instruction) noexcept {
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
-    auto addr = valueFromSrc1Register(instruction, TreatAsDoubleAlignedOrdinal{});
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    auto addr = doubleWordAlign(valueFromSrc1Register<Ordinal>(instruction));
     DoubleRegister temp(loadLong(src));
     synchronizedStore(addr, temp);
     /// @todo figure out how to support bad access conditions
@@ -803,8 +803,8 @@ Core::synmovl(const Instruction &instruction) noexcept {
 
 void
 Core::synmovq(const Instruction &instruction) noexcept {
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{}); // source address
-    auto addr = valueFromSrc1Register(instruction, TreatAsQuadAlignedOrdinal{});
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    auto addr = quadWordAlign(valueFromSrc1Register<Ordinal>(instruction));
     QuadRegister temp = loadQuad(src);
     synchronizedStore(addr, temp);
     /// @todo figure out how to support bad access conditions
@@ -847,17 +847,17 @@ Core::synchronizeMemoryRequests() noexcept {
 }
 void
 Core::notbit(const Instruction& instruction) noexcept {
-    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto bitpos = getBitPosition(valueFromSrc1Register<Ordinal>(instruction));
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     setDestinationFromSrcDest(instruction, src ^ bitpos, TreatAsOrdinal{});
 }
 
 void
 Core::shrdi(const Instruction &instruction) noexcept {
     // according to the manual, equivalent to divi value, 2 so that is what we're going to do for correctness sake
-    auto len = valueFromSrc1Register(instruction, TreatAsInteger{});
+    auto len = valueFromSrc1Register<Integer>(instruction);
     if (auto& dest = destinationFromSrcDest(instruction); len < 32) {
-        auto src = valueFromSrc2Register(instruction, TreatAsInteger{});
+        auto src = valueFromSrc2Register<Integer>(instruction);
         /// @todo verify that this does what we expect
         dest.set<Integer>(src / static_cast<Integer>(bitPositions[len]));
     } else {
@@ -871,8 +871,8 @@ Core::checkPendingInterrupts() noexcept {
 void
 Core::extract(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
-    auto bitpos = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-    auto len = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto bitpos = valueFromSrc1Register<Ordinal>(instruction);
+    auto len = valueFromSrc2Register<Ordinal>(instruction);
     // taken from the Hx manual as it isn't insane
     auto shiftAmount = bitpos > 32 ? 32 : bitpos;
     dest.set<Ordinal>((dest.get<Ordinal>() >> shiftAmount) & ~(0xFFFF'FFFF << len));
@@ -881,7 +881,7 @@ Core::extract(const Instruction &instruction) noexcept {
 void
 Core::mov(const Instruction &inst) noexcept {
     setDestinationFromSrcDest(inst,
-                              valueFromSrc1Register(inst, TreatAsOrdinal{}),
+                              valueFromSrc1Register<Ordinal>(inst),
                               TreatAsOrdinal {});
 }
 void
@@ -901,15 +901,24 @@ Core::movq(const Instruction &instruction) noexcept {
     const auto& src = getQuadRegister(instruction.getSrc1());
     dest.copy(src);
 }
+namespace {
+    template<Ordinal mask>
+    constexpr bool scanByte0(Ordinal a, Ordinal b) noexcept {
+        return (a & mask) == (b & mask);
+    }
+}
 void
 Core::scanbyte(const Instruction &instruction) noexcept {
-    const auto& src1 = sourceFromSrc1(instruction);
-    const auto& src2 = sourceFromSrc2(instruction);
-    auto bytesEqual = [&src1, &src2](int which) constexpr { return src1.get(which, TreatAsByteOrdinal{}) == src2.get(which, TreatAsByteOrdinal{}); };
-    ac_.setConditionCode((bytesEqual(0) ||
-                          bytesEqual(1) ||
-                          bytesEqual(2) ||
-                          bytesEqual(3)) ? 0b010 : 0b000);
+    Ordinal src1 = valueFromSrc1Register<Ordinal>(instruction);
+    Ordinal src2 = valueFromSrc2Register<Ordinal>(instruction);
+    if (scanByte0<0x0000'00FF>(src1, src2) ||
+        scanByte0<0x0000'FF00>(src1, src2) ||
+        scanByte0<0x00FF'0000>(src1, src2) ||
+        scanByte0<0xFF00'0000>(src1, src2)) {
+        ac_.setConditionCode(0b010);
+    } else {
+        ac_.clearConditionCode();
+    }
 }
 void
 Core::scanbit(const Instruction &instruction) noexcept {

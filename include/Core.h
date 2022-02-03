@@ -385,22 +385,21 @@ private:
     }
     template<typename T>
     void cmpx(const Instruction& instruction, TreatAs<T>) noexcept {
-        using K = TreatAs<T>;
-        auto src1 = valueFromSrc1Register(instruction, K{});
-        auto src2 = valueFromSrc2Register(instruction, K{});
+        auto src1 = valueFromSrc1Register<T>(instruction);
+        auto src2 = valueFromSrc2Register<T>(instruction);
         ac_.setConditionCode(compareGeneric<T>(src1, src2));
     }
     template<typename T>
     void cmpdecx(const Instruction& instruction, TreatAs<T>) noexcept {
         using K = TreatAs<T>;
-        auto src2 = valueFromSrc2Register(instruction, K{});
-        cmpx(instruction, K{});
+        auto src2 = valueFromSrc2Register<T>(instruction);
+        cmpx<T>(instruction, K{});
         setDestinationFromSrcDest(instruction, src2 - 1, K{});
     }
     template<typename T>
     void cmpincx(const Instruction& instruction, TreatAs<T>) noexcept {
         using K = TreatAs<T>;
-        auto src2 = valueFromSrc2Register(instruction, K{});
+        auto src2 = valueFromSrc2Register<T>(instruction);
         cmpx(instruction, K{});
         setDestinationFromSrcDest(instruction, src2 + 1, K{});
     }
