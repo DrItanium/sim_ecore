@@ -584,14 +584,26 @@ private:
 private:
     void bbc(const Instruction& inst) noexcept;
     void bbs(const Instruction& inst) noexcept;
-    [[nodiscard]] const Register& getAbaseRegister(const Instruction& inst) const noexcept;
-    [[nodiscard]] const Register& getIndexRegister(const Instruction& inst) const noexcept;
-    [[nodiscard]] Ordinal valueFromAbaseRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
-    [[nodiscard]] Integer valueFromAbaseRegister(const Instruction& inst, TreatAsInteger) const noexcept;
-    [[nodiscard]] Ordinal valueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
-    [[nodiscard]] Integer valueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
-    [[nodiscard]] Ordinal scaledValueFromIndexRegister(const Instruction& inst, TreatAsOrdinal) const noexcept;
-    [[nodiscard]] Integer scaledValueFromIndexRegister(const Instruction& inst, TreatAsInteger) const noexcept;
+    template<typename T>
+    [[nodiscard]] Operand<T> getAbaseRegister(const Instruction& inst) const noexcept {
+        return getOperand<T>(inst.getABase());
+    }
+    template<typename T>
+    [[nodiscard]] Operand<T> getIndexRegister(const Instruction& inst) const noexcept {
+        return getOperand<T>(inst.getIndex());
+    }
+    template<typename T>
+    [[nodiscard]] T valueFromAbaseRegister(const Instruction& inst) const noexcept {
+        return getAbaseRegister<T>(inst).getValue();
+    }
+    template<typename T>
+    [[nodiscard]] T valueFromIndexRegister(const Instruction& inst) const noexcept {
+        return getIndexRegister<T>(inst).getValue();
+    }
+    template<typename T>
+    [[nodiscard]] T scaledValueFromIndexRegister(const Instruction& inst) const noexcept {
+        return valueFromIndexRegister<T>(inst) << inst.getScale();
+    }
     void restoreStandardFrame() noexcept;
     void fmark(const Instruction& inst) noexcept;
     void mark(const Instruction& inst) noexcept;
