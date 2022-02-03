@@ -343,6 +343,18 @@ private:
     void store(Address destination, Ordinal value) noexcept { store(destination, value, TreatAsOrdinal{}); }
 private:
 
+    template<typename T>
+    [[nodiscard]] Operand<T> getOperand(RegisterIndex targetIndex) noexcept {
+        if (isLocalRegister(targetIndex))  {
+            return Operand<T>{getLocals().getRegister(static_cast<uint8_t>(targetIndex))};
+        } else if (isGlobalRegister(targetIndex)) {
+            return Operand<T>{globals.getRegister(static_cast<uint8_t>(targetIndex))};
+        } else if (isLiteral(targetIndex)) {
+            return Operand<T>{getLiteral(targetIndex, TreatAs<T>{})};
+        } else {
+            return Operand<T>{};
+        }
+    }
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
     [[nodiscard]] const Register& getRegister(RegisterIndex targetIndex) const noexcept;
     [[nodiscard]] const Register& getSourceRegister(RegisterIndex targetIndex) const noexcept;
@@ -481,10 +493,8 @@ private:
     void arithmeticGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
         using K = TreatAs<T>;
         T result = static_cast<T>(0);
-        Operand<T> src2(sourceFromSrc2(instruction));
-        Operand<T> src1(sourceFromSrc1(instruction));
-        //auto& src2 = sourceFromSrc2(instruction);
-        //auto& src1 = sourceFromSrc1(instruction);
+        auto src2 = getOperand<T>(instruction.getSrc2());
+        auto src1 = getOperand<T>(instruction.getSrc1());
         switch (op) {
             case ArithmeticOperation::Add:
                 result = src2 + src1;

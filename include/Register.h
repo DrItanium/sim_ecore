@@ -182,7 +182,8 @@ public:
     using Self = Operand<T>;
 public:
 
-    explicit constexpr Operand(T value) : theValue_(value) { }
+    constexpr Operand() : theValue_(static_cast<T>(0)), valid_(false) { }
+    explicit constexpr Operand(T value) : theValue_(value), valid_(true) { }
     explicit constexpr Operand(const Register& theRegister) : Self(theRegister.get<T>()) { }
     [[nodiscard]] constexpr T getValue() const noexcept { return theValue_; }
     [[nodiscard]] constexpr bool operator==(const Self& other) const noexcept { return theValue_ == other.theValue_; }
@@ -202,9 +203,11 @@ public:
     [[nodiscard]] constexpr bool operator<=(const Self& other) const noexcept { return theValue_ <= other.theValue_; }
     [[nodiscard]] constexpr bool operator>(const Self& other) const noexcept { return theValue_ > other.theValue_; }
     [[nodiscard]] constexpr bool operator>=(const Self& other) const noexcept { return theValue_ >= other.theValue_; }
-
+    [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
+    [[nodiscard]] constexpr operator bool() const noexcept { return valid_; }
 private:
     T theValue_;
+    bool valid_;
 };
 
 /**
