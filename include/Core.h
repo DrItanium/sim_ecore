@@ -345,7 +345,21 @@ private:
                 return Operand<T>{};
             }
         } else if constexpr (is_same_v<T, TripleRegister>) {
+            if (isLocalRegister(targetIndex)) {
+                return Operand<T>{getLocals().getTripleRegister(static_cast<int>(targetIndex))};
+            } else if (isGlobalRegister(targetIndex)) {
+                return Operand<T>{globals.getTripleRegister(static_cast<int>(targetIndex))};
+            } else {
+                return Operand<T>();
+            }
         } else if constexpr (is_same_v<T, QuadRegister>) {
+            if (isLocalRegister(targetIndex)) {
+                return Operand<T>(getLocals().getQuadRegister(static_cast<int>(targetIndex)));
+            } else if (isGlobalRegister(targetIndex)) {
+                return Operand<T>(globals.getQuadRegister(static_cast<int>(targetIndex)));
+            } else {
+                return Operand<T>();
+            }
         } else {
             if (isLocalRegister(targetIndex)) {
                 return Operand<T>{getLocals().getRegister(static_cast<uint8_t>(targetIndex))};
