@@ -50,26 +50,6 @@ namespace
     }
 }
 const Register& Core::getSourceRegister(RegisterIndex targetIndex) const noexcept { return getRegister(targetIndex); }
-Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc1(instruction).get<Ordinal>(); }
-Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept { return sourceFromSrc1(instruction).get(TreatAsWordAlignedOrdinal{}); }
-Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept { return sourceFromSrc1(instruction).get(TreatAsQuadAlignedOrdinal{}); }
-Ordinal Core::valueFromSrc1Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept { return sourceFromSrc1(instruction).get(TreatAsDoubleAlignedOrdinal{}); }
-Integer Core::valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc1(instruction).get<Integer>(); }
-
-Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept { return sourceFromSrc2(instruction).get<Ordinal>(); }
-Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept { return sourceFromSrc2(instruction).get(TreatAsWordAlignedOrdinal{}); }
-Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept { return sourceFromSrc2(instruction).get(TreatAsQuadAlignedOrdinal{}); }
-Ordinal Core::valueFromSrc2Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept { return sourceFromSrc2(instruction).get(TreatAsDoubleAlignedOrdinal{}); }
-Integer Core::valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept { return sourceFromSrc2(instruction).get<Integer>(); }
-LongOrdinal  Core::valueFromSrc2Register(const Instruction &instruction, TreatAsLongOrdinal) const noexcept { return getDoubleRegister(instruction.getSrc2()).get(TreatAsLongOrdinal{}); }
-const Register&
-Core::sourceFromSrc1(const Instruction& instruction) const noexcept {
-    return getSourceRegister(instruction.getSrc1());
-}
-const Register&
-Core::sourceFromSrc2(const Instruction& instruction) const noexcept {
-    return getSourceRegister(instruction.getSrc2());
-}
 Register&
 Core::destinationFromSrcDest(const Instruction& instruction) noexcept {
     return getRegister(instruction.getSrcDest(false));
@@ -298,8 +278,8 @@ Core::cmpobx(const Instruction &instruction, uint8_t mask) noexcept {
 };
 void
 Core::bbc(const Instruction& instruction) noexcept {
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    auto bitpos = getBitPosition(valueFromSrc1Register<Ordinal>(instruction));
     if ((bitpos & src) == 0) {
         // another lie in the i960Sx manual, when this bit is clear we assign 0b000 otherwise it is 0b010
         ac_.setConditionCode(0b000);
@@ -312,8 +292,8 @@ Core::bbc(const Instruction& instruction) noexcept {
 }
 void
 Core::bbs(const Instruction& instruction) noexcept {
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    auto bitpos = getBitPosition(valueFromSrc1Register(instruction, TreatAsOrdinal{}));
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    auto bitpos = getBitPosition(valueFromSrc1Register<Ordinal>(instruction));
     if ((bitpos & src) != 0) {
         ac_.setConditionCode(0b010);
         // while the docs show (displacement * 4), I am currently including the bottom two bits being forced to zero in displacement
@@ -488,7 +468,7 @@ Core::calls(const Instruction& instruction) noexcept {
     if constexpr (EnableEmulatorTrace) {
         Serial.println(F("CALLS!"));
     }
-    if (auto targ = valueFromSrc1Register(instruction, TreatAsOrdinal{}); targ > 259) {
+    if (auto targ = valueFromSrc1Register<Ordinal>(instruction); targ > 259) {
         generateFault(FaultType::Protection_Length);
     } else {
         syncf();
@@ -745,16 +725,20 @@ namespace {
     constexpr LongOrdinal subtractWithCarry(Ordinal src2, Ordinal src1, Ordinal carry) noexcept {
         return static_cast<LongOrdinal>(src2) - static_cast<LongOrdinal>(src1) - 1 + carry;
     }
-    bool overflowDetected(const Register& src2, const Register& src1, const Register& dest) noexcept {
-        return (src2.getMostSignificantBit() == src1.getMostSignificantBit()) && (src2.getMostSignificantBit() != dest.getMostSignificantBit());
+    constexpr Ordinal getMostSignificantBit(const Operand<Ordinal>& value) noexcept { return value.getValue() & 0x8000'0000; }
+
+    bool overflowDetected(const Operand<Ordinal>& src2, const Operand<Ordinal>& src1, const Register& dest) noexcept {
+        return (getMostSignificantBit(src2) == getMostSignificantBit(src1)) && (getMostSignificantBit(src2) != dest.getMostSignificantBit());
     }
 }
 void
 Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCarryOperation op) noexcept {
-    auto& src1 = sourceFromSrc1(instruction);
-    auto& src2 = sourceFromSrc2(instruction);
+    auto src1 = sourceFromSrc1<Ordinal>(instruction);
+    auto src2 = sourceFromSrc2<Ordinal>(instruction);
     auto carry = ac_.getCarryBit() ? 1 : 0;
-    DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ? addWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry) : subtractWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry));
+    DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ?
+    addWithCarry(src2.getValue(), src1.getValue(), carry) :
+    subtractWithCarry(src2.getValue(), src1.getValue(), carry));
     auto& dest = destinationFromSrcDest(instruction);
     dest.set<Ordinal>(result.get(0, TreatAsOrdinal{}));
     ac_.clearConditionCode();
@@ -765,13 +749,18 @@ Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCa
     ac_.setCarryBit(result.get(1, TreatAsOrdinal{}) != 0);
     // set the carry out bit
 }
+namespace {
+    [[nodiscard]] constexpr Ordinal wordAlign(Ordinal value) noexcept { return value & 0xFFFF'FFF0; }
+    [[nodiscard]] constexpr Ordinal doubleWordAlign(Ordinal value) noexcept { return value & 0xFFFF'FFF8; }
+    [[nodiscard]] constexpr Ordinal quadWordAlign(Ordinal value) noexcept { return value & 0xFFFF'FFFC; }
+}
 void Core::synld(const Instruction& instruction) noexcept {
     // wait until another execution unit sets the condition codes to continue after requesting a load.
     // In the case of this emulator, it really doesn't mean anything but I can see this being a synld followed by a wait
     // for synchronization. It also allows access to internal memory mapped items.
     // So I'm not sure how to implement this yet, however I think at this point I'm just going to treat is as a special kind of load
     // with condition code assignments and forced alignments
-    auto address = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
+    auto address = wordAlign(valueFromSrc1Register<Ordinal>(instruction));
     // load basically takes care of accessing different registers and such even memory mapped ones
     setDestinationFromSrcDest(instruction, load(address), TreatAsOrdinal{});
     // there is a _fail_ condition where a bad access condition will result in 0b000
@@ -783,8 +772,8 @@ void Core::synld(const Instruction& instruction) noexcept {
 void
 Core::synmov(const Instruction &instruction) noexcept {
     // load from memory and then store to another address in a synchronous fashion
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
-    auto addr = valueFromSrc1Register(instruction, TreatAsWordAlignedOrdinal{});
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    auto addr = wordAlign(valueFromSrc1Register<Ordinal>(instruction));
 #if 0
     Serial.print(F("synmov(0x"));
     Serial.print(addr, HEX);

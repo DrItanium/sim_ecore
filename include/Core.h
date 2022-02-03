@@ -428,26 +428,21 @@ private:
     void setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal);
     void setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger);
     void setDestinationFromSrcDest(const Instruction& instruction, LongOrdinal value, TreatAsLongOrdinal);
-    [[nodiscard]] const Register& sourceFromSrc1(const Instruction& instruction) const noexcept;
-    [[nodiscard]] const Register& sourceFromSrc2(const Instruction& instruction) const noexcept;
-    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
-    [[nodiscard]] Integer valueFromSrc1Register(const Instruction& instruction, TreatAsInteger) const noexcept;
-    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept;
-    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept;
-    [[nodiscard]] Ordinal valueFromSrc1Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept;
+    template<typename T>
+    [[nodiscard]] Operand<T> sourceFromSrc1(const Instruction& instruction) const noexcept {
+        return getOperand<T>(instruction.getSrc1());
+    }
+    template<typename T>
+    [[nodiscard]] Operand<T> sourceFromSrc2(const Instruction& instruction) const noexcept {
+        return getOperand<T>(instruction.getSrc2());
+    }
     template<typename T>
     [[nodiscard]] T valueFromSrc1Register(const Instruction& instruction) const noexcept {
-        return valueFromSrc1Register(instruction, TreatAs<T>{});
+        return sourceFromSrc1<T>(instruction).getValue();
     }
-    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsOrdinal) const noexcept;
-    [[nodiscard]] LongOrdinal valueFromSrc2Register(const Instruction& instruction, TreatAsLongOrdinal) const noexcept;
-    [[nodiscard]] Integer valueFromSrc2Register(const Instruction& instruction, TreatAsInteger) const noexcept;
-    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsQuadAlignedOrdinal) const noexcept;
-    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsDoubleAlignedOrdinal) const noexcept;
-    [[nodiscard]] Ordinal valueFromSrc2Register(const Instruction& instruction, TreatAsWordAlignedOrdinal) const noexcept;
     template<typename T>
     [[nodiscard]] T valueFromSrc2Register(const Instruction& instruction) const noexcept {
-        return valueFromSrc2Register(instruction, TreatAs<T>{});
+        return sourceFromSrc2<T>(instruction).getValue();
     }
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
@@ -597,11 +592,10 @@ private:
     void subc(const Instruction& inst) noexcept { withCarryOperationGeneric(inst, ArithmeticWithCarryOperation::Subtract); }
     template<typename T>
     void concmpGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
-        using K = TreatAs<T>;
         if ((ac_.getConditionCode() & 0b100) == 0) {
-            const auto& src1 = sourceFromSrc1(instruction);
-            const auto& src2 = sourceFromSrc2(instruction);
-            ac_.setConditionCode(src1.lessThanOrEqual(src2, K{}) ? 0b010 : 0b001);
+            auto src1 = sourceFromSrc1<T>(instruction);
+            auto src2 = sourceFromSrc2<T>(instruction);
+            ac_.setConditionCode(src1 <= src2 ? 0b010 : 0b001);
         }
     }
     void synld(const Instruction& inst) noexcept;
@@ -658,8 +652,8 @@ private:
     template<bool shiftLeft>
     void shxo(const Instruction& inst) noexcept {
         Ordinal result = 0;
-        if (auto len = valueFromSrc1Register(inst, TreatAsOrdinal{}); len < 32) {
-            if constexpr(auto src = valueFromSrc2Register(inst, TreatAsOrdinal{}); shiftLeft) {
+        if (auto len = valueFromSrc1Register<Ordinal>(inst); len < 32) {
+            if constexpr(auto src = valueFromSrc2Register<Ordinal>(inst); shiftLeft) {
                 result = src << len;
             } else {
                 result = src >> len;

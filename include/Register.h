@@ -27,22 +27,10 @@
 #ifndef SIM3_REGISTER_H
 #define SIM3_REGISTER_H
 #include "Types.h"
-struct TreatAsWordAlignedOrdinal final {
-    using UnderlyingType = Ordinal;
-};
-struct TreatAsQuadAlignedOrdinal final {
-    using UnderlyingType = Ordinal;
-};
-struct TreatAsDoubleAlignedOrdinal final {
-    using UnderlyingType = Ordinal;
-};
 union Register {
 public:
     constexpr explicit Register(Ordinal value = 0) noexcept : ord_(value) { }
     [[nodiscard]] constexpr bool getMostSignificantBit() const noexcept { return ord_ & 0x8000'0000; }
-    [[nodiscard]] constexpr auto get(TreatAsQuadAlignedOrdinal) const noexcept { return ord_ & 0xFFFF'FFF0; }
-    [[nodiscard]] constexpr auto get(TreatAsDoubleAlignedOrdinal) const noexcept { return ord_ & 0xFFFF'FFF8; }
-    [[nodiscard]] constexpr auto get(TreatAsWordAlignedOrdinal) const noexcept { return ord_ & 0xFFFF'FFFC; }
     [[nodiscard]] constexpr Integer get(TreatAsInteger) const noexcept { return integer_; }
     [[nodiscard]] constexpr Ordinal get(TreatAsOrdinal) const noexcept { return ord_; }
     [[nodiscard]] constexpr ByteInteger get(TreatAsByteInteger) const noexcept { return static_cast<ByteInteger>(integer_); }
