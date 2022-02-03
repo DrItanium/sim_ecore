@@ -621,6 +621,7 @@ private:
 private:
     void condBranch(const Instruction& inst) noexcept;
     void absoluteBranch(Ordinal value) noexcept;
+private: // IAC messages
     void processIACMessage(const IACMessage& message) noexcept;
     void storeSystemBase(const IACMessage& message) noexcept;
     void generateSystemInterrupt(const IACMessage& message) noexcept;
@@ -628,10 +629,10 @@ private:
     void setBreakpointRegister(const IACMessage& message) noexcept;
     void testPendingInterrupts(const IACMessage& message) noexcept;
     void purgeInstructionCache(const IACMessage& message) noexcept;
+private:
     void boot0(Ordinal sat, Ordinal pcb, Ordinal startIP);
-    void shrdi(const Instruction& inst) noexcept;
-    void setEBIUpper(Address address) noexcept;
     [[noreturn]] void checksumFail() noexcept;
+    void shrdi(const Instruction& inst) noexcept;
     void setStackPointer(Ordinal value) noexcept;
     [[nodiscard]] Ordinal getStackPointerValue() const noexcept;
     void checkPendingInterrupts() noexcept;
@@ -680,6 +681,8 @@ private:
 private:
     inline void b(const Instruction& inst) noexcept { ipRelativeBranch(inst); }
     void bal(const Instruction& inst) noexcept;
+private: // implementation specific
+    void setEBIUpper(Address address) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);
