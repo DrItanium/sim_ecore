@@ -198,17 +198,6 @@ private:
     [[nodiscard]] Ordinal getFaultTableBase() noexcept;
     [[nodiscard]] Ordinal getInterruptStackPointer() noexcept;
     void generateFault(FaultType fault) noexcept;
-    [[nodiscard]] static constexpr bool inInternalSpace(Address destination) noexcept {
-        return static_cast<byte>(destination >> 24) == 0xFF;
-    }
-    /**
-     * @brief Compute the actual address within the EBI window
-     * @param offset The lower 16-bits of the address
-     * @return The adjusted window address
-     */
-    [[nodiscard]] static constexpr size_t computeWindowOffsetAddress(Address offset) noexcept {
-        return 0x8000 + (static_cast<size_t>(offset) & 0x7FFF);
-    }
     void store(Address destination, const TripleRegister& reg) noexcept;
     void store(Address destination, const QuadRegister& reg) noexcept;
     void load(Address destination, TripleRegister& reg) noexcept;
@@ -217,18 +206,6 @@ private:
     void synchronizedStore(Address destination, const QuadRegister& value) noexcept;
     void synchronizedStore(Address destination, const Register& value) noexcept;
     [[nodiscard]] QuadRegister loadQuad(Address destination) noexcept;
-    [[nodiscard]] ByteOrdinal readFromInternalSpace(Address destination) noexcept;
-    void writeToInternalSpace(Address destination, byte value) noexcept;
-    template<typename T>
-    void storeToBus(Address destination, T value, TreatAs<T>) noexcept {
-        setEBIUpper(destination);
-        memory<T>(computeWindowOffsetAddress(destination)) = value;
-    }
-    template<typename T>
-    typename TreatAs<T>::UnderlyingType loadFromBus(Address destination, TreatAs<T>) noexcept {
-        setEBIUpper(destination);
-        return memory<T>(computeWindowOffsetAddress(destination));
-    }
 
     template<typename T>
     typename TreatAs<T>::UnderlyingType load(Address destination, TreatAs<T>) noexcept {
@@ -683,6 +660,29 @@ private:
     void bal(const Instruction& inst) noexcept;
 private: // implementation specific
     void setEBIUpper(Address address) noexcept;
+    [[nodiscard]] static constexpr bool inInternalSpace(Address destination) noexcept {
+        return static_cast<byte>(destination >> 24) == 0xFF;
+    }
+    /**
+     * @brief Compute the actual address within the EBI window
+     * @param offset The lower 16-bits of the address
+     * @return The adjusted window address
+     */
+    [[nodiscard]] static constexpr size_t computeWindowOffsetAddress(Address offset) noexcept {
+        return 0x8000 + (static_cast<size_t>(offset) & 0x7FFF);
+    }
+    [[nodiscard]] ByteOrdinal readFromInternalSpace(Address destination) noexcept;
+    void writeToInternalSpace(Address destination, byte value) noexcept;
+    template<typename T>
+    void storeToBus(Address destination, T value, TreatAs<T>) noexcept {
+        setEBIUpper(destination);
+        memory<T>(computeWindowOffsetAddress(destination)) = value;
+    }
+    template<typename T>
+    typename TreatAs<T>::UnderlyingType loadFromBus(Address destination, TreatAs<T>) noexcept {
+        setEBIUpper(destination);
+        return memory<T>(computeWindowOffsetAddress(destination));
+    }
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);
