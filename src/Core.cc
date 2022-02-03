@@ -774,7 +774,7 @@ Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCa
     DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ? addWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry) : subtractWithCarry(src2.get<Ordinal>(), src1.get<Ordinal>(), carry));
     auto& dest = destinationFromSrcDest(instruction);
     dest.set<Ordinal>(result.get(0, TreatAsOrdinal{}));
-    ac_.setConditionCode(0);
+    ac_.clearConditionCode();
     if (overflowDetected(src2, src1, dest)) {
         // set the overflow bit in ac
         ac_.setOverflowBit(true);
@@ -945,7 +945,7 @@ Core::scanbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
     auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     dest.set<Ordinal>(0xFFFF'FFFF);
-    ac_.setConditionCode(0);
+    ac_.clearConditionCode();
     Ordinal index = 31;
     for (auto mask : reverseBitPositions) {
         if ((src & mask) != 0) {
@@ -962,7 +962,7 @@ Core::spanbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
     auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
     dest.set<Ordinal>(0xFFFF'FFFF);
-    ac_.setConditionCode(0);
+    ac_.clearConditionCode();
     Ordinal index = 31;
     for (auto mask : reverseBitPositions) {
         if ((src & mask) == 0) {

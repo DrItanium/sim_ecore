@@ -277,7 +277,7 @@ private:
         Ordinal unused2 : 8;
     };
 };
-static_assert (sizeof(TraceControls) == sizeof(Ordinal), "ArithmeticControls must be the width of a single Ordinal");
+static_assert (sizeof(TraceControls) == sizeof(Ordinal), "TraceControls must be the width of a single Ordinal");
 union ProcessControls {
 public:
     constexpr explicit ProcessControls(Ordinal value = 0) noexcept : ord_(value) { }
@@ -316,7 +316,7 @@ private:
         Ordinal internalState : 11; // 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
     };
 };
-static_assert (sizeof(ProcessControls) == sizeof(Ordinal), "ArithmeticControls must be the width of a single Ordinal");
+static_assert (sizeof(ProcessControls) == sizeof(Ordinal), "ProcessControls must be the width of a single Ordinal");
 
 
 union ArithmeticControls {
@@ -342,6 +342,7 @@ public:
     void setValue(Ordinal value) noexcept { ord_ = value; }
     [[nodiscard]] constexpr byte getConditionCode() const noexcept { return static_cast<byte>(conditionCode); }
     void setConditionCode(byte value) noexcept { conditionCode = value; }
+    void clearConditionCode() noexcept { setConditionCode(0); }
 #define X(name, field, type) \
 constexpr type get ## name () const noexcept { return field ; } \
 void set ## name( type value) noexcept { field  = value ; }
