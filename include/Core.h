@@ -344,7 +344,7 @@ private:
 private:
 
     template<typename T>
-    [[nodiscard]] Operand<T> getOperand(RegisterIndex targetIndex) noexcept {
+    [[nodiscard]] Operand<T> getOperand(RegisterIndex targetIndex) const noexcept {
         if (isLocalRegister(targetIndex))  {
             return Operand<T>{getLocals().getRegister(static_cast<uint8_t>(targetIndex))};
         } else if (isGlobalRegister(targetIndex)) {
