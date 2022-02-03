@@ -924,7 +924,7 @@ void
 Core::scanbit(const Instruction &instruction) noexcept {
     // perform a sanity check
     auto& dest = destinationFromSrcDest(instruction);
-    auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto src = valueFromSrc1Register<Ordinal>(instruction);
     dest.set<Ordinal>(0xFFFF'FFFF);
     ac_.clearConditionCode();
     Ordinal index = 31;
@@ -941,7 +941,7 @@ Core::scanbit(const Instruction &instruction) noexcept {
 void
 Core::spanbit(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
-    auto src = valueFromSrc1Register(instruction, TreatAsOrdinal{});
+    auto src = valueFromSrc1Register<Ordinal>(instruction);
     dest.set<Ordinal>(0xFFFF'FFFF);
     ac_.clearConditionCode();
     Ordinal index = 31;
@@ -957,8 +957,8 @@ Core::spanbit(const Instruction &instruction) noexcept {
 
 void
 Core::alterbit(const Instruction &instruction) noexcept {
-    auto bitpos = bitPositions[valueFromSrc1Register(instruction, TreatAsOrdinal{}) & 0b11111];
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto bitpos = bitPositions[valueFromSrc1Register<Ordinal>(instruction) & 0b11111];
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     Ordinal result = src;
     if (; ac_.getConditionCode() & 0b010) {
         result |= bitpos;
@@ -971,16 +971,16 @@ void
 Core::modify(const Instruction &instruction) noexcept {
     // this is my encode operation but expanded out
     auto& dest = destinationFromSrcDest(instruction);
-    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto mask = valueFromSrc1Register<Ordinal>(instruction);
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     dest.set<Ordinal>(::modify(mask, src, dest.get<Ordinal>()));
 }
 void
 Core::modi(const Instruction &instruction) noexcept {
-    if (auto denominator = valueFromSrc1Register(instruction, TreatAsInteger{}); denominator == 0) {
+    if (auto denominator = valueFromSrc1Register<Integer>(instruction); denominator == 0) {
         generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
     } else {
-        auto numerator = valueFromSrc2Register(instruction, TreatAsInteger{});
+        auto numerator = valueFromSrc2Register<Integer>(instruction);
         auto result = numerator - ((numerator / denominator) * denominator);
         if (((numerator * denominator) < 0) && (result != 0)) {
             result += denominator;
@@ -991,13 +991,13 @@ Core::modi(const Instruction &instruction) noexcept {
 void
 Core::modac(const Instruction &instruction) noexcept {
     auto& dest = destinationFromSrcDest(instruction);
-    auto mask = valueFromSrc1Register(instruction, TreatAsOrdinal{});
-    auto src = valueFromSrc2Register(instruction, TreatAsOrdinal{});
+    auto mask = valueFromSrc1Register<Ordinal>(instruction);
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
     dest.set<Ordinal>(ac_.modify(mask, src));
 }
 void
 Core::ediv(const Instruction &instruction) noexcept {
-    if (auto denomord = valueFromSrc1Register(instruction, TreatAsOrdinal{}); denomord == 0) {
+    if (auto denomord = valueFromSrc1Register<Ordinal>(instruction); denomord == 0) {
         // raise an arithmetic zero divide fault
         generateFault(FaultType::Arithmetic_ArithmeticZeroDivide);
     } else {

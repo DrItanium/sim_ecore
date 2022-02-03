@@ -543,8 +543,8 @@ private:
     template<LogicalOp op>
     void logicalOpGeneric(const Instruction& inst) noexcept {
         Ordinal result = 0;
-        auto src2 = getOperand<Ordinal>(inst.getSrc2());
-        auto src1 = getOperand<Ordinal>(inst.getSrc1());
+        auto src2 = valueFromSrc2Register<Ordinal>(inst);
+        auto src1 = valueFromSrc1Register<Ordinal>(inst);
         switch (op) {
             case LogicalOp::And: result = src2 & src1; break;
             case LogicalOp::Or: result = src2 | src1; break;

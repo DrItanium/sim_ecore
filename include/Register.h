@@ -192,11 +192,12 @@ public:
     [[nodiscard]] constexpr bool operator>(const Self& other) const noexcept { return theValue_ > other.theValue_; }
     [[nodiscard]] constexpr bool operator>=(const Self& other) const noexcept { return theValue_ >= other.theValue_; }
     [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
-    [[nodiscard]] constexpr operator bool() const noexcept { return valid_; }
+    [[nodiscard]] constexpr explicit operator bool() const noexcept { return valid_; }
 private:
     T theValue_;
     bool valid_;
 };
+
 
 /**
  * @brief Wrapper around a register to make it behave like the frame pointer should
@@ -563,5 +564,39 @@ union RegisterFrame {
     TripleRegister tprs[sizeof(gprs)/sizeof(TripleRegister)]; // this will have the same alignment as quad registers by ignoring the fourth ordinal
     QuadRegister qprs[sizeof(gprs)/sizeof(QuadRegister)];
     // we put the extended reals in a different location
+};
+
+template<>
+class Operand<LongOrdinal> final {
+public:
+    using Self = Operand<LongOrdinal>;
+public:
+
+    constexpr Operand() = default;
+    explicit constexpr Operand(LongOrdinal value) : theValue_(value), valid_(true) { }
+    explicit constexpr Operand(const DoubleRegister& theRegister) : Self(theRegister.get(TreatAsLongOrdinal{})) { }
+    [[nodiscard]] constexpr LongOrdinal getValue() const noexcept { return theValue_; }
+    [[nodiscard]] constexpr bool operator==(const Self& other) const noexcept { return theValue_ == other.theValue_; }
+    [[nodiscard]] constexpr bool operator!=(const Self& other) const noexcept { return theValue_ != other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator+(const Self& other) const noexcept { return theValue_ + other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator-(const Self& other) const noexcept { return theValue_ - other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator*(const Self& other) const noexcept { return theValue_ * other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator/(const Self& other) const noexcept { return theValue_ / other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator%(const Self& other) const noexcept { return theValue_ % other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator<<(const Self& other) const noexcept { return theValue_ << other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator>>(const Self& other) const noexcept { return theValue_ >> other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator&(const Self& other) const noexcept { return theValue_ & other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator|(const Self& other) const noexcept { return theValue_ | other.theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator~() const noexcept { return ~theValue_; }
+    [[nodiscard]] constexpr LongOrdinal operator^(const Self& other) const noexcept { return theValue_ ^ other.theValue_; }
+    [[nodiscard]] constexpr bool operator<(const Self& other) const noexcept { return theValue_ < other.theValue_; }
+    [[nodiscard]] constexpr bool operator<=(const Self& other) const noexcept { return theValue_ <= other.theValue_; }
+    [[nodiscard]] constexpr bool operator>(const Self& other) const noexcept { return theValue_ > other.theValue_; }
+    [[nodiscard]] constexpr bool operator>=(const Self& other) const noexcept { return theValue_ >= other.theValue_; }
+    [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
+    [[nodiscard]] constexpr explicit operator bool() const noexcept { return valid_; }
+private:
+    LongOrdinal theValue_ = 0;
+    bool valid_ = false;
 };
 #endif //SIM3_REGISTER_H
