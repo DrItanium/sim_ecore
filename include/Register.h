@@ -80,13 +80,11 @@ public:
     }
     template<typename T>
     [[nodiscard]] constexpr T subtract(const Register& other, TreatAs<T>) const noexcept {
-        using K = TreatAs<T>;
-        return get(K{}) - other.get(K{});
+        return get<T>() - other.get<T>();
     }
     template<typename T>
     [[nodiscard]] constexpr T multiply(const Register& other, TreatAs<T>) const noexcept {
-        using K = TreatAs<T>;
-        return get(K{}) * other.get(K{});
+        return get<T>() * other.get<T>();
     }
     template<typename T>
     [[nodiscard]] constexpr T divide(const Register& other, TreatAs<T>) const noexcept {
@@ -173,6 +171,42 @@ Ordinal operator|(Ordinal src2, const Register& src1) noexcept;
 Ordinal operator|(const Register& src2, Ordinal src1) noexcept;
 Ordinal operator^(const Register& src2, const Register& src1) noexcept;
 Ordinal operator~(const Register& value) noexcept;
+
+/**
+ * @brief A constant view of a register which only allows one to view that register through the lens of the provided type. This allows one to use operator overloading in a clean and precise manner
+ * @tparam T The type to view the contents of the register as
+ */
+template<typename T>
+class RegisterView final {
+public:
+    explicit RegisterView(const Register& theRegister) : theRegister_(theRegister) {}
+    [[nodiscard]] constexpr T getValue() const noexcept { return theRegister_.get<T>(); }
+private:
+    const Register& theRegister_;
+};
+template<typename T>
+T operator+(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+    return a.getValue() + b.getValue();
+}
+template<typename T>
+T operator-(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+    return a.getValue() - b.getValue();
+}
+template<typename T>
+T operator*(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+    return a.getValue() * b.getValue();
+}
+template<typename T>
+T operator/(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+    return a.getValue() / b.getValue();
+}
+
+template<typename T>
+T operator%(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+    return a.getValue() % b.getValue();
+}
+
+
 
 /**
  * @brief Wrapper around a register to make it behave like the frame pointer should
