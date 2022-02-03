@@ -475,8 +475,8 @@ private:
     void arithmeticGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
         using K = TreatAs<T>;
         T result = static_cast<T>(0);
-        auto src2 = getOperand<T>(instruction.getSrc2());
-        auto src1 = getOperand<T>(instruction.getSrc1());
+        auto src2 = sourceFromSrc2<T>(instruction);
+        auto src1 = sourceFromSrc1<T>(instruction);
         switch (op) {
             case ArithmeticOperation::Add:
                 result = src2 + src1;
