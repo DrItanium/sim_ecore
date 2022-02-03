@@ -343,6 +343,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         case Opcode::ret:
             ret();
             break;
+        case Opcode::bswap:
+            bswap(instruction);
+            break;
         default:
             generateFault(FaultType::Operation_InvalidOpcode);
             break;
