@@ -69,10 +69,6 @@ DoubleRegister&
 Core::longDestinationFromSrcDest(const Instruction& instruction) noexcept {
     return getDoubleRegister(instruction.getSrcDest(false));
 }
-const DoubleRegister&
-Core::longSourceFromSrcDest(const Instruction &instruction) const noexcept {
-    return getDoubleRegister(instruction.getSrcDest(true));
-}
 void
 Core::syncf() noexcept {
     if (ac_.getNoImpreciseFaults()) {
@@ -152,23 +148,6 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
         return BadRegisterQuad;
     }
 }
-
-
-const DoubleRegister&
-Core::getDoubleRegister(RegisterIndex targetIndex) const noexcept {
-    if (isLocalRegister(targetIndex)) {
-        return getLocals().getDoubleRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isGlobalRegister(targetIndex)) {
-        return globals.getDoubleRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
-        /// @todo implement double register literal support, according to the docs it is allowed
-        return LongOrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
-    } else {
-        //generateFault(FaultType::Operation_InvalidOperand);
-        return BadRegisterDouble;
-    }
-}
-
 
 Instruction
 Core::loadInstruction(Address baseAddress) noexcept {
@@ -849,8 +828,7 @@ Core::mov(const Instruction &inst) noexcept {
 }
 void
 Core::movl(const Instruction &instruction) noexcept {
-    const auto& src = getSourceDoubleRegister(instruction.getSrc1());
-    longDestinationFromSrcDest(instruction).copy(src);
+    longDestinationFromSrcDest(instruction).set(valueFromSrc1Register<LongOrdinal>(instruction), TreatAsLongOrdinal {});
 }
 void
 Core::movt(const Instruction &instruction) noexcept {

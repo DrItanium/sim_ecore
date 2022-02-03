@@ -349,7 +349,10 @@ private:
                 return Operand<T>{getLocals().getTripleRegister(static_cast<int>(targetIndex))};
             } else if (isGlobalRegister(targetIndex)) {
                 return Operand<T>{globals.getTripleRegister(static_cast<int>(targetIndex))};
+            } else if (isLiteral(targetIndex)) {
+                return Operand<T>{getLiteral(targetIndex, TreatAs<T>{})};
             } else {
+
                 return Operand<T>();
             }
         } else if constexpr (is_same_v<T, QuadRegister>) {
@@ -357,6 +360,8 @@ private:
                 return Operand<T>(getLocals().getQuadRegister(static_cast<int>(targetIndex)));
             } else if (isGlobalRegister(targetIndex)) {
                 return Operand<T>(globals.getQuadRegister(static_cast<int>(targetIndex)));
+            } else if (isLiteral(targetIndex)) {
+                return Operand<T>{getLiteral(targetIndex, TreatAs<T>{})};
             } else {
                 return Operand<T>();
             }
@@ -374,8 +379,6 @@ private:
     }
     [[nodiscard]] Register& getRegister(RegisterIndex targetIndex);
     [[nodiscard]] DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
-    [[nodiscard]] const DoubleRegister& getDoubleRegister(RegisterIndex targetIndex) const noexcept;
-    [[nodiscard]] const DoubleRegister& getSourceDoubleRegister(RegisterIndex targetIndex) const noexcept { return getDoubleRegister(targetIndex); }
     [[nodiscard]] TripleRegister& getTripleRegister(RegisterIndex targetIndex);
     [[nodiscard]] QuadRegister& getQuadRegister(RegisterIndex targetIndex);
     [[nodiscard]] Register& getStackPointer() noexcept { return getRegister(RegisterIndex::SP960); }
@@ -445,7 +448,6 @@ private:
         return getOperand<T>(instruction.getSrcDest(true));
     }
     [[nodiscard]] DoubleRegister& longDestinationFromSrcDest(const Instruction& instruction) noexcept;
-    [[nodiscard]] const DoubleRegister& longSourceFromSrcDest(const Instruction& instruction) const noexcept;
     void setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal);
     void setDestinationFromSrcDest(const Instruction& instruction, Integer value, TreatAsInteger);
     void setDestinationFromSrcDest(const Instruction& instruction, LongOrdinal value, TreatAsLongOrdinal);
