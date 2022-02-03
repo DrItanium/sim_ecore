@@ -649,6 +649,7 @@ private:
     }
     inline void shro(const Instruction& inst) noexcept { shxo<false>(inst); }
     inline void shlo(const Instruction& inst) noexcept { shxo<true>(inst); }
+    void bswap(const Instruction& inst) noexcept;
 private:
     void handleFaultReturn() noexcept;
     void handleSupervisorReturnWithTraceSet() noexcept;
