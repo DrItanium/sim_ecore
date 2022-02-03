@@ -177,32 +177,40 @@ Ordinal operator~(const Register& value) noexcept;
  * @tparam T The type to view the contents of the register as
  */
 template<typename T>
-class RegisterView final {
+class Operand final {
 public:
-    explicit RegisterView(const Register& theRegister) : theRegister_(theRegister) {}
-    [[nodiscard]] constexpr T getValue() const noexcept { return theRegister_.get<T>(); }
+    using Self = Operand<T>;
+public:
+
+    explicit constexpr Operand(T value) : theValue_(value) { }
+    explicit constexpr Operand(const Register& theRegister) : Self(theRegister.get<T>()) { }
+    [[nodiscard]] constexpr T getValue() const noexcept { return theValue_; }
 private:
-    const Register& theRegister_;
+    T theValue_;
 };
 template<typename T>
-T operator+(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+bool operator==(const Operand<T>& a, const Operand<T>& b) noexcept {
+    return a.getValue() == b.getValue();
+}
+template<typename T>
+T operator+(const Operand<T>& a, const Operand<T>& b) noexcept {
     return a.getValue() + b.getValue();
 }
 template<typename T>
-T operator-(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+T operator-(const Operand<T>& a, const Operand<T>& b) noexcept {
     return a.getValue() - b.getValue();
 }
 template<typename T>
-T operator*(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+T operator*(const Operand<T>& a, const Operand<T>& b) noexcept {
     return a.getValue() * b.getValue();
 }
 template<typename T>
-T operator/(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+T operator/(const Operand<T>& a, const Operand<T>& b) noexcept {
     return a.getValue() / b.getValue();
 }
 
 template<typename T>
-T operator%(const RegisterView<T>& a, const RegisterView<T>& b) noexcept {
+T operator%(const Operand<T>& a, const Operand<T>& b) noexcept {
     return a.getValue() % b.getValue();
 }
 
