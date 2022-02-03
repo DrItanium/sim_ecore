@@ -287,16 +287,16 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger {});
             break;
         case Opcode::st:
-            store(computeMemoryAddress(instruction), sourceFromSrcDest<Ordinal>(instruction).getValue());
+            store(computeMemoryAddress(instruction), valueFromSrcDestRegister<Ordinal>(instruction));
             break;
         case Opcode::stob:
-            storeByte(computeMemoryAddress(instruction), sourceFromSrcDest<ByteOrdinal>(instruction).getValue());
+            storeByte(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteOrdinal>(instruction));
             break;
         case Opcode::stos:
-            storeShort(computeMemoryAddress(instruction), sourceFromSrcDest<ShortOrdinal>(instruction).getValue());
+            storeShort(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortOrdinal>(instruction));
             break;
         case Opcode::stl:
-            storeLong(computeMemoryAddress(instruction), longSourceFromSrcDest(instruction).get(TreatAsLongOrdinal{}));
+            storeLong(computeMemoryAddress(instruction), valueFromSrcDestRegister<LongOrdinal>(instruction));
             break;
         case Opcode::stt:
             store(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(true)));
@@ -305,10 +305,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             store(computeMemoryAddress(instruction), getQuadRegister(instruction.getSrcDest(true)));
             break;
         case Opcode::stib:
-            storeByteInteger(computeMemoryAddress(instruction), static_cast<ByteInteger>(sourceFromSrcDest<Integer>(instruction).getValue()));
+            storeByteInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteInteger>(instruction));
             break;
         case Opcode::stis:
-            storeShortInteger(computeMemoryAddress(instruction), static_cast<ShortInteger>(sourceFromSrcDest<Integer>(instruction).getValue()));
+            storeShortInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortInteger>(instruction));
             break;
         case Opcode::shrdi:
             shrdi(instruction);

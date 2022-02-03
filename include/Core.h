@@ -450,6 +450,16 @@ private:
     [[nodiscard]] T valueFromSrc2Register(const Instruction& instruction) const noexcept {
         return sourceFromSrc2<T>(instruction).getValue();
     }
+    /**
+     * @brief Treat src/dest as a src register and pull the value it holds out
+     * @tparam T The type that we want to view the register contents as
+     * @param instruction The instruction holding the index of the src/dest register to use
+     * @return The value contained in the target register viewed through a specific "lens"
+     */
+    template<typename T>
+    [[nodiscard]] T valueFromSrcDestRegister(const Instruction& instruction) const noexcept {
+        return sourceFromSrcDest<T>(instruction).getValue();
+    }
 private:
     void saveRegisterFrame(const RegisterFrame& theFrame, Address baseAddress) noexcept;
     void restoreRegisterFrame(RegisterFrame& theFrame, Address baseAddress) noexcept;
