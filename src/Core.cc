@@ -833,8 +833,8 @@ Core::movl(const Instruction &instruction) noexcept {
 void
 Core::movt(const Instruction &instruction) noexcept {
     auto& dest = getTripleRegister(instruction.getSrcDest(false));
-    const auto& src = getTripleRegister(instruction.getSrc1());
-    dest.copy(src);
+
+    dest.copy(sourceFromSrc1<TripleRegister>(instruction));
 }
 void
 Core::movq(const Instruction &instruction) noexcept {

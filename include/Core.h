@@ -183,46 +183,6 @@ public:
         bool valid_ = false;
     };
 public:
-    /// @todo figure out a better way to handle literals instead of having very large lookup tables
-    static constexpr DoubleRegister LongOrdinalLiterals[32] {
-#define X(base) DoubleRegister(base + 0), DoubleRegister(base + 1), DoubleRegister(base + 2), DoubleRegister(base + 3)
-            X(0),
-            X(4),
-            X(8),
-            X(12),
-            X(16),
-            X(20),
-            X(24),
-            X(28),
-#undef X
-    };
-    static constexpr TripleRegister TripleOrdinalLiterals[32] {
-#define X(base) TripleRegister(base + 0), TripleRegister(base + 1), TripleRegister(base + 2), TripleRegister(base + 3)
-            X(0),
-            X(4),
-            X(8),
-            X(12),
-            X(16),
-            X(20),
-            X(24),
-            X(28),
-#undef X
-    };
-    static constexpr QuadRegister QuadOrdinalLiterals[32] {
-#define X(base) QuadRegister(base + 0), QuadRegister(base + 1), QuadRegister(base + 2), QuadRegister(base + 3)
-            X(0),
-            X(4),
-            X(8),
-            X(12),
-            X(16),
-            X(20),
-            X(24),
-            X(28),
-#undef X
-    };
-public:
-    // Mega2560 pins
-public:
     explicit Core(Ordinal salign = 4);
     ~Core() = default;
     void begin() noexcept;
@@ -352,7 +312,6 @@ private:
             } else if (isLiteral(targetIndex)) {
                 return Operand<T>{getLiteral(targetIndex, TreatAs<T>{})};
             } else {
-
                 return Operand<T>();
             }
         } else if constexpr (is_same_v<T, QuadRegister>) {

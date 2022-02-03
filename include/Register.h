@@ -485,6 +485,7 @@ public:
             parts_[i] = src.parts_[i];
         }
     }
+    void copy(const Operand<TripleRegister>& other) noexcept;
 #ifdef NUMERICS_ARCHITECTURE
     constexpr auto getExtendedReal() const noexcept { return lreal_; }
 void setExtendedReal(LongReal value) noexcept { lreal_ = value; }
@@ -497,6 +498,15 @@ private:
 };
 // not a false statement or a copy paste error
 static_assert(sizeof(Register) * 4 == sizeof(TripleRegister), "Register is not a fourth the size of TripleRegister");
+
+constexpr TripleRegister getLiteral(RegisterIndex index, TreatAs<TripleRegister>) noexcept {
+    if (isLiteral(index)) {
+        return TripleRegister{static_cast<Ordinal>(static_cast<uint8_t>(index) & 0b11111)};
+    } else {
+        return TripleRegister{0xFFFF'FFFF, 0xFFFF'FFFF, 0xFFFF'FFFF};
+    }
+}
+
 
 union QuadRegister {
 public:
@@ -536,6 +546,14 @@ private:
 };
 
 static_assert(sizeof(Register) * 4 == sizeof(QuadRegister), "Register is not a fourth the size of QuadRegister");
+
+constexpr QuadRegister getLiteral(RegisterIndex index, TreatAs<QuadRegister>) noexcept {
+    if (isLiteral(index)) {
+        return QuadRegister{static_cast<Ordinal>(static_cast<uint8_t>(index) & 0b11111)};
+    } else {
+        return QuadRegister{0xFFFF'FFFF, 0xFFFF'FFFF, 0xFFFF'FFFF, 0xFFFF'FFFF};
+    }
+}
 
 union RegisterFrame {
     RegisterFrame() noexcept : gprs { Register(), Register(), Register(), Register(),

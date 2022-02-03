@@ -68,3 +68,10 @@ Ordinal operator^(const Register& src2, const Register& src1) noexcept {
 Ordinal operator~(const Register& value) noexcept {
     return ~value.get<Ordinal>();
 }
+
+void
+TripleRegister::copy(const Operand<TripleRegister> &other) noexcept {
+    for (byte i = 0; i < 3; ++i) {
+        parts_[i] = other.getValue(i);
+    }
+}

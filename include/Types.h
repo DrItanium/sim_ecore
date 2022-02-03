@@ -262,6 +262,7 @@ constexpr LongInteger getLiteral(RegisterIndex index, TreatAsLongInteger) noexce
     }
 }
 
+
 constexpr Real getLiteral(RegisterIndex index, TreatAsReal) noexcept {
     switch (index) {
         case RegisterIndex::Literal0_0f: return 0.0f;
