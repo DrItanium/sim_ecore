@@ -340,6 +340,10 @@ private:
     [[nodiscard]] DoubleRegister& getDoubleRegister(RegisterIndex targetIndex);
     [[nodiscard]] TripleRegister& getTripleRegister(RegisterIndex targetIndex);
     [[nodiscard]] QuadRegister& getQuadRegister(RegisterIndex targetIndex);
+    [[nodiscard]] inline const TripleRegister& sourceFromSrcDest(const Instruction& inst, TreatAsTripleRegister) noexcept { return getTripleRegister(inst.getSrcDest(true)); }
+    [[nodiscard]] inline const QuadRegister& sourceFromSrcDest(const Instruction& inst, TreatAsQuadRegister) noexcept { return getQuadRegister(inst.getSrcDest(true)); }
+    [[nodiscard]] inline TripleRegister& destinationFromSrcDest(const Instruction& inst, TreatAsTripleRegister) noexcept { return getTripleRegister(inst.getSrcDest(false)); }
+    [[nodiscard]] inline QuadRegister& destinationFromSrcDest(const Instruction& inst, TreatAsQuadRegister) noexcept { return getQuadRegister(inst.getSrcDest(false)); }
     [[nodiscard]] Register& getStackPointer() noexcept { return getRegister(RegisterIndex::SP960); }
     [[nodiscard]] FramePointer getFramePointer() noexcept { return FramePointer(getRegister(RegisterIndex::FP), frameAlignmentMask_); }
     [[nodiscard]] PreviousFramePointer getPFP() noexcept { return PreviousFramePointer(getRegister(RegisterIndex::PFP)); }

@@ -551,6 +551,8 @@ private:
 };
 
 static_assert(sizeof(Register) * 4 == sizeof(QuadRegister), "Register is not a fourth the size of QuadRegister");
+using TreatAsQuadRegister = TreatAs<QuadRegister>;
+using TreatAsTripleRegister = TreatAs<TripleRegister>;
 
 constexpr QuadRegister getLiteral(RegisterIndex index, TreatAs<QuadRegister>) noexcept {
     if (isLiteral(index)) {

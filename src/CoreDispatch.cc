@@ -144,10 +144,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestinationFromSrcDest(instruction, loadLong(computeMemoryAddress(instruction)), TreatAsLongOrdinal {});
             break;
         case Opcode::ldt:
-            load(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(false)));
+            load(computeMemoryAddress(instruction), destinationFromSrcDest(instruction, TreatAsTripleRegister{}));
             break;
         case Opcode::ldq:
-            load(computeMemoryAddress(instruction), getQuadRegister(instruction.getSrcDest(false)));
+            load(computeMemoryAddress(instruction), destinationFromSrcDest(instruction, TreatAsQuadRegister{}));
             break;
             // REG format
         case Opcode::addi: arithmeticGeneric<ArithmeticOperation::Add>(instruction, TreatAsInteger{}); break;
@@ -299,10 +299,10 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             storeLong(computeMemoryAddress(instruction), valueFromSrcDestRegister<LongOrdinal>(instruction));
             break;
         case Opcode::stt:
-            store(computeMemoryAddress(instruction), getTripleRegister(instruction.getSrcDest(true)));
+            store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsTripleRegister{}));
             break;
         case Opcode::stq:
-            store(computeMemoryAddress(instruction), getQuadRegister(instruction.getSrcDest(true)));
+            store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsQuadRegister{}));
             break;
         case Opcode::stib:
             storeByteInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteInteger>(instruction));

@@ -832,14 +832,11 @@ Core::movl(const Instruction &instruction) noexcept {
 }
 void
 Core::movt(const Instruction &instruction) noexcept {
-    auto& dest = getTripleRegister(instruction.getSrcDest(false));
-
-    dest.copy(sourceFromSrc1<TripleRegister>(instruction));
+    destinationFromSrcDest(instruction, TreatAsTripleRegister{}).copy(sourceFromSrc1<TripleRegister>(instruction));
 }
 void
 Core::movq(const Instruction &instruction) noexcept {
-    auto& dest = getQuadRegister(instruction.getSrcDest(false));
-    dest.copy(sourceFromSrc1<QuadRegister>(instruction));
+    destinationFromSrcDest(instruction, TreatAsQuadRegister{}).copy(sourceFromSrc1<QuadRegister>(instruction));
 }
 namespace {
     template<Ordinal mask>
