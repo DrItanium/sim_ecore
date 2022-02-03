@@ -74,10 +74,6 @@ Register&
 Core::destinationFromSrcDest(const Instruction& instruction) noexcept {
     return getRegister(instruction.getSrcDest(false));
 }
-const Register&
-Core::sourceFromSrcDest(const Instruction& instruction) const noexcept {
-    return getRegister(instruction.getSrcDest(true));
-}
 void
 Core::setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal) {
     destinationFromSrcDest(instruction).set<Ordinal>(value);
@@ -178,19 +174,6 @@ Core::getQuadRegister(RegisterIndex targetIndex) {
     }
 }
 
-const Register&
-Core::getRegister(RegisterIndex targetIndex) const noexcept {
-    if (isLocalRegister(targetIndex)) {
-        return getLocals().getRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isGlobalRegister(targetIndex)) {
-        return globals.getRegister(static_cast<uint8_t>(targetIndex));
-    } else if (isLiteral(targetIndex)) {
-        return OrdinalLiterals[static_cast<uint8_t>(targetIndex) & 0b11111];
-    } else {
-        //generateFault(FaultType::Operation_InvalidOperand);
-        return BadRegister;
-    }
-}
 
 const DoubleRegister&
 Core::getDoubleRegister(RegisterIndex targetIndex) const noexcept {

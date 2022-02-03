@@ -183,18 +183,6 @@ public:
     };
 public:
     /// @todo figure out a better way to handle literals instead of having very large lookup tables
-    static constexpr Register OrdinalLiterals[32] {
-#define X(base) Register(base + 0), Register(base + 1), Register(base + 2), Register(base + 3)
-            X(0),
-            X(4),
-            X(8),
-            X(12),
-            X(16),
-            X(20),
-            X(24),
-            X(28),
-#undef X
-    };
     static constexpr DoubleRegister LongOrdinalLiterals[32] {
 #define X(base) DoubleRegister(base + 0), DoubleRegister(base + 1), DoubleRegister(base + 2), DoubleRegister(base + 3)
             X(0),
@@ -431,7 +419,10 @@ private:
     void cmpibx(const Instruction& instruction) noexcept { cmpibx(instruction, instruction.getEmbeddedMask()); }
 
     [[nodiscard]] Register& destinationFromSrcDest(const Instruction& instruction) noexcept;
-    [[nodiscard]] const Register& sourceFromSrcDest(const Instruction& instruction) const noexcept;
+    template<typename T>
+    [[nodiscard]] Operand<T> sourceFromSrcDest(const Instruction& instruction) const noexcept {
+        return getOperand<T>(instruction.getSrcDest(true));
+    }
     [[nodiscard]] DoubleRegister& longDestinationFromSrcDest(const Instruction& instruction) noexcept;
     [[nodiscard]] const DoubleRegister& longSourceFromSrcDest(const Instruction& instruction) const noexcept;
     void setDestinationFromSrcDest(const Instruction& instruction, Ordinal value, TreatAsOrdinal);
@@ -558,8 +549,8 @@ private:
     template<LogicalOp op>
     void logicalOpGeneric(const Instruction& inst) noexcept {
         Ordinal result = 0;
-        const auto& src2 = sourceFromSrc2(inst);
-        const auto& src1 = sourceFromSrc1(inst);
+        auto src2 = getOperand<Ordinal>(inst.getSrc2());
+        auto src1 = getOperand<Ordinal>(inst.getSrc1());
         switch (op) {
             case LogicalOp::And: result = src2 & src1; break;
             case LogicalOp::Or: result = src2 | src1; break;

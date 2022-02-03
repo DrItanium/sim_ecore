@@ -287,13 +287,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger {});
             break;
         case Opcode::st:
-            store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).get<Ordinal>());
+            store(computeMemoryAddress(instruction), sourceFromSrcDest<Ordinal>(instruction).getValue());
             break;
         case Opcode::stob:
-            storeByte(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).get(0, TreatAsByteOrdinal{}));
+            storeByte(computeMemoryAddress(instruction), sourceFromSrcDest<ByteOrdinal>(instruction).getValue());
             break;
         case Opcode::stos:
-            storeShort(computeMemoryAddress(instruction), sourceFromSrcDest(instruction).get<ShortOrdinal>());
+            storeShort(computeMemoryAddress(instruction), sourceFromSrcDest<ShortOrdinal>(instruction).getValue());
             break;
         case Opcode::stl:
             storeLong(computeMemoryAddress(instruction), longSourceFromSrcDest(instruction).get(TreatAsLongOrdinal{}));

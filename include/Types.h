@@ -230,6 +230,21 @@ constexpr Integer getLiteral(RegisterIndex index, TreatAsInteger) noexcept {
         return -1;
     }
 }
+constexpr ByteOrdinal getLiteral(RegisterIndex index, TreatAsByteOrdinal) noexcept {
+    return static_cast<ByteOrdinal>(getLiteral(index, TreatAsOrdinal{}));
+}
+
+constexpr ByteInteger getLiteral(RegisterIndex index, TreatAsByteInteger) noexcept {
+    return static_cast<ByteInteger>(getLiteral(index, TreatAsInteger{}));
+}
+
+constexpr ShortOrdinal getLiteral(RegisterIndex index, TreatAsShortOrdinal) noexcept {
+    return static_cast<ShortOrdinal>(getLiteral(index, TreatAsOrdinal{}));
+}
+
+constexpr ShortInteger getLiteral(RegisterIndex index, TreatAsShortInteger) noexcept {
+    return static_cast<ShortInteger>(getLiteral(index, TreatAsInteger{}));
+}
 
 constexpr Real getLiteral(RegisterIndex index, TreatAsReal) noexcept {
     switch (index) {
