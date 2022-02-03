@@ -344,6 +344,8 @@ private:
             } else {
                 return Operand<T>{};
             }
+        } else if constexpr (is_same_v<T, TripleRegister>) {
+        } else if constexpr (is_same_v<T, QuadRegister>) {
         } else {
             if (isLocalRegister(targetIndex)) {
                 return Operand<T>{getLocals().getRegister(static_cast<uint8_t>(targetIndex))};
@@ -418,7 +420,6 @@ private:
     inline void cmpinci(const Instruction& inst) noexcept { cmpincx(inst, TreatAsInteger{}); }
     void syncf() noexcept;
     void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
-    void setDestination(RegisterIndex index, Integer value, TreatAsInteger);
     void cmpobx(const Instruction& instruction, uint8_t mask) noexcept;
     void cmpobx(const Instruction& instruction) noexcept { cmpobx(instruction, instruction.getEmbeddedMask()); }
     void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;

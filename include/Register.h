@@ -599,4 +599,47 @@ private:
     LongOrdinal theValue_ = 0;
     bool valid_ = false;
 };
+
+template<>
+class Operand<TripleRegister> final {
+public:
+    using Self = Operand<TripleRegister>;
+public:
+    constexpr Operand() = default;
+    explicit constexpr Operand(Ordinal a, Ordinal b, Ordinal c) : ords_{a, b, c}, valid_(true) { }
+    explicit constexpr Operand(const TripleRegister& t) : Self(t.getOrdinal(0), t.getOrdinal(1), t.getOrdinal(2)) { }
+    [[nodiscard]] constexpr Ordinal getValue(byte which) const noexcept { return ords_[which % 3]; }
+    [[nodiscard]] constexpr bool operator==(const Self& other) const noexcept {
+        return ords_[0] == other.ords_[0] &&
+               ords_[1] == other.ords_[1] &&
+               ords_[2] == other.ords_[2];
+    }
+    [[nodiscard]] constexpr bool operator!=(const Self& other) const noexcept { return !(operator==(other)); }
+    [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
+    [[nodiscard]] constexpr explicit operator bool() const noexcept { return valid_; }
+private:
+    Ordinal ords_[3] { 0 };
+    bool valid_ = false;
+};
+
+template<>
+class Operand<QuadRegister> final {
+public:
+    using Self = Operand<QuadRegister>;
+public:
+    constexpr Operand() = default;
+    explicit constexpr Operand(LongOrdinal lo, LongOrdinal up = 0) : lords_{lo, up}, valid_(true) { }
+    explicit constexpr Operand(const QuadRegister& t) : Self(t.getLowerHalf(), t.getUpperHalf()) { }
+    [[nodiscard]] constexpr LongOrdinal getValue(byte which) const noexcept { return lords_[which % 3]; }
+    [[nodiscard]] constexpr bool operator==(const Self& other) const noexcept {
+        return lords_[0] == other.lords_[0] &&
+               lords_[1] == other.lords_[1];
+    }
+    [[nodiscard]] constexpr bool operator!=(const Self& other) const noexcept { return !(operator==(other)); }
+    [[nodiscard]] constexpr bool valid() const noexcept { return valid_; }
+    [[nodiscard]] constexpr explicit operator bool() const noexcept { return valid_; }
+private:
+    LongOrdinal lords_[2] { 0 };
+    bool valid_ = false;
+};
 #endif //SIM3_REGISTER_H

@@ -331,10 +331,6 @@ void
 Core::setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
     getRegister(index).set<Ordinal>(value);
 }
-void
-Core::setDestination(RegisterIndex index, Integer value, TreatAsInteger) {
-    getRegister(index).set<Integer>(value);
-}
 
 Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1), stackAlignMask_(c_ - 1), frameAlignmentMask_(~stackAlignMask_) {
 }
