@@ -481,30 +481,32 @@ private:
     void arithmeticGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
         using K = TreatAs<T>;
         T result = static_cast<T>(0);
-        auto& src2 = sourceFromSrc2(instruction);
-        auto& src1 = sourceFromSrc1(instruction);
+        Operand<T> src2(sourceFromSrc2(instruction));
+        Operand<T> src1(sourceFromSrc1(instruction));
+        //auto& src2 = sourceFromSrc2(instruction);
+        //auto& src1 = sourceFromSrc1(instruction);
         switch (op) {
             case ArithmeticOperation::Add:
-                result = src2.add(src1, K{});
+                result = src2 + src1;
                 break;
             case ArithmeticOperation::Subtract:
-                result = src2.subtract(src1, K{});
+                result = src2 - src1;
                 break;
             case ArithmeticOperation::Multiply:
-                result = src2.multiply(src1, K{});
+                result = src2 * src1;
                 break;
             case ArithmeticOperation::Divide:
                 /// @todo check denominator and do proper handling
-                result = src2.divide(src1, K{});
+                result = src2 / src1;
                 break;
             case ArithmeticOperation::Remainder:
-                result = src2.remainder(src1, K{});
+                result = src2 % src1;
                 break;
             case ArithmeticOperation::Rotate:
-                result = src2.rotate(src1, K{});
+                result = ::rotate(src2.getValue(), src1.getValue());
                 break;
             case ArithmeticOperation::ShiftLeft:
-                result = src2.shiftLeft(src1, K{});
+                result = src2 << src1;
                 break;
             case ArithmeticOperation::ShiftRight:
                 /*
@@ -525,7 +527,7 @@ private:
                  *
                  */
                 /// @todo perhaps implement the extra logic if necessary on shri
-                result = src2.shiftRight(src1, K{});
+                result = src2 >> src1;
                 break;
         }
         setDestinationFromSrcDest(instruction, result, K{});

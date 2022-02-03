@@ -185,36 +185,27 @@ public:
     explicit constexpr Operand(T value) : theValue_(value) { }
     explicit constexpr Operand(const Register& theRegister) : Self(theRegister.get<T>()) { }
     [[nodiscard]] constexpr T getValue() const noexcept { return theValue_; }
+    [[nodiscard]] bool operator==(const Self& other) const noexcept {
+        return theValue_ == other.theValue_;
+    }
+    [[nodiscard]] bool operator!=(const Self& other) const noexcept {
+        return theValue_ != other.theValue_;
+    }
+    [[nodiscard]] T operator+(const Self& other) const noexcept { return theValue_ + other.theValue_; }
+    [[nodiscard]] T operator-(const Self& other) const noexcept { return theValue_ - other.theValue_; }
+    [[nodiscard]] T operator*(const Self& other) const noexcept { return theValue_ * other.theValue_; }
+    [[nodiscard]] T operator/(const Self& other) const noexcept { return theValue_ / other.theValue_; }
+    [[nodiscard]] T operator%(const Self& other) const noexcept { return theValue_ % other.theValue_; }
+    [[nodiscard]] T operator<<(const Self& other) const noexcept { return theValue_ << other.theValue_; }
+    [[nodiscard]] T operator>>(const Self& other) const noexcept { return theValue_ >> other.theValue_; }
+    [[nodiscard]] T operator&(const Self& other) const noexcept { return theValue_ & other.theValue_; }
+    [[nodiscard]] T operator|(const Self& other) const noexcept { return theValue_ | other.theValue_; }
+    [[nodiscard]] T operator~() const noexcept { return ~theValue_; }
+    [[nodiscard]] T operator^(const Self& other) const noexcept { return theValue_ ^ other.theValue_; }
+
 private:
     T theValue_;
 };
-template<typename T>
-bool operator==(const Operand<T>& a, const Operand<T>& b) noexcept {
-    return a.getValue() == b.getValue();
-}
-template<typename T>
-T operator+(const Operand<T>& a, const Operand<T>& b) noexcept {
-    return a.getValue() + b.getValue();
-}
-template<typename T>
-T operator-(const Operand<T>& a, const Operand<T>& b) noexcept {
-    return a.getValue() - b.getValue();
-}
-template<typename T>
-T operator*(const Operand<T>& a, const Operand<T>& b) noexcept {
-    return a.getValue() * b.getValue();
-}
-template<typename T>
-T operator/(const Operand<T>& a, const Operand<T>& b) noexcept {
-    return a.getValue() / b.getValue();
-}
-
-template<typename T>
-T operator%(const Operand<T>& a, const Operand<T>& b) noexcept {
-    return a.getValue() % b.getValue();
-}
-
-
 
 /**
  * @brief Wrapper around a register to make it behave like the frame pointer should
