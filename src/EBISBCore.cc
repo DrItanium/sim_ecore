@@ -120,6 +120,9 @@ haltExecution(const __FlashStringHelper* message) noexcept {
 void
 Core::begin() noexcept {
     bringUpSerial();
+    Serial.print(F("Size of long double (extended real) = ")); Serial.println(sizeof(long double));
+    Serial.print(F("Size of double (long real) = ")); Serial.println(sizeof(double));
+    Serial.print(F("Size of float (real) = ")); Serial.println(sizeof(float));
     setupEBI();
     setupInterruptPins();
     setupInternalConfigurationSpace();
