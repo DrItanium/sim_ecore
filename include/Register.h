@@ -185,23 +185,23 @@ public:
     explicit constexpr Operand(T value) : theValue_(value) { }
     explicit constexpr Operand(const Register& theRegister) : Self(theRegister.get<T>()) { }
     [[nodiscard]] constexpr T getValue() const noexcept { return theValue_; }
-    [[nodiscard]] bool operator==(const Self& other) const noexcept {
-        return theValue_ == other.theValue_;
-    }
-    [[nodiscard]] bool operator!=(const Self& other) const noexcept {
-        return theValue_ != other.theValue_;
-    }
-    [[nodiscard]] T operator+(const Self& other) const noexcept { return theValue_ + other.theValue_; }
-    [[nodiscard]] T operator-(const Self& other) const noexcept { return theValue_ - other.theValue_; }
-    [[nodiscard]] T operator*(const Self& other) const noexcept { return theValue_ * other.theValue_; }
-    [[nodiscard]] T operator/(const Self& other) const noexcept { return theValue_ / other.theValue_; }
-    [[nodiscard]] T operator%(const Self& other) const noexcept { return theValue_ % other.theValue_; }
-    [[nodiscard]] T operator<<(const Self& other) const noexcept { return theValue_ << other.theValue_; }
-    [[nodiscard]] T operator>>(const Self& other) const noexcept { return theValue_ >> other.theValue_; }
-    [[nodiscard]] T operator&(const Self& other) const noexcept { return theValue_ & other.theValue_; }
-    [[nodiscard]] T operator|(const Self& other) const noexcept { return theValue_ | other.theValue_; }
-    [[nodiscard]] T operator~() const noexcept { return ~theValue_; }
-    [[nodiscard]] T operator^(const Self& other) const noexcept { return theValue_ ^ other.theValue_; }
+    [[nodiscard]] constexpr bool operator==(const Self& other) const noexcept { return theValue_ == other.theValue_; }
+    [[nodiscard]] constexpr bool operator!=(const Self& other) const noexcept { return theValue_ != other.theValue_; }
+    [[nodiscard]] constexpr T operator+(const Self& other) const noexcept { return theValue_ + other.theValue_; }
+    [[nodiscard]] constexpr T operator-(const Self& other) const noexcept { return theValue_ - other.theValue_; }
+    [[nodiscard]] constexpr T operator*(const Self& other) const noexcept { return theValue_ * other.theValue_; }
+    [[nodiscard]] constexpr T operator/(const Self& other) const noexcept { return theValue_ / other.theValue_; }
+    [[nodiscard]] constexpr T operator%(const Self& other) const noexcept { return theValue_ % other.theValue_; }
+    [[nodiscard]] constexpr T operator<<(const Self& other) const noexcept { return theValue_ << other.theValue_; }
+    [[nodiscard]] constexpr T operator>>(const Self& other) const noexcept { return theValue_ >> other.theValue_; }
+    [[nodiscard]] constexpr T operator&(const Self& other) const noexcept { return theValue_ & other.theValue_; }
+    [[nodiscard]] constexpr T operator|(const Self& other) const noexcept { return theValue_ | other.theValue_; }
+    [[nodiscard]] constexpr T operator~() const noexcept { return ~theValue_; }
+    [[nodiscard]] constexpr T operator^(const Self& other) const noexcept { return theValue_ ^ other.theValue_; }
+    [[nodiscard]] constexpr bool operator<(const Self& other) const noexcept { return theValue_ < other.theValue_; }
+    [[nodiscard]] constexpr bool operator<=(const Self& other) const noexcept { return theValue_ <= other.theValue_; }
+    [[nodiscard]] constexpr bool operator>(const Self& other) const noexcept { return theValue_ > other.theValue_; }
+    [[nodiscard]] constexpr bool operator>=(const Self& other) const noexcept { return theValue_ >= other.theValue_; }
 
 private:
     T theValue_;
