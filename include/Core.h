@@ -375,7 +375,6 @@ private:
     inline void cmpinco(const Instruction& inst) noexcept { cmpincx(inst, TreatAsOrdinal{}); }
     inline void cmpinci(const Instruction& inst) noexcept { cmpincx(inst, TreatAsInteger{}); }
     void syncf() noexcept;
-    void setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal);
     void cmpobx(const Instruction& instruction, uint8_t mask) noexcept;
     void cmpobx(const Instruction& instruction) noexcept { cmpobx(instruction, instruction.getEmbeddedMask()); }
     void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;

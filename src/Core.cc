@@ -306,11 +306,6 @@ Core::getInterruptStackPointer() noexcept {
     return load(getPRCBPtrBase() + 24);
 }
 
-void
-Core::setDestination(RegisterIndex index, Ordinal value, TreatAsOrdinal) {
-    getRegister(index).set<Ordinal>(value);
-}
-
 Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_((salign * 16) - 1), stackAlignMask_(c_ - 1), frameAlignmentMask_(~stackAlignMask_) {
 }
 
@@ -1036,6 +1031,6 @@ Core::modtc(const Instruction &instruction) noexcept {
 }
 void
 Core::bal(const Instruction &inst) noexcept {
-    setDestination(RegisterIndex::Global14, ip_.get<Ordinal>() + 4, TreatAsOrdinal{});
+    getRegister(RegisterIndex::Global14).set<Ordinal>(ip_.get<Ordinal>() + 4);
     ipRelativeBranch(inst);
 }
