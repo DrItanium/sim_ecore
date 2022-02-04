@@ -26,7 +26,27 @@
 
 #include "Core.h"
 
+Register&
+Core::destinationFromSrc2(const Instruction &instruction) noexcept {
+    return getRegister(instruction.getSrc2());
+}
+const Register&
+Core::registerFromSrc1(const Instruction& instruction) noexcept {
+    return getRegister(instruction.getSrc1());
+}
 void
 Core::bswap(const Instruction& inst) noexcept {
-
+    // copies bytes 3:0 of src1 to src2 reversing order of the bytes.
+    // Byte 0 of src1 -> Byte 3 of src2
+    // Byte 1 of src1 -> Byte 2 of src2
+    // Byte 2 of src1 -> Byte 1 of src2
+    // Byte 3 of src1 -> Byte 0 of src2
+    // from the Jx manual (not implemented on the Sx, Kx, and Cx processors)
+    // dest = (rotate_left(src 8) & 0x00FF00FF) + (rotate_left(src 24) & 0xFF00FF00)
+    auto& dest = destinationFromSrc2(inst);
+    const auto& src = registerFromSrc1(inst);
+    dest.set(src.get(0, TreatAsByteOrdinal{}), 3, TreatAsByteOrdinal{});
+    dest.set(src.get(1, TreatAsByteOrdinal{}), 2, TreatAsByteOrdinal{});
+    dest.set(src.get(2, TreatAsByteOrdinal{}), 1, TreatAsByteOrdinal{});
+    dest.set(src.get(3, TreatAsByteOrdinal{}), 0, TreatAsByteOrdinal{});
 }

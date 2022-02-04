@@ -383,6 +383,8 @@ private:
     void cmpibx(const Instruction& instruction) noexcept { cmpibx(instruction, instruction.getEmbeddedMask()); }
 
     [[nodiscard]] Register& destinationFromSrcDest(const Instruction& instruction) noexcept;
+    [[nodiscard]] Register& destinationFromSrc2(const Instruction& instruction) noexcept;
+    [[nodiscard]] const Register& registerFromSrc1(const Instruction& instruction) noexcept;
     template<typename T>
     [[nodiscard]] Operand<T> sourceFromSrcDest(const Instruction& instruction) const noexcept {
         return getOperand<T>(instruction.getSrcDest(true));
