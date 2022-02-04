@@ -135,16 +135,6 @@ Core::begin() noexcept {
 }
 
 void
-Core::generateFault(FaultType faultKind) noexcept {
-    /// @todo implement proper fault handling support instead of this terminate system
-    Serial.print(F("FAULT GENERATED AT 0x"));
-    Serial.print(ip_.get<Ordinal>(), HEX);
-    Serial.println(F("! HALTING!!"));
-    while (true) {
-        delay(1000);
-    }
-}
-void
 Core::boot0(Ordinal sat, Ordinal pcb, Ordinal startIP) {
     systemAddressTableBase_ = sat;
     prcbBase_ = pcb;
