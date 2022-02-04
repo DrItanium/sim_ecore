@@ -192,9 +192,8 @@ Core::computeMemoryAddress(const Instruction &instruction) noexcept {
             return static_cast<Ordinal>(ip_.get<Integer>() + instruction.getDisplacement() + 8);
         case MEMFormatMode::MEMB_AbsoluteDisplacement:
             return instruction.getDisplacement(); // this will return the optional displacement
-        case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement: {
+        case MEMFormatMode::MEMB_RegisterIndirectWithDisplacement:
             return static_cast<Ordinal>(valueFromAbaseRegister<Integer>(instruction) + instruction.getDisplacement());
-        }
         case MEMFormatMode::MEMB_IndexWithDisplacement:
             return static_cast<Ordinal>(scaledValueFromIndexRegister<Integer>(instruction) + instruction.getDisplacement());
         case MEMFormatMode::MEMB_RegisterIndirectWithIndexAndDisplacement:
