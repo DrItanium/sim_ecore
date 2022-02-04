@@ -197,7 +197,6 @@ private:
     [[nodiscard]] Ordinal getInterruptTableBase() noexcept;
     [[nodiscard]] Ordinal getFaultTableBase() noexcept;
     [[nodiscard]] Ordinal getInterruptStackPointer() noexcept;
-    void generateFault(FaultType fault) noexcept;
     void store(Address destination, const TripleRegister& reg) noexcept;
     void store(Address destination, const QuadRegister& reg) noexcept;
     void load(Address destination, TripleRegister& reg) noexcept;
@@ -686,6 +685,10 @@ private: // implementation specific
         setEBIUpper(destination);
         return memory<T>(computeWindowOffsetAddress(destination));
     }
+private: // fault handling
+    void generateFault(FaultType fault) noexcept;
+private: // interrupt handling
+    void generateInterrupt(uint16_t index) noexcept;
 public:
     static constexpr size_t NumSRAMBytesMapped = 2048;
     static_assert(NumSRAMBytesMapped < 4096 && NumSRAMBytesMapped >= 1024);
