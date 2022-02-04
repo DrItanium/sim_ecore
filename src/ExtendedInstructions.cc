@@ -50,3 +50,12 @@ Core::bswap(const Instruction& inst) noexcept {
     dest.set(src.get(2, TreatAsByteOrdinal{}), 1, TreatAsByteOrdinal{});
     dest.set(src.get(3, TreatAsByteOrdinal{}), 0, TreatAsByteOrdinal{});
 }
+
+void
+Core::condSelect(const Instruction &inst) noexcept {
+    if (auto mask = inst.getEmbeddedMask(); (mask & ac_.getConditionCode()) || (mask == ac_.getConditionCode())) {
+        setDestinationFromSrcDest(inst, valueFromSrc2Register<Ordinal>(inst), TreatAsOrdinal{});
+    } else {
+        setDestinationFromSrcDest(inst, valueFromSrc1Register<Ordinal>(inst), TreatAsOrdinal{});
+    }
+}
