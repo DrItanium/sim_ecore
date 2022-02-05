@@ -846,13 +846,13 @@ void
 Core::scanbyte(const Instruction &instruction) noexcept {
     const auto& src1 = getRegister(instruction.getSrc1());
     const auto& src2 = getRegister(instruction.getSrc2());
-    ac_.clearConditionCode();
     for (byte i = 0;i < 4; ++i) {
        if (src1.get(i, TreatAsByteOrdinal{}) == src2.get(i, TreatAsByteOrdinal{})) {
            ac_.setConditionCode(0b010);
            return;
        }
     }
+    ac_.clearConditionCode();
 }
 void
 Core::scanbit(const Instruction &instruction) noexcept {
