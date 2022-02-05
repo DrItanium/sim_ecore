@@ -21,75 +21,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Core.h"
-void
-Core::illegalInstruction(const Instruction &inst) noexcept {
-    generateFault(FaultType::Operation_InvalidOpcode) ;
-}
-void
-Core::stob(const Instruction &instruction) noexcept {
-    storeByte(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteOrdinal>(instruction));
-}
-void
-Core::stib(const Instruction &instruction) noexcept {
-    storeByteInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteInteger>(instruction));
-}
-void
-Core::stis(const Instruction &instruction) noexcept {
-    storeShortInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortInteger>(instruction));
-}
 
-void
-Core::st(const Instruction &instruction) noexcept {
-    store(computeMemoryAddress(instruction), valueFromSrcDestRegister<Ordinal>(instruction));
-}
-void
-Core::stos(const Instruction &instruction) noexcept {
-    storeShort(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortOrdinal>(instruction));
-}
-void
-Core::stl(const Instruction &instruction) noexcept {
-    storeLong(computeMemoryAddress(instruction), valueFromSrcDestRegister<LongOrdinal>(instruction));
-}
-void
-Core::stt(const Instruction &instruction) noexcept {
-    store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsTripleRegister{}));
-}
-void
-Core::stq(const Instruction &instruction) noexcept {
-    store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsQuadRegister{}));
-}
-void
-Core::ldis(const Instruction &instruction) noexcept {
-    setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger{});
-}
-void
-Core::ldib(const Instruction &instruction) noexcept {
-    setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsInteger{});
-}
-void
-Core::ldob(const Instruction &instruction) noexcept {
-    setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal{});
-}
-void
-Core::ldos(const Instruction &inst) noexcept {
-    setDestinationFromSrcDest(inst, loadShort(computeMemoryAddress(inst)), TreatAsOrdinal{});
-}
-void
-Core::ld(const Instruction &inst) noexcept {
-    setDestinationFromSrcDest(inst, load(computeMemoryAddress(inst)), TreatAsOrdinal{});
-}
-void
-Core::ldl(const Instruction &inst) noexcept {
-    setDestinationFromSrcDest(inst, loadLong(computeMemoryAddress(inst)), TreatAsLongOrdinal{});
-}
-void
-Core::ldt(const Instruction &inst) noexcept {
-    load(computeMemoryAddress(inst), destinationFromSrcDest(inst, TreatAsTripleRegister{}));
-}
-void
-Core::ldq(const Instruction &inst) noexcept {
-    load(computeMemoryAddress(inst), destinationFromSrcDest(inst, TreatAsQuadRegister{}));
-}
 void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     using TargetFunction = void (Core::*)(const Instruction& inst);
@@ -255,6 +187,51 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         &Core::illegalInstruction, // 0xCF
     };
 
+    static const TargetFunction regFormatInstruction[] {
+        // unlike the other instructions, there is a second level of decode necessary for these
+        // so this contains the first dispatch level only
+        &Core::dispatchREG_0x58,
+        &Core::dispatchREG_0x59,
+        &Core::dispatchREG_0x5A,
+        &Core::dispatchREG_0x5B,
+        &Core::dispatchREG_0x5C,
+        &Core::dispatchREG_0x5D,
+        &Core::dispatchREG_0x5E,
+        &Core::dispatchREG_0x5F,
+        &Core::illegalInstruction,
+        &Core::dispatchREG_0x61,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::dispatchREG_0x64,
+        &Core::dispatchREG_0x65,
+        &Core::dispatchREG_0x66,
+        &Core::dispatchREG_0x67,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::dispatchREG_0x70,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::dispatchREG_0x74,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::illegalInstruction,
+        &Core::dispatchREG_0x78,
+        &Core::dispatchREG_0x79,
+        &Core::dispatchREG_0x7A,
+        &Core::dispatchREG_0x7B,
+        &Core::dispatchREG_0x7C,
+        &Core::dispatchREG_0x7D,
+        &Core::dispatchREG_0x7E,
+        &Core::dispatchREG_0x7F,
+
+    };
     if (instruction.isCTRLFormat()) {
         // CTRL Format opcodes
         (this->*ctrlFormatInstructions[instruction.getMajorOpcode()])(instruction);

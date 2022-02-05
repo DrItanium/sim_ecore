@@ -1033,3 +1033,73 @@ Core::bal(const Instruction &inst) noexcept {
     getRegister(RegisterIndex::Global14).set<Ordinal>(ip_.get<Ordinal>() + 4);
     ipRelativeBranch(inst);
 }
+
+void
+Core::illegalInstruction(const Instruction &inst) noexcept {
+    generateFault(FaultType::Operation_InvalidOpcode) ;
+}
+void
+Core::stob(const Instruction &instruction) noexcept {
+    storeByte(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteOrdinal>(instruction));
+}
+void
+Core::stib(const Instruction &instruction) noexcept {
+    storeByteInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteInteger>(instruction));
+}
+void
+Core::stis(const Instruction &instruction) noexcept {
+    storeShortInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortInteger>(instruction));
+}
+
+void
+Core::st(const Instruction &instruction) noexcept {
+    store(computeMemoryAddress(instruction), valueFromSrcDestRegister<Ordinal>(instruction));
+}
+void
+Core::stos(const Instruction &instruction) noexcept {
+    storeShort(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortOrdinal>(instruction));
+}
+void
+Core::stl(const Instruction &instruction) noexcept {
+    storeLong(computeMemoryAddress(instruction), valueFromSrcDestRegister<LongOrdinal>(instruction));
+}
+void
+Core::stt(const Instruction &instruction) noexcept {
+    store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsTripleRegister{}));
+}
+void
+Core::stq(const Instruction &instruction) noexcept {
+    store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsQuadRegister{}));
+}
+void
+Core::ldis(const Instruction &instruction) noexcept {
+    setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger{});
+}
+void
+Core::ldib(const Instruction &instruction) noexcept {
+    setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsInteger{});
+}
+void
+Core::ldob(const Instruction &instruction) noexcept {
+    setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal{});
+}
+void
+Core::ldos(const Instruction &inst) noexcept {
+    setDestinationFromSrcDest(inst, loadShort(computeMemoryAddress(inst)), TreatAsOrdinal{});
+}
+void
+Core::ld(const Instruction &inst) noexcept {
+    setDestinationFromSrcDest(inst, load(computeMemoryAddress(inst)), TreatAsOrdinal{});
+}
+void
+Core::ldl(const Instruction &inst) noexcept {
+    setDestinationFromSrcDest(inst, loadLong(computeMemoryAddress(inst)), TreatAsLongOrdinal{});
+}
+void
+Core::ldt(const Instruction &inst) noexcept {
+    load(computeMemoryAddress(inst), destinationFromSrcDest(inst, TreatAsTripleRegister{}));
+}
+void
+Core::ldq(const Instruction &inst) noexcept {
+    load(computeMemoryAddress(inst), destinationFromSrcDest(inst, TreatAsQuadRegister{}));
+}

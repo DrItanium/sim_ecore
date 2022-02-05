@@ -678,6 +678,30 @@ private:
     void stib(const Instruction& inst) noexcept;
     void ldis(const Instruction& inst) noexcept;
     void stis(const Instruction& inst) noexcept;
+private: // reg format specific operations, missing indices are illegal opcodes
+    void dispatchREG_0x58(const Instruction& inst) noexcept;
+    void dispatchREG_0x59(const Instruction& inst) noexcept;
+    void dispatchREG_0x5A(const Instruction& inst) noexcept;
+    void dispatchREG_0x5B(const Instruction& inst) noexcept;
+    void dispatchREG_0x5C(const Instruction& inst) noexcept;
+    void dispatchREG_0x5D(const Instruction& inst) noexcept;
+    void dispatchREG_0x5E(const Instruction& inst) noexcept;
+    void dispatchREG_0x5F(const Instruction& inst) noexcept;
+    void dispatchREG_0x61(const Instruction& inst) noexcept;
+    void dispatchREG_0x64(const Instruction& inst) noexcept;
+    void dispatchREG_0x65(const Instruction& inst) noexcept;
+    void dispatchREG_0x66(const Instruction& inst) noexcept;
+    void dispatchREG_0x67(const Instruction& inst) noexcept;
+    void dispatchREG_0x70(const Instruction& inst) noexcept;
+    void dispatchREG_0x74(const Instruction& inst) noexcept;
+    void dispatchREG_0x78(const Instruction& inst) noexcept;
+    void dispatchREG_0x79(const Instruction& inst) noexcept;
+    void dispatchREG_0x7A(const Instruction& inst) noexcept;
+    void dispatchREG_0x7B(const Instruction& inst) noexcept;
+    void dispatchREG_0x7C(const Instruction& inst) noexcept;
+    void dispatchREG_0x7D(const Instruction& inst) noexcept;
+    void dispatchREG_0x7E(const Instruction& inst) noexcept;
+    void dispatchREG_0x7F(const Instruction& inst) noexcept;
 private: // implementation specific
     void setEBIUpper(Address address) noexcept;
     [[nodiscard]] static constexpr bool inInternalSpace(Address destination) noexcept {
