@@ -74,7 +74,8 @@ constexpr auto isREGFormat(uint8_t opcode) noexcept {
     return opcode >= 0x58 && opcode < 0x80;
 }
 constexpr auto isMEMFormat(uint8_t opcode) noexcept {
-    return opcode >= 0x80;
+    // the range is [0x80,0xD0) actually
+    return opcode >= 0x80 && opcode < 0xD0;
 }
 // based off of the i960 instruction set
 struct Instruction {
