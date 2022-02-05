@@ -424,6 +424,60 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::syncf, // 0x0F
     };
+    static const LookupTable16 REGTable_0x67 {
+            &Core::emul, // 0x00
+            &Core::ediv, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03, ldtime
+            &Core::illegalInstruction, // 0x04, cvtir
+            &Core::illegalInstruction, // 0x05, cvtilr
+            &Core::illegalInstruction, // 0x06, scalerl
+            &Core::illegalInstruction, // 0x07, scaler
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x70{
+            &Core::illegalInstruction, // 0x00
+            &Core::arithmeticGeneric<ArithmeticOperation::Multiply, Ordinal>, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04
+            &Core::illegalInstruction, // 0x05
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::arithmeticGeneric<ArithmeticOperation::Remainder, Ordinal>, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::arithmeticGeneric<ArithmeticOperation::Divide, Ordinal>, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x74{
+            &Core::illegalInstruction, // 0x00
+            &Core::arithmeticGeneric<ArithmeticOperation::Multiply, Integer>, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04
+            &Core::illegalInstruction, // 0x05
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::arithmeticGeneric<ArithmeticOperation::Remainder, Integer>, // 0x08
+            &Core::modi, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::arithmeticGeneric<ArithmeticOperation::Divide, Integer>, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
     static const LookupTable16 EmptyTable {
             &Core::illegalInstruction, // 0x00
             &Core::illegalInstruction, // 0x01
@@ -458,31 +512,31 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             REGTable_0x64,
             REGTable_0x65,
             REGTable_0x66,
+            REGTable_0x67,
+            nullptr, // floating point only
+            nullptr, // floating point only
+            nullptr,
+            nullptr,
+            nullptr, // floating point only
+            nullptr, // floating point only
+            nullptr, // floating point only
+            nullptr,
+            REGTable_0x70,
             nullptr,
             nullptr,
             nullptr,
+            REGTable_0x74,
             nullptr,
             nullptr,
             nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr,
+            nullptr, // core extended and floating point
+            nullptr, // core extended and floating point
+            nullptr, // core extended and floating point
+            nullptr, // core extended and floating point
+            nullptr, // core extended and floating point
+            nullptr, // core extended and floating point
+            nullptr, // core extended and floating point
+            nullptr, // core extended and floating point
     };
     if (instruction.isCTRLFormat()) {
         // CTRL Format opcodes
@@ -504,175 +558,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         }
     } else {
         illegalInstruction(instruction);
-        return;
-        switch (instruction.identifyOpcode()) {
-                // REG format
-            case Opcode::muli:
-                arithmeticGeneric<ArithmeticOperation::Multiply, Integer>(instruction);
-                break;
-            case Opcode::mulo:
-                arithmeticGeneric<ArithmeticOperation::Multiply, Ordinal>(instruction);
-                break;
-            case Opcode::divo:
-                arithmeticGeneric<ArithmeticOperation::Divide, Ordinal>(instruction);
-                break;
-            case Opcode::divi:
-                arithmeticGeneric<ArithmeticOperation::Divide, Integer>(instruction);
-                break;
-            case Opcode::remi:
-                arithmeticGeneric<ArithmeticOperation::Remainder, Integer>(instruction);
-                break;
-            case Opcode::remo:
-                arithmeticGeneric<ArithmeticOperation::Remainder, Ordinal>(instruction);
-                break;
-            case Opcode::rotate:
-                arithmeticGeneric<ArithmeticOperation::Rotate, Ordinal>(instruction);
-                break;
-            case Opcode::notbit:
-                notbit(instruction);
-                break;
-            case Opcode::logicalAnd:
-                logicalOpGeneric<LogicalOp::And>(instruction);
-                break;
-            case Opcode::logicalOr:
-                logicalOpGeneric<LogicalOp::Or>(instruction);
-                break;
-            case Opcode::logicalXor:
-                logicalOpGeneric<LogicalOp::Xor>(instruction);
-                break;
-            case Opcode::logicalXnor:
-                logicalOpGeneric<LogicalOp::Xnor>(instruction);
-                break;
-            case Opcode::logicalNor:
-                logicalOpGeneric<LogicalOp::Nor>(instruction);
-                break;
-            case Opcode::logicalNand:
-                logicalOpGeneric<LogicalOp::Nand>(instruction);
-                break;
-            case Opcode::logicalNot:
-                logicalOpGeneric<LogicalOp::Not>(instruction);
-                break;
-            case Opcode::andnot:
-                logicalOpGeneric<LogicalOp::AndNot>(instruction);
-                break;
-            case Opcode::notand:
-                logicalOpGeneric<LogicalOp::NotAnd>(instruction);
-                break;
-            case Opcode::ornot:
-                logicalOpGeneric<LogicalOp::OrNot>(instruction);
-                break;
-            case Opcode::notor:
-                logicalOpGeneric<LogicalOp::NotOr>(instruction);
-                break;
-            case Opcode::mov:
-                mov(instruction);
-                break;
-            case Opcode::movl:
-                movl(instruction);
-                break;
-            case Opcode::movt:
-                movt(instruction);
-                break;
-            case Opcode::movq:
-                movq(instruction);
-                break;
-            case Opcode::alterbit:
-                alterbit(instruction);
-                break;
-            case Opcode::ediv:
-                ediv(instruction);
-                break;
-            case Opcode::emul:
-                emul(instruction);
-                break;
-            case Opcode::extract:
-                extract(instruction);
-                break;
-            case Opcode::fmark:
-                fmark(instruction);
-                break;
-            case Opcode::mark:
-                mark(instruction);
-                break;
-            case Opcode::modac:
-                modac(instruction);
-                break;
-            case Opcode::modi:
-                modi(instruction);
-                break;
-            case Opcode::modify:
-                modify(instruction);
-                break;
-            case Opcode::call:
-                call(instruction);
-                break;
-            case Opcode::callx:
-                callx(instruction);
-                break;
-            case Opcode::shlo:
-                shlo(instruction);
-                break;
-            case Opcode::shro:
-                shro(instruction);
-                break;
-            case Opcode::scanbyte:
-                scanbyte(instruction);
-                break;
-            case Opcode::scanbit:
-                scanbit(instruction);
-                break;
-            case Opcode::spanbit:
-                spanbit(instruction);
-                break;
-            case Opcode::atadd:
-                atadd(instruction);
-                break;
-            case Opcode::atmod:
-                atmod(instruction);
-                break;
-            case Opcode::chkbit:
-                chkbit(instruction);
-                break;
-            case Opcode::addc:
-                addc(instruction);
-                break;
-            case Opcode::subc:
-                subc(instruction);
-                break;
-            case Opcode::shrdi:
-                shrdi(instruction);
-                break;
-            case Opcode::synld:
-                synld(instruction);
-                break;
-            case Opcode::synmov:
-                synmov(instruction);
-                break;
-            case Opcode::synmovl:
-                synmovl(instruction);
-                break;
-            case Opcode::synmovq:
-                synmovq(instruction);
-                break;
-            case Opcode::modpc:
-                modpc(instruction);
-                break;
-            case Opcode::modtc:
-                modtc(instruction);
-                break;
-            case Opcode::setbit:
-                setbit(instruction);
-                break;
-            case Opcode::clrbit:
-                clrbit(instruction);
-                break;
-            case Opcode::calls:
-                calls(instruction);
-                break;
-            default:
-                illegalInstruction(instruction);
-                break;
-        }
     }
 }
 
