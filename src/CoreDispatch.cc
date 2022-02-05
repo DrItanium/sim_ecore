@@ -507,36 +507,36 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             REGTable_0x5F,
             REGTable_0x60,
             REGTable_0x61,
-            nullptr,
-            nullptr,
+            EmptyTable,
+            EmptyTable,
             REGTable_0x64,
             REGTable_0x65,
             REGTable_0x66,
             REGTable_0x67,
-            nullptr, // floating point only
-            nullptr, // floating point only
-            nullptr,
-            nullptr,
-            nullptr, // floating point only
-            nullptr, // floating point only
-            nullptr, // floating point only
-            nullptr,
+            EmptyTable, // floating point only
+            EmptyTable, // floating point only
+            EmptyTable,
+            EmptyTable,
+            EmptyTable, // floating point only
+            EmptyTable, // floating point only
+            EmptyTable, // floating point only
+            EmptyTable,
             REGTable_0x70,
-            nullptr,
-            nullptr,
-            nullptr,
+            EmptyTable,
+            EmptyTable,
+            EmptyTable,
             REGTable_0x74,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr, // core extended and floating point
-            nullptr, // core extended and floating point
-            nullptr, // core extended and floating point
-            nullptr, // core extended and floating point
-            nullptr, // core extended and floating point
-            nullptr, // core extended and floating point
-            nullptr, // core extended and floating point
-            nullptr, // core extended and floating point
+            EmptyTable,
+            EmptyTable,
+            EmptyTable,
+            EmptyTable, // core extended and floating point
+            EmptyTable, // core extended and floating point
+            EmptyTable, // core extended and floating point
+            EmptyTable, // core extended and floating point
+            EmptyTable, // core extended and floating point
+            EmptyTable, // core extended and floating point
+            EmptyTable, // core extended and floating point
+            EmptyTable, // core extended and floating point
     };
     if (instruction.isCTRLFormat()) {
         // CTRL Format opcodes
@@ -551,11 +551,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     } else if (instruction.isREGFormat()) {
         /// @todo handle 0x5C specially since there is only one operation in that space (saves ram)
         auto properOffset = instruction.getMajorOpcode() - REGBaseOffset;
-        if (auto result = REGLookupTable[properOffset]; result) {
-            (this->*result[instruction.getMinorOpcode()&0b1111])(instruction);
-        } else {
-            illegalInstruction(instruction);
-        }
+        (this->*REGLookupTable[properOffset][instruction.getMinorOpcode()])(instruction);
     } else {
         illegalInstruction(instruction);
     }
