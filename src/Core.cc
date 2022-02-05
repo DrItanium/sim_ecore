@@ -37,14 +37,6 @@ namespace
 #undef X
 #undef Z
     };
-    constexpr Ordinal reverseBitPositions[32] {
-#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
-#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
-            X(28), X(24), X(20), X(16),
-            X(12), X(8), X(4), X(0),
-#undef X
-#undef Z
-    };
     constexpr Ordinal getBitPosition(Ordinal value) noexcept {
         return bitPositions[value & 0b11111];
     }
@@ -858,40 +850,6 @@ Core::scanbyte(const Instruction &instruction) noexcept {
         }
     }
     ac_.clearConditionCode();
-}
-void
-Core::scanbit(const Instruction &instruction) noexcept {
-    // perform a sanity check
-    auto& dest = destinationFromSrcDest(instruction);
-    auto src = valueFromSrc1Register<Ordinal>(instruction);
-    dest.set<Ordinal>(0xFFFF'FFFF);
-    ac_.clearConditionCode();
-    Ordinal index = 31;
-    for (auto mask : reverseBitPositions) {
-        if ((src & mask) != 0) {
-            dest.set<Ordinal>(index);
-            ac_.setConditionCode(0b010);
-            return;
-        }
-        --index;
-    }
-}
-
-void
-Core::spanbit(const Instruction &instruction) noexcept {
-    auto& dest = destinationFromSrcDest(instruction);
-    auto src = valueFromSrc1Register<Ordinal>(instruction);
-    dest.set<Ordinal>(0xFFFF'FFFF);
-    ac_.clearConditionCode();
-    Ordinal index = 31;
-    for (auto mask : reverseBitPositions) {
-        if ((src & mask) == 0) {
-            dest.set<Ordinal>(index);
-            ac_.setConditionCode(0b010);
-            return;
-        }
-        --index;
-    }
 }
 
 void

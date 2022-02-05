@@ -584,6 +584,46 @@ private:
             ac_.setConditionCode(src1 <= src2 ? 0b010 : 0b001);
         }
     }
+    template<bool checkEqualsZero>
+    static constexpr bool sxbitCheck(Ordinal src, Ordinal mask) noexcept {
+        if constexpr (auto result = src & mask; checkEqualsZero) {
+            return result == 0;
+        } else {
+            return result != 0;
+        }
+    }
+    static constexpr Ordinal reverseBitPositions[32] {
+#define Z(base, offset) static_cast<Ordinal>(1) << static_cast<Ordinal>(base + offset)
+#define X(base) Z(base, 3), Z(base, 2), Z(base, 1), Z(base, 0)
+            X(28), X(24), X(20), X(16),
+            X(12), X(8), X(4), X(0),
+#undef X
+#undef Z
+    };
+    /**
+     * @brief Common code for both scanbit and spanbit
+     * @tparam StopOnCheckEqualZero If true, src & mask == 0 will terminate the call, otherwise src & mask != 0 will terminate the call
+     * @param inst The instruction to get appropriate registers from
+     */
+    template<bool StopOnCheckEqualZero>
+    void sxbit(const Instruction& inst) noexcept {
+        // perform a sanity check
+        auto& dest = destinationFromSrcDest(inst);
+        auto src = valueFromSrc1Register<Ordinal>(inst);
+        dest.set<Ordinal>(0xFFFF'FFFF);
+        ac_.clearConditionCode();
+        Ordinal index = 31;
+        for (auto mask : reverseBitPositions) {
+            if (sxbitCheck<StopOnCheckEqualZero>(src, mask)) {
+                dest.set<Ordinal>(index);
+                ac_.setConditionCode(0b010);
+                return;
+            }
+            --index;
+        }
+    }
+    inline void scanbit(const Instruction& inst) noexcept { sxbit<false>(inst); }
+    inline void spanbit(const Instruction& inst) noexcept { sxbit<true>(inst); }
     void synld(const Instruction& inst) noexcept;
     void synmov(const Instruction& inst) noexcept;
     void synmovl(const Instruction& inst) noexcept;
@@ -619,9 +659,7 @@ private:
     void movl(const Instruction& inst) noexcept;
     void movt(const Instruction& inst) noexcept;
     void movq(const Instruction& inst) noexcept;
-    void scanbit(const Instruction& inst) noexcept;
     void scanbyte(const Instruction& inst) noexcept;
-    void spanbit(const Instruction& inst) noexcept;
     void alterbit(const Instruction& inst) noexcept;
     void modify(const Instruction& inst) noexcept;
     void modi(const Instruction& inst) noexcept;
