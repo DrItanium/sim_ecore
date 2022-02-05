@@ -435,7 +435,7 @@ private:
     void call(const Instruction& instruction) noexcept;
     void callx(const Instruction& instruction) noexcept;
     void calls(const Instruction& instruction) noexcept;
-    void ret() noexcept;
+    void ret(const Instruction&) noexcept;
     [[nodiscard]] Ordinal properFramePointerAddress() const noexcept;
 private:
     enum class ArithmeticOperation : byte {
@@ -649,6 +649,7 @@ private:
     }
     inline void shro(const Instruction& inst) noexcept { shxo<false>(inst); }
     inline void shlo(const Instruction& inst) noexcept { shxo<true>(inst); }
+    void illegalInstruction(const Instruction& inst) noexcept;
 private: // extended instructions
     void bswap(const Instruction& inst) noexcept;
     void condSelect(const Instruction& inst) noexcept;

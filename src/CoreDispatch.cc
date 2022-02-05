@@ -22,7 +22,27 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Core.h"
 void
+Core::illegalInstruction(const Instruction &inst) noexcept {
+    generateFault(FaultType::Operation_InvalidOpcode) ;
+}
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
+    using TargetFunction = void (Core::*)(const Instruction& inst);
+    static const TargetFunction ctrlFormatInstructions [] {
+        &Core::illegalInstruction, // 0x00
+        &Core::illegalInstruction, // 0x01
+        &Core::illegalInstruction, // 0x02
+        &Core::illegalInstruction, // 0x03
+        &Core::illegalInstruction, // 0x04
+        &Core::illegalInstruction, // 0x05,
+        &Core::illegalInstruction, // 0x06,
+        &Core::illegalInstruction, // 0x07,
+        &Core::b, // 0x08,
+        &Core::call,
+        &Core::ret,
+        &Core::bal,
+        &Core::condBranch,
+    };
     switch (instruction.identifyOpcode()) {
         // CTRL Format opcodes
         case Opcode::b:
@@ -341,13 +361,13 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             calls(instruction);
             break;
         case Opcode::ret:
-            ret();
+            ret(instruction);
             break;
         case Opcode::bswap:
             bswap(instruction);
             break;
         default:
-            generateFault(FaultType::Operation_InvalidOpcode);
+            illegalInstruction(instruction);
             break;
     }
 }

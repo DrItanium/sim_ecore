@@ -509,7 +509,7 @@ Core::handleLocalReturn() noexcept {
     restoreStandardFrame();
 }
 void
-Core::ret() noexcept {
+Core::ret(const Instruction&) noexcept {
     if constexpr (EnableEmulatorTrace) {
         Serial.println(F("RET!"));
     }
