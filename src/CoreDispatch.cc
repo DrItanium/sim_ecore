@@ -226,65 +226,263 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::arithmeticGeneric<ArithmeticOperation::ShiftLeft, Integer>,
             &Core::illegalInstruction,
     };
+    static const LookupTable16 REGTable_0x5A {
+            &Core::cmpo,
+            &Core::cmpi,
+            &Core::concmpGeneric<Ordinal>,
+            &Core::concmpGeneric<Integer>,
+            &Core::cmpinco,
+            &Core::cmpinci,
+            &Core::cmpdeco,
+            &Core::cmpdeci,
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::scanbyte, // 0x0C
+            &Core::bswap, // 0x0D
+            &Core::chkbit, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x5B{
+            &Core::addc, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::subc, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04, intdis
+            &Core::illegalInstruction, // 0x05, inten
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x5C{
+            &Core::illegalInstruction, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04
+            &Core::illegalInstruction, // 0x05
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::mov, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x5D {
+            &Core::illegalInstruction, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04
+            &Core::illegalInstruction, // 0x05
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08, eshro
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::movl, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x5E {
+            &Core::illegalInstruction, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04
+            &Core::illegalInstruction, // 0x05
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::movt, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x5F {
+            &Core::illegalInstruction, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04
+            &Core::illegalInstruction, // 0x05
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::movq, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x60 {
+            &Core::synmov, // 0x00
+            &Core::synmovl, // 0x01
+            &Core::synmovq, // 0x02
+            &Core::illegalInstruction, // 0x03, cmpstr
+            &Core::illegalInstruction, // 0x04, movqstr
+            &Core::illegalInstruction, // 0x05, movstr
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x61{
+            &Core::atmod, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::atadd, // 0x02
+            &Core::illegalInstruction, // 0x03, inspacc
+            &Core::illegalInstruction, // 0x04, ldphy
+            &Core::synld, // 0x05,
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07, fill
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x64 {
+            &Core::spanbit, // 0x00
+            &Core::scanbit, // 0x01
+            &Core::illegalInstruction, // 0x02, daddc
+            &Core::illegalInstruction, // 0x03, dsubc
+            &Core::illegalInstruction, // 0x04, dmovt
+            &Core::modac, // 0x05
+            &Core::illegalInstruction, // 0x06, condrec
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x65 {
+            &Core::modify, // 0x00
+            &Core::extract, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::modtc, // 0x04
+            &Core::modpc, // 0x05
+            &Core::illegalInstruction, // 0x06, receive
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08, intctl
+            &Core::illegalInstruction, // 0x09, sysctl
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B, icctl
+            &Core::illegalInstruction, // 0x0C, dcctl
+            &Core::illegalInstruction, // 0x0D, halt
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
+    };
+    static const LookupTable16 REGTable_0x66{
+            &Core::calls, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::illegalInstruction, // 0x02, send
+            &Core::illegalInstruction, // 0x03, sendserv
+            &Core::illegalInstruction, // 0x04, resumprcs
+            &Core::illegalInstruction, // 0x05, schedprcs
+            &Core::illegalInstruction, // 0x06, saveprcs
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08, condwait
+            &Core::illegalInstruction, // 0x09, wait
+            &Core::illegalInstruction, // 0x0A, signal
+            &Core::mark, // 0x0B
+            &Core::fmark, // 0x0C
+            &Core::flushreg, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::syncf, // 0x0F
+    };
     static const LookupTable16 EmptyTable {
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
-            &Core::illegalInstruction,
+            &Core::illegalInstruction, // 0x00
+            &Core::illegalInstruction, // 0x01
+            &Core::illegalInstruction, // 0x02
+            &Core::illegalInstruction, // 0x03
+            &Core::illegalInstruction, // 0x04
+            &Core::illegalInstruction, // 0x05
+            &Core::illegalInstruction, // 0x06
+            &Core::illegalInstruction, // 0x07
+            &Core::illegalInstruction, // 0x08
+            &Core::illegalInstruction, // 0x09
+            &Core::illegalInstruction, // 0x0A
+            &Core::illegalInstruction, // 0x0B
+            &Core::illegalInstruction, // 0x0C
+            &Core::illegalInstruction, // 0x0D
+            &Core::illegalInstruction, // 0x0E
+            &Core::illegalInstruction, // 0x0F
     };
     static const TargetFunction* REGLookupTable[40] {
             REGTable_0x58,
             REGTable_0x59,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
-            EmptyTable,
+            REGTable_0x5A,
+            REGTable_0x5B,
+            REGTable_0x5C,
+            REGTable_0x5D,
+            REGTable_0x5E,
+            REGTable_0x5F,
+            REGTable_0x60,
+            REGTable_0x61,
+            nullptr,
+            nullptr,
+            REGTable_0x64,
+            REGTable_0x65,
+            REGTable_0x66,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
     };
     if (instruction.isCTRLFormat()) {
         // CTRL Format opcodes
@@ -297,6 +495,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         auto properOffset = instruction.getMajorOpcode() - MEMBaseOffset;
         (this->*memFormatInstructions[properOffset])(instruction);
     } else if (instruction.isREGFormat()) {
+        /// @todo handle 0x5C specially since there is only one operation in that space (saves ram)
         auto properOffset = instruction.getMajorOpcode() - REGBaseOffset;
         if (auto result = REGLookupTable[properOffset]; result) {
             (this->*result[instruction.getMinorOpcode()&0b1111])(instruction);
@@ -304,31 +503,9 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             illegalInstruction(instruction);
         }
     } else {
+        illegalInstruction(instruction);
+        return;
         switch (instruction.identifyOpcode()) {
-            case Opcode::cmpo:
-                cmpo(instruction);
-                break;
-            case Opcode::cmpi:
-                cmpi(instruction);
-                break;
-            case Opcode::cmpdeco:
-                cmpdeco(instruction);
-                break;
-            case Opcode::cmpdeci:
-                cmpdeci(instruction);
-                break;
-            case Opcode::cmpinco:
-                cmpinco(instruction);
-                break;
-            case Opcode::cmpinci:
-                cmpinci(instruction);
-                break;
-            case Opcode::concmpi:
-                concmpGeneric(instruction, TreatAsInteger{});
-                break;
-            case Opcode::concmpo:
-                concmpGeneric(instruction, TreatAsOrdinal{});
-                break;
                 // REG format
             case Opcode::muli:
                 arithmeticGeneric<ArithmeticOperation::Multiply, Integer>(instruction);
@@ -411,9 +588,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             case Opcode::extract:
                 extract(instruction);
                 break;
-            case Opcode::flushreg:
-                flushreg();
-                break;
             case Opcode::fmark:
                 fmark(instruction);
                 break;
@@ -449,9 +623,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 break;
             case Opcode::spanbit:
                 spanbit(instruction);
-                break;
-            case Opcode::syncf:
-                syncf();
                 break;
             case Opcode::atadd:
                 atadd(instruction);
@@ -497,9 +668,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 break;
             case Opcode::calls:
                 calls(instruction);
-                break;
-            case Opcode::bswap:
-                bswap(instruction);
                 break;
             default:
                 illegalInstruction(instruction);

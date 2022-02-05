@@ -334,7 +334,7 @@ private:
     void setFramePointer(Ordinal value) noexcept;
     [[nodiscard]] Ordinal getFramePointerValue() const noexcept;
     void lda(const Instruction& inst) noexcept;
-    void flushreg() noexcept;
+    void flushreg(const Instruction&) noexcept;
     void ipRelativeBranch(const Instruction& inst) noexcept;
     [[nodiscard]] Instruction loadInstruction(Address baseAddress) noexcept;
     void executeInstruction(const Instruction& instruction) noexcept;
@@ -375,6 +375,7 @@ private:
     inline void cmpinco(const Instruction& inst) noexcept { cmpincx(inst, TreatAsOrdinal{}); }
     inline void cmpinci(const Instruction& inst) noexcept { cmpincx(inst, TreatAsInteger{}); }
     void syncf() noexcept;
+    void syncf(const Instruction&) noexcept { syncf(); }
     void cmpobx(const Instruction& instruction, uint8_t mask) noexcept;
     void cmpobx(const Instruction& instruction) noexcept { cmpobx(instruction, instruction.getEmbeddedMask()); }
     void cmpibx(const Instruction& instruction, uint8_t mask) noexcept;
@@ -576,7 +577,7 @@ private:
     void addc(const Instruction& inst) noexcept { withCarryOperationGeneric(inst, ArithmeticWithCarryOperation::Add); }
     void subc(const Instruction& inst) noexcept { withCarryOperationGeneric(inst, ArithmeticWithCarryOperation::Subtract); }
     template<typename T>
-    void concmpGeneric(const Instruction& instruction, TreatAs<T>) noexcept {
+    void concmpGeneric(const Instruction& instruction) noexcept {
         if ((ac_.getConditionCode() & 0b100) == 0) {
             auto src1 = sourceFromSrc1<T>(instruction);
             auto src2 = sourceFromSrc2<T>(instruction);

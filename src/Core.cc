@@ -309,7 +309,7 @@ Core::Core(Ordinal salign) : ip_(0), ac_(0), pc_(0), tc_(0), salign_(salign), c_
 }
 
 void
-Core::flushreg() noexcept {
+Core::flushreg(const Instruction&) noexcept {
     // clear all registers except the current one
     for (Ordinal curr = currentFrameIndex_ + 1; curr != currentFrameIndex_; curr = ((curr + 1) % NumRegisterFrames)) {
         frames[curr].relinquishOwnership([this](const RegisterFrame& frame, Address dest) noexcept {
