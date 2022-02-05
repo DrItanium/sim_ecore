@@ -844,15 +844,14 @@ namespace {
 }
 void
 Core::scanbyte(const Instruction &instruction) noexcept {
-    if (auto src1 = valueFromSrc1Register<Ordinal>(instruction),
-                src2 = valueFromSrc2Register<Ordinal>(instruction);
-            scanByte0<0x0000'00FF>(src1, src2) ||
-            scanByte0<0x0000'FF00>(src1, src2) ||
-            scanByte0<0x00FF'0000>(src1, src2) ||
-            scanByte0<0xFF00'0000>(src1, src2)) {
-        ac_.setConditionCode(0b010);
-    } else {
-        ac_.clearConditionCode();
+    const auto& src1 = getRegister(instruction.getSrc1());
+    const auto& src2 = getRegister(instruction.getSrc2());
+    ac_.clearConditionCode();
+    for (byte i = 0;i < 4; ++i) {
+       if (src1.get(i, TreatAsByteOrdinal{}) == src2.get(i, TreatAsByteOrdinal{})) {
+           ac_.setConditionCode(0b010);
+           return;
+       }
     }
 }
 void
