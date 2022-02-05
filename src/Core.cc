@@ -842,15 +842,20 @@ namespace {
         return (a & mask) == (b & mask);
     }
 }
+namespace {
+    [[nodiscard]] constexpr bool bytesEqual(const Register& src1, const Register& src2, byte index) noexcept {
+        return src1.get(index, TreatAsByteOrdinal{}) == src2.get(index, TreatAsByteOrdinal{});
+    }
+}
 void
 Core::scanbyte(const Instruction &instruction) noexcept {
     const auto& src1 = getRegister(instruction.getSrc1());
     const auto& src2 = getRegister(instruction.getSrc2());
     for (byte i = 0;i < 4; ++i) {
-       if (src1.get(i, TreatAsByteOrdinal{}) == src2.get(i, TreatAsByteOrdinal{})) {
-           ac_.setConditionCode(0b010);
-           return;
-       }
+        if (bytesEqual(src1, src2, i)) {
+            ac_.setConditionCode(0b010);
+            return;
+        }
     }
     ac_.clearConditionCode();
 }
