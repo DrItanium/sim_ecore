@@ -26,10 +26,75 @@ Core::illegalInstruction(const Instruction &inst) noexcept {
     generateFault(FaultType::Operation_InvalidOpcode) ;
 }
 void
+Core::stob(const Instruction &instruction) noexcept {
+    storeByte(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteOrdinal>(instruction));
+}
+void
+Core::stib(const Instruction &instruction) noexcept {
+    storeByteInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteInteger>(instruction));
+}
+void
+Core::stis(const Instruction &instruction) noexcept {
+    storeShortInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortInteger>(instruction));
+}
+
+void
+Core::st(const Instruction &instruction) noexcept {
+    store(computeMemoryAddress(instruction), valueFromSrcDestRegister<Ordinal>(instruction));
+}
+void
+Core::stos(const Instruction &instruction) noexcept {
+    storeShort(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortOrdinal>(instruction));
+}
+void
+Core::stl(const Instruction &instruction) noexcept {
+    storeLong(computeMemoryAddress(instruction), valueFromSrcDestRegister<LongOrdinal>(instruction));
+}
+void
+Core::stt(const Instruction &instruction) noexcept {
+    store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsTripleRegister{}));
+}
+void
+Core::stq(const Instruction &instruction) noexcept {
+    store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsQuadRegister{}));
+}
+void
+Core::ldis(const Instruction &instruction) noexcept {
+    setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger{});
+}
+void
+Core::ldib(const Instruction &instruction) noexcept {
+    setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsInteger{});
+}
+void
+Core::ldob(const Instruction &instruction) noexcept {
+    setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal{});
+}
+void
+Core::ldos(const Instruction &inst) noexcept {
+    setDestinationFromSrcDest(inst, loadShort(computeMemoryAddress(inst)), TreatAsOrdinal{});
+}
+void
+Core::ld(const Instruction &inst) noexcept {
+    setDestinationFromSrcDest(inst, load(computeMemoryAddress(inst)), TreatAsOrdinal{});
+}
+void
+Core::ldl(const Instruction &inst) noexcept {
+    setDestinationFromSrcDest(inst, loadLong(computeMemoryAddress(inst)), TreatAsLongOrdinal{});
+}
+void
+Core::ldt(const Instruction &inst) noexcept {
+    load(computeMemoryAddress(inst), destinationFromSrcDest(inst, TreatAsTripleRegister{}));
+}
+void
+Core::ldq(const Instruction &inst) noexcept {
+    load(computeMemoryAddress(inst), destinationFromSrcDest(inst, TreatAsQuadRegister{}));
+}
+void
 Core::executeInstruction(const Instruction &instruction) noexcept {
     using TargetFunction = void (Core::*)(const Instruction& inst);
     static const TargetFunction ctrlFormatInstructions [] {
-        &Core::illegalInstruction, // 0x00
+            &Core::illegalInstruction, // 0x00
         &Core::illegalInstruction, // 0x01
         &Core::illegalInstruction, // 0x02
         &Core::illegalInstruction, // 0x03
@@ -66,6 +131,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         &Core::condFault, // faultle
         &Core::condFault, // faulto
     };
+    static constexpr byte COBRBaseOffset = 0x20;
     static const TargetFunction cobrFormatInstructions[] {
         // just like with fault and branch, test has the mask embedded in the opcode, so extract it out
         &Core::testOp, // testno
@@ -105,13 +171,100 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
         &Core::cmpibx, // cmpible
         &Core::cmpibx, // cmpibo
     };
+    static constexpr byte MEMBaseOffset = 0x80;
+    static const TargetFunction memFormatInstructions[] {
+        &Core::ldob, // 0x80
+        &Core::illegalInstruction, // 0x81
+        &Core::stob, // 0x82
+        &Core::illegalInstruction, // 0x83
+        &Core::bx, // 0x84
+        &Core::balx, // 0x85
+        &Core::callx, // 0x86
+        &Core::illegalInstruction, // 0x87
+        &Core::ldos, // 0x88
+        &Core::illegalInstruction, // 0x89
+        &Core::stos, // 0x8a
+        &Core::illegalInstruction, // 0x8b
+        &Core::lda, // 0x8c
+        &Core::illegalInstruction, // 0x8d
+        &Core::illegalInstruction, // 0x8e
+        &Core::illegalInstruction, // 0x8f
+        &Core::ld, // 0x90
+        &Core::illegalInstruction, // 0x91
+        &Core::st, // 0x92
+        &Core::illegalInstruction, // 0x93
+        &Core::illegalInstruction, // 0x94
+        &Core::illegalInstruction, // 0x95
+        &Core::illegalInstruction, // 0x96
+        &Core::illegalInstruction, // 0x97
+        &Core::ldl, // 0x98
+        &Core::illegalInstruction, // 0x99
+        &Core::stl, // 0x9A
+        &Core::illegalInstruction, // 0x9B
+        &Core::illegalInstruction, // 0x9C
+        &Core::illegalInstruction, // 0x9D
+        &Core::illegalInstruction, // 0x9E
+        &Core::illegalInstruction, // 0x9F
+        &Core::ldt, // 0xA0
+        &Core::illegalInstruction, // 0xA1
+        &Core::stt, // 0xA2
+        &Core::illegalInstruction, // 0xA3
+        &Core::illegalInstruction, // 0xA4
+        &Core::illegalInstruction, // 0xA5
+        &Core::illegalInstruction, // 0xA6
+        &Core::illegalInstruction, // 0xA7
+        &Core::illegalInstruction, // 0xA8
+        &Core::illegalInstruction, // 0xA9
+        &Core::illegalInstruction, // 0xAA
+        &Core::illegalInstruction, // 0xAB
+        &Core::illegalInstruction, // 0xAC
+        &Core::illegalInstruction, // 0xAD
+        &Core::illegalInstruction, // 0xAE
+        &Core::illegalInstruction, // 0xAF
+        &Core::ldq, // 0xB0
+        &Core::illegalInstruction, // 0xB1
+        &Core::stq, // 0xB2
+        &Core::illegalInstruction, // 0xB3
+        &Core::illegalInstruction, // 0xB4
+        &Core::illegalInstruction, // 0xB5
+        &Core::illegalInstruction, // 0xB6
+        &Core::illegalInstruction, // 0xB7
+        &Core::illegalInstruction, // 0xB8
+        &Core::illegalInstruction, // 0xB9
+        &Core::illegalInstruction, // 0xBA
+        &Core::illegalInstruction, // 0xBB
+        &Core::illegalInstruction, // 0xBC
+        &Core::illegalInstruction, // 0xBD
+        &Core::illegalInstruction, // 0xBE
+        &Core::illegalInstruction, // 0xBF
+        &Core::ldib, // 0xC0
+        &Core::illegalInstruction, // 0xC1
+        &Core::stib, // 0xC2
+        &Core::illegalInstruction, // 0xC3
+        &Core::illegalInstruction, // 0xC4
+        &Core::illegalInstruction, // 0xC5
+        &Core::illegalInstruction, // 0xC6
+        &Core::illegalInstruction, // 0xC7
+        &Core::ldis, // 0xC8
+        &Core::illegalInstruction, // 0xC9
+        &Core::stis, // 0xCA
+        &Core::illegalInstruction, // 0xCB
+        &Core::illegalInstruction, // 0xCC
+        &Core::illegalInstruction, // 0xCD
+        &Core::illegalInstruction, // 0xCE
+        &Core::illegalInstruction, // 0xCF
+    };
+
     if (instruction.isCTRLFormat()) {
         // CTRL Format opcodes
         (this->*ctrlFormatInstructions[instruction.getMajorOpcode()])(instruction);
     } else if (instruction.isCOBRFormat()) {
         // since these are separate tables, we need to do some offset calculation
-        auto properOffset = instruction.getMajorOpcode() - 0x20;
+        auto properOffset = instruction.getMajorOpcode() - COBRBaseOffset;
         (this->*cobrFormatInstructions[properOffset])(instruction);
+    } else if (instruction.isMEMFormat()) {
+        auto properOffset = instruction.getMajorOpcode() - MEMBaseOffset;
+        (this->*memFormatInstructions[properOffset])(instruction);
     } else {
         switch (instruction.identifyOpcode()) {
             case Opcode::cmpo:
@@ -137,34 +290,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 break;
             case Opcode::concmpo:
                 concmpGeneric(instruction, TreatAsOrdinal{});
-                break;
-                // MEM Format
-            case Opcode::ldob:
-                setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsOrdinal{});
-                break;
-            case Opcode::bx:
-                bx(instruction);
-                break;
-            case Opcode::balx:
-                balx(instruction);
-                break;
-            case Opcode::lda:
-                lda(instruction);
-                break;
-            case Opcode::ldos:
-                setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsOrdinal{});
-                break;
-            case Opcode::ld:
-                setDestinationFromSrcDest(instruction, load(computeMemoryAddress(instruction)), TreatAsOrdinal{});
-                break;
-            case Opcode::ldl:
-                setDestinationFromSrcDest(instruction, loadLong(computeMemoryAddress(instruction)), TreatAsLongOrdinal{});
-                break;
-            case Opcode::ldt:
-                load(computeMemoryAddress(instruction), destinationFromSrcDest(instruction, TreatAsTripleRegister{}));
-                break;
-            case Opcode::ldq:
-                load(computeMemoryAddress(instruction), destinationFromSrcDest(instruction, TreatAsQuadRegister{}));
                 break;
                 // REG format
             case Opcode::addi:
@@ -323,36 +448,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             case Opcode::subc:
                 subc(instruction);
                 break;
-            case Opcode::ldib:
-                setDestinationFromSrcDest(instruction, loadByte(computeMemoryAddress(instruction)), TreatAsInteger{});
-                break;
-            case Opcode::ldis:
-                setDestinationFromSrcDest(instruction, loadShort(computeMemoryAddress(instruction)), TreatAsInteger{});
-                break;
-            case Opcode::st:
-                store(computeMemoryAddress(instruction), valueFromSrcDestRegister<Ordinal>(instruction));
-                break;
-            case Opcode::stob:
-                storeByte(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteOrdinal>(instruction));
-                break;
-            case Opcode::stos:
-                storeShort(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortOrdinal>(instruction));
-                break;
-            case Opcode::stl:
-                storeLong(computeMemoryAddress(instruction), valueFromSrcDestRegister<LongOrdinal>(instruction));
-                break;
-            case Opcode::stt:
-                store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsTripleRegister{}));
-                break;
-            case Opcode::stq:
-                store(computeMemoryAddress(instruction), sourceFromSrcDest(instruction, TreatAsQuadRegister{}));
-                break;
-            case Opcode::stib:
-                storeByteInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ByteInteger>(instruction));
-                break;
-            case Opcode::stis:
-                storeShortInteger(computeMemoryAddress(instruction), valueFromSrcDestRegister<ShortInteger>(instruction));
-                break;
             case Opcode::shrdi:
                 shrdi(instruction);
                 break;
@@ -382,9 +477,6 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
                 break;
             case Opcode::calls:
                 calls(instruction);
-                break;
-            case Opcode::ret:
-                ret(instruction);
                 break;
             case Opcode::bswap:
                 bswap(instruction);
