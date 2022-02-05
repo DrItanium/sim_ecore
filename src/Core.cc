@@ -846,16 +846,17 @@ namespace {
     [[nodiscard]] constexpr bool bytesEqual(const Register& src1, const Register& src2, byte index) noexcept {
         return src1.get(index, TreatAsByteOrdinal{}) == src2.get(index, TreatAsByteOrdinal{});
     }
+    [[nodiscard]] constexpr bool maskedEquals(Ordinal src1, Ordinal src2, Ordinal mask) noexcept {
+        return (src1 & mask) == (src2 & mask);
+    }
     [[nodiscard]] constexpr bool maskedEquals(const Operand<Ordinal>& src1, const Operand<Ordinal>& src2, Ordinal mask) noexcept {
-        return (src1.getValue() & mask) == (src2.getValue() & mask);
+        return maskedEquals(src1.getValue(), src2.getValue(), mask);
     }
 }
 void
 Core::scanbyte(const Instruction &instruction) noexcept {
-#if 0
     const auto& src1 = getRegister(instruction.getSrc1());
     const auto& src2 = getRegister(instruction.getSrc2());
-#if 0
     for (byte i = 0;i < 4; ++i) {
         if (bytesEqual(src1, src2, i)) {
             ac_.setConditionCode(0b010);
@@ -863,33 +864,6 @@ Core::scanbyte(const Instruction &instruction) noexcept {
         }
     }
     ac_.clearConditionCode();
-#else
-    if (bytesEqual(src1, src2, 0) ||
-        bytesEqual(src1, src2, 1) ||
-        bytesEqual(src1, src2, 2) ||
-            bytesEqual(src1, src2, 3)) {
-       ac_.setConditionCode(0b010) ;
-    } else {
-        ac_.clearConditionCode() ;
-    }
-#endif
-#else
-    auto src1 = sourceFromSrc1<Ordinal>(instruction);
-    auto src2 = sourceFromSrc2<Ordinal>(instruction);
-    static constexpr Ordinal masks[] {
-        0x000000FF,
-        0x0000FF00,
-        0x00FF0000,
-        0xFF000000,
-    };
-    for (auto mask : masks) {
-        if (maskedEquals(src1, src2, mask)) {
-            ac_.setConditionCode(0b010);
-            return;
-        }
-    }
-    ac_.clearConditionCode();
-#endif
 }
 void
 Core::scanbit(const Instruction &instruction) noexcept {
