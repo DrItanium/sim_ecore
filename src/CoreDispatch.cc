@@ -190,7 +190,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
     // unlike the other instructions, there is a second level of decode necessary for these
     // so this contains the first dispatch level only
     using LookupTable16 = TargetFunction[16];
-    static const LookupTable16 REGTable_0x58 {
+    static constexpr LookupTable16 REGTable_0x58 {
             &Core::notbit,
             &Core::logicalOpGeneric<LogicalOp::And>,
             &Core::logicalOpGeneric<LogicalOp::AndNot>,
@@ -208,7 +208,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::logicalOpGeneric<Core::LogicalOp::Nand>,
             &Core::alterbit,
     };
-    static const LookupTable16 REGTable_0x59 {
+    static constexpr LookupTable16 REGTable_0x59 {
             &Core::arithmeticGeneric<ArithmeticOperation::Add, Ordinal>,
             &Core::arithmeticGeneric<ArithmeticOperation::Add, Integer>,
             &Core::arithmeticGeneric<ArithmeticOperation::Subtract, Ordinal>,
@@ -226,7 +226,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::arithmeticGeneric<ArithmeticOperation::ShiftLeft, Integer>,
             &Core::illegalInstruction,
     };
-    static const LookupTable16 REGTable_0x5A {
+    static constexpr LookupTable16 REGTable_0x5A {
             &Core::cmpo,
             &Core::cmpi,
             &Core::concmpGeneric<Ordinal>,
@@ -244,7 +244,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::chkbit, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x5B{
+    static constexpr LookupTable16 REGTable_0x5B{
             &Core::addc, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::subc, // 0x02
@@ -262,7 +262,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x5C{
+    static constexpr LookupTable16 REGTable_0x5C{
             &Core::illegalInstruction, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -280,7 +280,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x5D {
+    static constexpr LookupTable16 REGTable_0x5D {
             &Core::illegalInstruction, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -298,7 +298,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x5E {
+    static constexpr LookupTable16 REGTable_0x5E {
             &Core::illegalInstruction, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -316,7 +316,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x5F {
+    static constexpr LookupTable16 REGTable_0x5F {
             &Core::illegalInstruction, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -334,7 +334,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x60 {
+    static constexpr LookupTable16 REGTable_0x60 {
             &Core::synmov, // 0x00
             &Core::synmovl, // 0x01
             &Core::synmovq, // 0x02
@@ -352,7 +352,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x61{
+    static constexpr LookupTable16 REGTable_0x61{
             &Core::atmod, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::atadd, // 0x02
@@ -370,7 +370,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x64 {
+    static constexpr LookupTable16 REGTable_0x64 {
             &Core::spanbit, // 0x00
             &Core::scanbit, // 0x01
             &Core::illegalInstruction, // 0x02, daddc
@@ -388,7 +388,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x65 {
+    static constexpr LookupTable16 REGTable_0x65 {
             &Core::modify, // 0x00
             &Core::extract, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -406,7 +406,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x66{
+    static constexpr LookupTable16 REGTable_0x66{
             &Core::calls, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::illegalInstruction, // 0x02, send
@@ -424,7 +424,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::syncf, // 0x0F
     };
-    static const LookupTable16 REGTable_0x67 {
+    static constexpr LookupTable16 REGTable_0x67 {
             &Core::emul, // 0x00
             &Core::ediv, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -442,7 +442,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x70{
+    static constexpr LookupTable16 REGTable_0x70{
             &Core::illegalInstruction, // 0x00
             &Core::arithmeticGeneric<ArithmeticOperation::Multiply, Ordinal>, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -460,7 +460,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 REGTable_0x74{
+    static constexpr LookupTable16 REGTable_0x74{
             &Core::illegalInstruction, // 0x00
             &Core::arithmeticGeneric<ArithmeticOperation::Multiply, Integer>, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -478,7 +478,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const LookupTable16 EmptyTable {
+    static constexpr LookupTable16 EmptyTable {
             &Core::illegalInstruction, // 0x00
             &Core::illegalInstruction, // 0x01
             &Core::illegalInstruction, // 0x02
@@ -496,7 +496,7 @@ Core::executeInstruction(const Instruction &instruction) noexcept {
             &Core::illegalInstruction, // 0x0E
             &Core::illegalInstruction, // 0x0F
     };
-    static const TargetFunction* REGLookupTable[40] {
+    static constexpr const TargetFunction* REGLookupTable[40] {
             REGTable_0x58,
             REGTable_0x59,
             REGTable_0x5A,

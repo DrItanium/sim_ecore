@@ -920,13 +920,6 @@ Core::modi(const Instruction &instruction) noexcept {
     }
 }
 void
-Core::modac(const Instruction &instruction) noexcept {
-    auto& dest = destinationFromSrcDest(instruction);
-    auto mask = valueFromSrc1Register<Ordinal>(instruction);
-    auto src = valueFromSrc2Register<Ordinal>(instruction);
-    dest.set<Ordinal>(ac_.modify(mask, src));
-}
-void
 Core::ediv(const Instruction &instruction) noexcept {
     if (auto denomord = valueFromSrc1Register<Ordinal>(instruction); denomord == 0) {
         // raise an arithmetic zero divide fault
@@ -1023,12 +1016,6 @@ Core::modpc(const Instruction &instruction) noexcept {
 }
 
 void
-Core::modtc(const Instruction &instruction) noexcept {
-    auto mask = valueFromSrc1Register<Ordinal>(instruction);
-    auto src = valueFromSrc2Register<Ordinal>(instruction);
-    setDestinationFromSrcDest(instruction, tc_.modify(mask, src), TreatAsOrdinal {});
-}
-void
 Core::bal(const Instruction &inst) noexcept {
     getRegister(RegisterIndex::Global14).set<Ordinal>(ip_.get<Ordinal>() + 4);
     ipRelativeBranch(inst);
@@ -1102,4 +1089,21 @@ Core::ldt(const Instruction &inst) noexcept {
 void
 Core::ldq(const Instruction &inst) noexcept {
     load(computeMemoryAddress(inst), destinationFromSrcDest(inst, TreatAsQuadRegister{}));
+}
+void
+Core::modac(const Instruction &instruction) noexcept {
+    // modac is different than most other i960 instructions... dest is src1... wow
+    auto& dest = getRegister(instruction.getSrc1());
+    auto mask = valueFromSrcDestRegister<Ordinal>(instruction);
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    dest.set<Ordinal>(ac_.modify(mask, src));
+}
+
+void
+Core::modtc(const Instruction &instruction) noexcept {
+    // modtc is different than most other i960 instructions... dest is src1... wow
+    auto& dest = getRegister(instruction.getSrc1());
+    auto mask = valueFromSrcDestRegister<Ordinal>(instruction);
+    auto src = valueFromSrc2Register<Ordinal>(instruction);
+    dest.set<Ordinal>(tc_.modify(mask, src));
 }
