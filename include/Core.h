@@ -602,10 +602,10 @@ private:
     };
     /**
      * @brief Common code for both scanbit and spanbit
-     * @tparam StopOnCheckEqualZero If true, src & mask == 0 will terminate the call, otherwise src & mask != 0 will terminate the call
+     * @tparam CompareWithZero If true, src & mask == 0 will terminate the call, otherwise src & mask != 0 will terminate the call
      * @param inst The instruction to get appropriate registers from
      */
-    template<bool StopOnCheckEqualZero>
+    template<bool CompareWithZero>
     void sxbit(const Instruction& inst) noexcept {
         // perform a sanity check
         auto& dest = destinationFromSrcDest(inst);
@@ -614,7 +614,7 @@ private:
         ac_.clearConditionCode();
         Ordinal index = 31;
         for (auto mask : reverseBitPositions) {
-            if (sxbitCheck<StopOnCheckEqualZero>(src, mask)) {
+            if (sxbitCheck<CompareWithZero>(src, mask)) {
                 dest.set<Ordinal>(index);
                 ac_.setConditionCode(0b010);
                 return;
