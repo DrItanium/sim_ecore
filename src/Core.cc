@@ -851,6 +851,7 @@ void
 Core::scanbyte(const Instruction &instruction) noexcept {
     const auto& src1 = getRegister(instruction.getSrc1());
     const auto& src2 = getRegister(instruction.getSrc2());
+#if 0
     for (byte i = 0;i < 4; ++i) {
         if (bytesEqual(src1, src2, i)) {
             ac_.setConditionCode(0b010);
@@ -858,6 +859,16 @@ Core::scanbyte(const Instruction &instruction) noexcept {
         }
     }
     ac_.clearConditionCode();
+#else
+    if (bytesEqual(src1, src2, 0) ||
+        bytesEqual(src1, src2, 1) ||
+        bytesEqual(src1, src2, 2) ||
+            bytesEqual(src1, src2, 3)) {
+       ac_.setConditionCode(0b010) ;
+    } else {
+        ac_.clearConditionCode() ;
+    }
+#endif
 }
 void
 Core::scanbit(const Instruction &instruction) noexcept {
