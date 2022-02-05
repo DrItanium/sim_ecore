@@ -67,7 +67,8 @@ constexpr auto isCTRLFormat(uint8_t opcode) noexcept {
     return opcode < 0x20;
 }
 constexpr auto isCOBRFormat(uint8_t opcode) noexcept {
-    return opcode >= 0x20 && opcode < 0x58;
+    // seems that COBR format instructions are actuall in between 0x20 and 0x40
+    return opcode >= 0x20 && opcode < 0x40;
 }
 constexpr auto isREGFormat(uint8_t opcode) noexcept {
     return opcode >= 0x58 && opcode < 0x80;
