@@ -655,11 +655,17 @@ Core::fmark(const Instruction &) noexcept {
     }
 }
 namespace {
-    constexpr LongOrdinal addWithCarry(Ordinal src2, Ordinal src1, Ordinal carry) noexcept {
-        return static_cast<LongOrdinal>(src2) + static_cast<LongOrdinal>(src1) + carry;
+    constexpr DoubleRegister doAddc(const Operand<Ordinal>& src2, const Operand<Ordinal>& src1, byte carry) noexcept {
+        return DoubleRegister{
+            static_cast<LongOrdinal>(src2.getValue()) +
+            static_cast<LongOrdinal>(src1.getValue()) +
+            carry
+        };
     }
-    constexpr LongOrdinal subtractWithCarry(Ordinal src2, Ordinal src1, Ordinal carry) noexcept {
-        return static_cast<LongOrdinal>(src2) - static_cast<LongOrdinal>(src1) - 1 + carry;
+    constexpr DoubleRegister doSubc(const Operand<Ordinal>& src2, const Operand<Ordinal>& src1, byte carry) noexcept {
+        return DoubleRegister{
+                static_cast<LongOrdinal>(src2.getValue()) - (static_cast<LongOrdinal>(src1.getValue()) - 1) + carry
+        };
     }
     constexpr Ordinal getMostSignificantBit(const Operand<Ordinal>& value) noexcept { return value.getValue() & 0x8000'0000; }
 
@@ -671,19 +677,17 @@ void
 Core::withCarryOperationGeneric(const Instruction &instruction, ArithmeticWithCarryOperation op) noexcept {
     auto src1 = sourceFromSrc1<Ordinal>(instruction);
     auto src2 = sourceFromSrc2<Ordinal>(instruction);
-    auto carry = ac_.getCarryBit() ? 1 : 0;
-    DoubleRegister result((op == ArithmeticWithCarryOperation::Add) ?
-    addWithCarry(src2.getValue(), src1.getValue(), carry) :
-    subtractWithCarry(src2.getValue(), src1.getValue(), carry));
     auto& dest = destinationFromSrcDest(instruction);
+    byte carry = ac_.getCarryBit() ? 1 : 0;
+    DoubleRegister result(op == ArithmeticWithCarryOperation::Add ? doAddc(src2, src1, carry) : doSubc(src2, src1, carry));
     dest.set<Ordinal>(result.get(0, TreatAsOrdinal{}));
     ac_.clearConditionCode();
+    // look for overflow
     if (overflowDetected(src2, src1, dest)) {
-        // set the overflow bit in ac
         ac_.setOverflowBit(true);
     }
+    // There are other ways to do this, see https://devblogs.microsoft.com/oldnewthing/20170822-00/?p=96865 for more information
     ac_.setCarryBit(result.get(1, TreatAsOrdinal{}) != 0);
-    // set the carry out bit
 }
 namespace {
     [[nodiscard]] constexpr Ordinal wordAlign(Ordinal value) noexcept { return value & 0xFFFF'FFF0; }
