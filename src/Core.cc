@@ -846,12 +846,6 @@ namespace {
     [[nodiscard]] constexpr bool bytesEqual(const Register& src1, const Register& src2, byte index) noexcept {
         return src1.get(index, TreatAsByteOrdinal{}) == src2.get(index, TreatAsByteOrdinal{});
     }
-    [[nodiscard]] constexpr bool maskedEquals(Ordinal src1, Ordinal src2, Ordinal mask) noexcept {
-        return (src1 & mask) == (src2 & mask);
-    }
-    [[nodiscard]] constexpr bool maskedEquals(const Operand<Ordinal>& src1, const Operand<Ordinal>& src2, Ordinal mask) noexcept {
-        return maskedEquals(src1.getValue(), src2.getValue(), mask);
-    }
 }
 void
 Core::scanbyte(const Instruction &instruction) noexcept {
