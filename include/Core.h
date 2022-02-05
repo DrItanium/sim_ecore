@@ -662,6 +662,22 @@ private:
 private:
     inline void b(const Instruction& inst) noexcept { ipRelativeBranch(inst); }
     void bal(const Instruction& inst) noexcept;
+    void ldob(const Instruction& inst) noexcept;
+    void stob(const Instruction& inst) noexcept;
+    void ldos(const Instruction& inst) noexcept;
+    void stos(const Instruction& inst) noexcept;
+    void ld(const Instruction& inst) noexcept;
+    void st(const Instruction& inst) noexcept;
+    void ldl(const Instruction& inst) noexcept;
+    void stl(const Instruction& inst) noexcept;
+    void ldt(const Instruction& inst) noexcept;
+    void stt(const Instruction& inst) noexcept;
+    void ldq(const Instruction& inst) noexcept;
+    void stq(const Instruction& inst) noexcept;
+    void ldib(const Instruction& inst) noexcept;
+    void stib(const Instruction& inst) noexcept;
+    void ldis(const Instruction& inst) noexcept;
+    void stis(const Instruction& inst) noexcept;
 private: // implementation specific
     void setEBIUpper(Address address) noexcept;
     [[nodiscard]] static constexpr bool inInternalSpace(Address destination) noexcept {
